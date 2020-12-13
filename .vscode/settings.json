@@ -8,7 +8,7 @@
 	{
 		"**/.DS_Store":true,
 		"**/.git":true,
-		"**/.gitignore":true,
+		"**/.gitignore":false,
 		"**/.gitattributes":true,
 		"**/.gitmodules":true,
 		"**/.svn":true,
@@ -21,7 +21,7 @@
 		"**/*.user":true,
 		"**/*.userprefs":true,
 		"**/*.unityproj":true,
-		"**/*.dll":true,
+		"**/*.dll":false,
 		"**/*.exe":true,
 		"**/*.pdf":true,
 		"**/*.mp4":true,
@@ -66,7 +66,8 @@
 		"library/":true,
 		"obj/":true,
 		"Obj/":true,
-		"ProjectSettings/":true,		"temp/":true,
+		"ProjectSettings/":true,
+		"temp/":true,
 		"Temp/":true
 	}
 }
