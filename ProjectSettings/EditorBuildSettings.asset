@@ -4,5 +4,26 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Start Screen.unity
+    guid: b08182d80c35dc34ba7699424e441f14
+  - enabled: 1
+    path: Assets/Scenes/Settings.unity
+    guid: e11d7b4d4c0e6f043a3bf5c3ea094710
+  - enabled: 1
+    path: Assets/Scenes/LOS.unity
+    guid: 60472664ccffb02408ebead1bddd6985
+  - enabled: 1
+    path: Assets/Scenes/Colour Matching.unity
+    guid: a56998babb0d097479eb9cf7b40554bf
+  - enabled: 1
+    path: Assets/Scenes/Ellipse.unity
+    guid: 1aab7a337da5ffd4d9709a64feedb072
+  - enabled: 1
+    path: Assets/Scenes/Target.unity
+    guid: 4693467ece777c34a8c21fb626941fad
+  - enabled: 1
+    path: Assets/Scenes/Hunting.unity
+    guid: c0603e1f3ecf99d4084d3f51fda27cf8
   m_configObjects: {}
