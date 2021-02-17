@@ -4,17 +4,15 @@ using UnityEngine;
 
 public class DetectCursor : MonoBehaviour
 {
-    private Color _oldColor;
-    
-    private void OnTriggerEnter2D(Collider2D collider) 
+    public static void ChangeColourOnDetection(GameObject gameObject, out Color oldColour)
     {
         var sprite = gameObject.GetComponent<SpriteRenderer>();
-        _oldColor = sprite.color;
+        oldColour = sprite.color;
         gameObject.GetComponent<SpriteRenderer>().color = new Color(0, 255, 0);
     }
 
-    private void OnTriggerExit2D(Collider2D collider) 
+    public static void ChangeColourBack(GameObject gameObject, Color oldColour)
     {
-        gameObject.GetComponent<SpriteRenderer>().color = _oldColor;
+        gameObject.GetComponent<SpriteRenderer>().color = oldColour;
     }
 }

@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4634348226491055554}
   - component: {fileID: 2408253634841668114}
   m_Layer: 5
-  m_Name: White Circle
+  m_Name: Stationary Circle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -113,6 +113,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 4634348226491055553}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c615df853b2c262409bd805ea7283a23, type: 3}
+  m_Script: {fileID: 11500000, guid: 0f30a3cfc831f5e40bae923ac0919241, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

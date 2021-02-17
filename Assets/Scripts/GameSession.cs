@@ -10,41 +10,37 @@ public class GameSession : MonoBehaviour
 
     private Ellipse _ellipse;
 
-    private void Awake() 
-    {
-        SetUpSingleton(); 
-    }
+    // private void Awake() 
+    // {
+    //     SetUpSingleton(); 
+    // }
 
-    private void SetUpSingleton()
-    {
-        var numberOfSessions = FindObjectsOfType<GameSession>().Length;
+    // private void SetUpSingleton()
+    // {
+    //     var numberOfSessions = FindObjectsOfType<GameSession>().Length;
 
-        if (numberOfSessions > 1)
-            Destroy(gameObject);
-        else
-            DontDestroyOnLoad(gameObject);
-    }
+    //     if (numberOfSessions > 1)
+    //         Destroy(gameObject);
+    //     else
+    //         DontDestroyOnLoad(gameObject);
+    // }
     
     // Start is called before the first frame update
     private void Start()
     {
         Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //need cursor for all games
 
-        if (SceneManager.GetActiveScene().name == "Colour Matching")
+        switch (SceneManager.GetActiveScene().name)
         {
-            
-        }
-        else if (SceneManager.GetActiveScene().name == "Ellipse")
-        {
-            EllipseGame();
-        }
-        else if (SceneManager.GetActiveScene().name == "Target")
-        {
-
-        }
-        else if (SceneManager.GetActiveScene().name == "Hunting")
-        {
-
+            case "Colour Matching":
+                break;
+            case "Ellipse":
+                EllipseGame();
+                break;
+            case "Target":
+                break;
+            case "Hunting":
+                break;
         }
     }
 

@@ -9,6 +9,7 @@ public class MovingCircle : MonoBehaviour
     private Ellipse _ellipse;
     private Vector3[] _ellipsePositions;
     private LineRenderer _lineRenderer;
+    private Color _oldColour;
     private int _positionIndex;
     private int _direction;
 
@@ -32,6 +33,16 @@ public class MovingCircle : MonoBehaviour
     private void Update() 
     {
         MoveCircle();
+    }
+
+    private void OnTriggerEnter2D(Collider2D collider) 
+    {
+        DetectCursor.ChangeColourOnDetection(gameObject, out _oldColour);
+    }
+
+    private void OnTriggerExit2D(Collider2D collider) 
+    {
+        DetectCursor.ChangeColourBack(gameObject, _oldColour);
     }
     
     private void MoveCircle()
