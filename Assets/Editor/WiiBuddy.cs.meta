@@ -1,9 +1,10 @@
 fileFormatVersion: 2
-guid: 1aea3814f13ac7b4488cdb732531972a
+guid: e02d34f6de1dd43389ca1e138f02dfd9
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - wii: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

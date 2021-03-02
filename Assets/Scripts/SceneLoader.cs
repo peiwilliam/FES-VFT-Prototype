@@ -1,12 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class SceneLoader : MonoBehaviour
-{
-    [SerializeField] private BluetoothConnect _bluetoothConnect;
-    
+{    
     public void LoadNextScene()
     {
         var currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
@@ -25,7 +21,7 @@ public class SceneLoader : MonoBehaviour
 
     public void LoadHunting() => SceneManager.LoadScene("Hunting");
 
-    public void ConnectToBoard() => Instantiate(_bluetoothConnect, new Vector3(0, 0, 0), Quaternion.identity);
+    public void ConnectToBoard() => SceneManager.LoadScene("Bluetooth PIN");
 
     public void QuitGame() => Application.Quit();
 }

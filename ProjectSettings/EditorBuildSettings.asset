@@ -26,4 +26,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Hunting.unity
     guid: c0603e1f3ecf99d4084d3f51fda27cf8
+  - enabled: 1
+    path: Assets/Scenes/Bluetooth PIN.unity
+    guid: 2668c360ccce41d43bbc66abafb57f75
   m_configObjects: {}
