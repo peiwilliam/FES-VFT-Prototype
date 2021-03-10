@@ -71,7 +71,7 @@ public class Cursor : MonoBehaviour
     {
         _dataList.Add(data);
 
-        if (_dataList.Count >= 200)
+        if (_dataList.Count >= 100)
         {
             _writer.WriteData(data);
             _dataList.Clear();
