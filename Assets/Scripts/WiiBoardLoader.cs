@@ -17,17 +17,15 @@ public class WiiBoardLoader : MonoBehaviour
     {
         using(_btClient = new BluetoothClient())
         {
-            Debug.Log("Removing existing wii devices");
-            
             foreach (var device in _btClient.DiscoverDevices())
             {
                 if (device.DeviceName.Contains("Nintendo"))
                 {
                     BluetoothSecurity.RemoveDevice(device.DeviceAddress);
                     device.SetServiceState(BluetoothService.HumanInterfaceDevice, false);
+                    Debug.Log("Wii Device removed");
                 }
             }
         }
-
     }
 }

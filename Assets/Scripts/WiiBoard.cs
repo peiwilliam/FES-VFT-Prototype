@@ -1,15 +1,12 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class WiiBoard : MonoBehaviour
 {
     //private Wiimote _wiiDevice;
 
-    [SerializeField] private GameObject _wiiBoard;
+    //[SerializeField] private GameObject _wiiBoard;
     
-    private int whichRemote;
+    private int whichRemote = 0;
 
     private void Awake() 
     {
@@ -26,60 +23,14 @@ public class WiiBoard : MonoBehaviour
             DontDestroyOnLoad(gameObject);
     }
 
-    private void OnEnable() 
+    private void Start() 
     {
-        _wiiBoard.gameObject.SetActive(false);
+        Wii.StartSearch();
 
         Wii.OnDiscoveryFailed     += OnDiscoveryFailed;
 		Wii.OnWiimoteDiscovered   += OnWiimoteDiscovered;
 		Wii.OnWiimoteDisconnected += OnWiimoteDisconnected;
     }
-
-    // private void Start()
-    // {
-    //     var deviceCollection = new WiimoteCollection(); // find all connected wii devices
-    //     deviceCollection.FindAllWiimotes();
-    //     _wiiDevice = deviceCollection[0]; // get the wiiboard, assumes no other wii devices are connected
-
-    //     // Setup update handlers.
-    //     _wiiDevice.WiimoteChanged          += WiiDeviceWiimoteChanged;
-    //     _wiiDevice.WiimoteExtensionChanged += WiiDeviceWiimoteExtensionChanged;
-
-    //     _wiiDevice.Connect();
-    //     // _wiiDevice.SetReportType(InputReport.IRAccel, false); // FALSE = DEVICE ONLY SENDS UPDATES WHEN VALUES CHANGE!
-    //     // _wiiDevice.SetLEDs(true, false, false, false);
-
-    //     if (_wiiDevice.WiimoteState.ExtensionType != ExtensionType.BalanceBoard)
-    //     {
-    //         using (StreamWriter w = File.AppendText("log.txt"))
-    //         {
-    //             w.WriteLine("Error: The device connected is not a Wii Balance Board. \n");
-    //         }
-
-    //         Application.Quit(); //quit the application when wrong device is connected
-    //     }
-    // }
-
-    // public float[] GetSensorValues()
-    // {
-    //     var cop = new float[] {
-    //         _wiiDevice.WiimoteState.BalanceBoardState.CenterOfGravity.X, //called center of gravity but actually centre of pressure
-    //         _wiiDevice.WiimoteState.BalanceBoardState.CenterOfGravity.Y};
-        
-    //     return cop;
-    // }
-
-    // private void OnDestroy() 
-    // {
-    //     _wiiDevice.Disconnect();
-    // }
-
-    public void BeginSearch()
-	{
-		//searching = true;
-		Wii.StartSearch();   
-		Time.timeScale = 1.0f;
-	}
 
 	public void OnDiscoveryFailed(int i) 
     {

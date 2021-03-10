@@ -283,43 +283,57 @@ PrefabInstance:
       value: 'In order to pair your device, follow the following instructions:
 
 
-        1.
-        Press the red sync button in the battery compartment of the board. The device
-        light should be blinking.
+        NOTE:
+        Steps 1 - 4 need to be done before the game is started.
 
 
-        2. Go to the bluetooth section of computer
-        settings (Control Panel or Bluetooth and other devices) and select Add Device
-        or Add Bluetooth or other device.
+        1. Press
+        the red sync button in the battery compartment of the board. The device light
+        should be blinking.
 
 
-        3. Select your Wii Balance Board
-        (Name should be something like Nintendo RVL-WBC-01.
+        2. Go to Control Panel -> Devices and Printers
+        -> Add a device
 
 
-        4. When a request
-        for a PIN shows up, use the pin generated here on the left to connect to
-        the board. Be sure to copy the enitre field, depending on your device, there
-        may be some "invisible characters" generated.
+        3. Select your Wii Balance Board (Name should be
+        something like Nintendo RVL-WBC-01).
 
 
-        5. Once the board
-        is connected, come back to this page and press connect
+        4. When a request for a PIN
+        shows up, leave the field empty and click next. If that doesn''t work, use
+        the pin generated here on the left to connect to the board. Be sure to copy
+        the enitre field, depending on your device, there may be some "invisible
+        characters" generated.
 
 
-        Note: if
-        you''re having issues connecting to the device, try pressing the Disconnect
-        Wii Devices button and then resetting the bluetooth.'
+        5. Once the board is connected, come back
+        to this page and press connect
+
+
+        Note: if you''re having issues connecting
+        to the device, try pressing the Disconnect Wii Devices button and then resetting
+        the bluetooth.'
+      objectReference: {fileID: 0}
+    - target: {fileID: 1319802877334616614, guid: d634c0644b94a9f4e91ef86313014ca0,
+        type: 3}
+      propertyPath: m_FontData.m_MinSize
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1319802877334616614, guid: d634c0644b94a9f4e91ef86313014ca0,
+        type: 3}
+      propertyPath: m_FontData.m_FontSize
+      value: 39
       objectReference: {fileID: 0}
     - target: {fileID: 1319802877334616615, guid: d634c0644b94a9f4e91ef86313014ca0,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: 1013.13745
+      value: 1044.2205
       objectReference: {fileID: 0}
     - target: {fileID: 1319802877334616615, guid: d634c0644b94a9f4e91ef86313014ca0,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -9.8
+      value: 17.8
       objectReference: {fileID: 0}
     - target: {fileID: 1319802877359901931, guid: d634c0644b94a9f4e91ef86313014ca0,
         type: 3}

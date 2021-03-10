@@ -8,7 +8,7 @@ public class DetectCursor : MonoBehaviour
     {
         var sprite = gameObject.GetComponent<SpriteRenderer>();
         oldColour = sprite.color;
-        sprite.color = new Color(0, 255, 0);
+        sprite.color = new Color(0, 255, 0); //pure green
     }
 
     public static void ChangeColourBack(GameObject gameObject, Color oldColour)

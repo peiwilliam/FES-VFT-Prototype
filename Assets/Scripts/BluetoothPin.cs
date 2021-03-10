@@ -25,7 +25,7 @@ public class BluetoothPin : MonoBehaviour
     private string AddressToWiiPin(string btAddress)
     {
         if (btAddress.Length != 12) 
-            throw new Exception("Invalid Bluetooth Address: " + btAddress);
+            throw new Exception("Invalid Bluetooth MAC Address: " + btAddress);
 
         var bluetoothPin = "";
         bool doubleZeroInAddr = false;
@@ -37,7 +37,7 @@ public class BluetoothPin : MonoBehaviour
         }
         if (doubleZeroInAddr)
         { 
-            throw new Exception("Invalid bt MAC address");
+            throw new Exception("Invalid Bluetooth MAC address");
         }
         return bluetoothPin;
     }
