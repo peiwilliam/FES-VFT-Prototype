@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using FilterManager;
+﻿using System.Linq;
 
 namespace FilterManager
 {
@@ -15,7 +13,20 @@ namespace FilterManager
 
         public float Solve(float input, float[] b)
         {
-            return 0.0f;
+            float output = 0.0f;
+
+            for (var i = 0; i < _y.Length; i++)
+            {
+                if (i < _y.Length)
+                    _y[i + 1] = _y[i];
+                else
+                {
+                    if (_y.Any(value => value == 0))
+                        output = input;
+                }
+            }
+
+            return output;
         }
     }
 }

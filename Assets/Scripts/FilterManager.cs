@@ -10,10 +10,6 @@ namespace FilterManager
         private float _wc;
         private int _order;
         private FilterStage[] _filterStages;
-        private FIRComponent _firComponent2nd; //2nd order
-        private IIRComponent _iirComponent2nd;
-        private FIRComponent _firComponent1st; //1st order
-        private IIRComponent _iirComponent1st;
         
         public FilterManager(float cutoffHzLow, float sampleHz, int order, bool high = false) // true is high, false is low (default)
         {
@@ -25,18 +21,6 @@ namespace FilterManager
             _order = order;
 
             _filterStages = new FilterStage[_order];
-
-            if (_order > 1) 
-            {
-                _firComponent2nd = new FIRComponent(_order + 1);
-                _iirComponent2nd = new IIRComponent(_order); //one less than fir because we're solving for filtered point
-            }
-
-            if (_order % 2 != 0)
-            {
-                _firComponent1st = new FIRComponent(2);
-                _firComponent1st = new FIRComponent(1);
-            }
         
             GetStages(_order, sampleHz, high);
         }
@@ -74,10 +58,12 @@ namespace FilterManager
             
             for (var stage = 0; stage < _filterStages.Length; stage++)
             {
-                if (_order % 2 != 0 && stage == 0)
-                    output = _iirComponent1st.Solve(_firComponent1st.Solve(output, _filterStages[stage].A), _filterStages[stage].B);
+                if (_order % 2 != 0 && stage == 0) //solve 1st order filter
+                    output = _filterStages[stage].IIRComponent1st.Solve(_filterStages[stage].FIRComponent1st.Solve(output, 
+                                                                        _filterStages[stage].A), _filterStages[stage].B);
                 else
-                    output =  _iirComponent2nd.Solve(_firComponent2nd.Solve(output, _filterStages[stage].A), _filterStages[stage].B);
+                    output = _filterStages[stage].IIRComponent2nd.Solve(_filterStages[stage].FIRComponent2nd.Solve(output, 
+                                                                        _filterStages[stage].A), _filterStages[stage].B);
             }
 
             return output;
