@@ -82,3 +82,6 @@ crashlytics-build.properties
 /[Aa]ssets/Documentation.meta
 /[Aa]ssets/Editor.meta
 /[Aa]ssets/Plugins.meta
+
+# VSCode folder
+.vscode/
