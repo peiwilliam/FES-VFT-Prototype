@@ -15,17 +15,26 @@ namespace FilterManager
         {
             float output = 0.0f;
 
-            for (var i = 0; i < _y.Length; i++)
+            if (_y.Length == 2) //2nd order
             {
-                if (i < _y.Length)
-                    _y[i + 1] = _y[i];
-                else
-                {
-                    if (_y.Any(value => value == 0))
-                        output = input;
-                }
+                _y[1] = _y[0];
+                _y[0] = input;
+            }
+            else //1st order
+            {
+                _y[0] = input;
             }
 
+            if (_y.Any(value => value == 0.0f)) //if any values in array are 0, just directly set output as the input.
+                output = input;
+            else
+            {
+                for (var i = 0; i < _y.Length; i++)
+                {
+                    output += _y[i] * b[i];
+                }
+            }
+            
             return output;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using FilterManager;
 using UnityEngine;
 
 public class Cursor : MonoBehaviour
@@ -16,9 +17,20 @@ public class Cursor : MonoBehaviour
     
     private void Start() 
     {
-        if ((bool)FindObjectOfType<WiiBoard>())
+        if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
         {
-            _initialCOP = Wii.GetCenterOfBalance(0); //actually centre of pressure, this is not going to be exactly 0,0
+            var initSenVals = new float[]
+            {
+                PlayerPrefs.GetFloat("Top Left Sensor"),
+                PlayerPrefs.GetFloat("Top Right Sensor"),
+                PlayerPrefs.GetFloat("Bottom Left Sensor"),
+                PlayerPrefs.GetFloat("Bottom Right Sensor")
+            };
+
+            var copX = (initSenVals[0] + initSenVals[2] - initSenVals[1] - initSenVals[3]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
+            var copY = (initSenVals[0] + initSenVals[1] - initSenVals[3] - initSenVals[4]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
+            
+            _initialCOP = new Vector2(copX, copY); //actually centre of pressure, this is not going to be exactly 0,0
             _writer = new CSVWriter();
             _dataList = new List<WiiBoardData>();
 
@@ -45,8 +57,22 @@ public class Cursor : MonoBehaviour
             }
 
             var pos = new Vector2(transform.position.x, transform.position.y);
-            pos.x = Mathf.Clamp(data.COPx * _maxX / 2 + Camera.main.transform.position.x, _minX, _maxX);
-            pos.y = Mathf.Clamp(data.COPy * _maxY / 2 + Camera.main.transform.position.y, _minY, _maxY);
+            pos.x = Mathf.Clamp(data.copX * _maxX / 2 + Camera.main.transform.position.x, _minX, _maxX);
+            pos.y = Mathf.Clamp(data.copY * _maxY / 2 + Camera.main.transform.position.y, _minY, _maxY);
+
+            if (true)
+            {
+                var filterX = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"), 
+                                        PlayerPrefs.GetFloat("Sample Frequency"),
+                                        PlayerPrefs.GetInt("Filter Order"));
+                var filterY = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"), 
+                                        PlayerPrefs.GetFloat("Sample Frequency"),
+                                        PlayerPrefs.GetInt("Filter Order"));
+                
+                pos.x = filterX.Compute(pos.x);
+                pos.y = filterY.Compute(pos.y);
+            }
+
             transform.position = pos;
         }
         else
@@ -62,17 +88,13 @@ public class Cursor : MonoBehaviour
     private WiiBoardData GetBoardValues()
     {
         var boardSensorValues = Wii.GetBalanceBoard(0);
-        var centreCOP = Wii.GetCenterOfBalance(0) - _initialCOP;
-        var data = new WiiBoardData
-        {
-            Time = Time.fixedUnscaledTime,
-            COPx = centreCOP.x,
-            COPy = centreCOP.y,
-            TopLeft = boardSensorValues.y,
-            TopRight = boardSensorValues.x,
-            BottomLeft = boardSensorValues.w,
-            BottomRight = boardSensorValues.z
-        };
+        var taredCOP = Wii.GetCenterOfBalance(0) - _initialCOP;
+        var data = new WiiBoardData(Time.fixedUnscaledTime, 
+                                    taredCOP.x, taredCOP.y, 
+                                    boardSensorValues.y, 
+                                    boardSensorValues.x, 
+                                    boardSensorValues.w, 
+                                    boardSensorValues.z);
 
         return data;
     }

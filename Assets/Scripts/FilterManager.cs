@@ -4,19 +4,19 @@ using UnityEngine;
 
 namespace FilterManager
 {
-    public class FilterManager
+    public class Filter
     {
         private const float _PI = Mathf.PI;
         private float _wc;
         private int _order;
         private FilterStage[] _filterStages;
         
-        public FilterManager(float cutoffHzLow, float sampleHz, int order, bool high = false) // true is high, false is low (default)
+        public Filter(float cutoffHz, float sampleHz, int order, bool high = false) // true is high, false is low (default)
         {
             if (!high)
-                _wc = 2.0f * sampleHz * Mathf.Tan(_PI * cutoffHzLow / sampleHz); //default for low pass
+                _wc = 2.0f * sampleHz * Mathf.Tan(_PI * cutoffHz / sampleHz); //default for low pass
             else
-                _wc = 1.0f / (2.0f * sampleHz * Mathf.Tan(_PI * cutoffHzLow / sampleHz)); //high pass has the inverse of the low pass
+                _wc = 1.0f / (2.0f * sampleHz * Mathf.Tan(_PI * cutoffHz / sampleHz)); //high pass has the inverse of the low pass
 
             _order = order;
 

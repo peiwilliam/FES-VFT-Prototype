@@ -36,7 +36,7 @@ public class CSVWriter
         {
             foreach (var data in dataList)
             {
-                var line = $"{data.Time}, {data.COPx}, {data.COPy}, {data.TopLeft}, {data.TopRight}, {data.BottomLeft}, {data.BottomRight}";
+                var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}";
                 w.WriteLine(line);
                 w.Flush();
             }
