@@ -30,13 +30,16 @@ public class CSVWriter
         File.AppendAllText(_path + @"\" + _fileName + _count + _extension, _csv.ToString());
     }
 
-    public void WriteData(WiiBoardData data)
+    public void WriteData(List<WiiBoardData> dataList)
     {
         using (var w = new StreamWriter(_path + @"\" + _fileName + _count + _extension, true)) // true to append and not overwrite
         {
-            var line = $"{data.Time}, {data.COPx}, {data.COPy}, {data.TopLeft}, {data.TopRight}, {data.BottomLeft}, {data.BottomRight}";
-            w.WriteLine(line);
-            w.Flush();
+            foreach (var data in dataList)
+            {
+                var line = $"{data.Time}, {data.COPx}, {data.COPy}, {data.TopLeft}, {data.TopRight}, {data.BottomLeft}, {data.BottomRight}";
+                w.WriteLine(line);
+                w.Flush();
+            }
         }
     }
 }

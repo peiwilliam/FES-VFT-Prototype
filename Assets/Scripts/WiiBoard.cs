@@ -15,9 +15,9 @@ public class WiiBoard : MonoBehaviour
 
     private void SetUpSingleton()
     {
-        var numberOfBt = FindObjectsOfType<WiiBoard>().Length;
+        var numberOfObj = FindObjectsOfType<WiiBoard>().Length;
 
-        if (numberOfBt > 1)
+        if (numberOfObj > 1)
             Destroy(gameObject);
         else
             DontDestroyOnLoad(gameObject);

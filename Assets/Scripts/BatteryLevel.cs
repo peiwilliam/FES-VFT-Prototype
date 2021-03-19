@@ -10,7 +10,7 @@ public class BatteryLevel : MonoBehaviour
     private void Start() 
     {
         var text = gameObject.GetComponent<InputField>();
-        text.SetTextWithoutNotify(GetBattery().ToString());
+        text.text = GetBattery().ToString();
         text.readOnly = true;
     }
 

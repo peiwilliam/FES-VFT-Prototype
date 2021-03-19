@@ -24,4 +24,13 @@ public class SceneLoader : MonoBehaviour
     public void ConnectToBoard() => SceneManager.LoadScene("Bluetooth PIN");
 
     public void QuitGame() => Application.Quit();
+
+    private void OnEnable() 
+    {
+        if (SceneManager.GetActiveScene().name == "Settings")
+        {
+            var settingsManager = FindObjectOfType<SettingsManager>();
+            settingsManager.SetInputFields();
+        }
+    }
 }

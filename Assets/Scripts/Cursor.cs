@@ -9,17 +9,21 @@ public class Cursor : MonoBehaviour
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
     [SerializeField] private Vector2 _initialCOP; //unused for now
 
-    // private const float _Length = 433; //units are mm
-    // private const float _Width = 228; //units are mm
+    private const float _Length = 433; //units are mm
+    private const float _Width = 228; //units are mm
     private CSVWriter _writer;
     private List<WiiBoardData> _dataList;
     
     private void Start() 
     {
-        //_initialCOP = Wii.GetCenterOfBalance(0); //actually centre of pressure, this is not going to be exactly 0,0
-        _writer = new CSVWriter();
-        _writer.WriteHeader();
-        _dataList = new List<WiiBoardData>();
+        if ((bool)FindObjectOfType<WiiBoard>())
+        {
+            _initialCOP = Wii.GetCenterOfBalance(0); //actually centre of pressure, this is not going to be exactly 0,0
+            _writer = new CSVWriter();
+            _dataList = new List<WiiBoardData>();
+
+            _writer.WriteHeader();
+        }
     }
     
     private void FixedUpdate()
@@ -32,7 +36,13 @@ public class Cursor : MonoBehaviour
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
         {
             var data = GetBoardValues();
-            CollectAndWriteBoardData(data);
+            _dataList.Add(data);
+
+            if (_dataList.Count >= 100)
+            {
+                _writer.WriteData(_dataList);
+                _dataList.Clear();
+            }
 
             var pos = new Vector2(transform.position.x, transform.position.y);
             pos.x = Mathf.Clamp(data.COPx * _maxX / 2 + Camera.main.transform.position.x, _minX, _maxX);
@@ -65,16 +75,5 @@ public class Cursor : MonoBehaviour
         };
 
         return data;
-    }
-
-    private void CollectAndWriteBoardData(WiiBoardData data)
-    {
-        _dataList.Add(data);
-
-        if (_dataList.Count >= 100)
-        {
-            _writer.WriteData(data);
-            _dataList.Clear();
-        }
     }
 }

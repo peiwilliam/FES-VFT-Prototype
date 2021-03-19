@@ -282,24 +282,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1722220295 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1722220295, guid: 661f19b32875ba24b9ca09791b5ef495,
-    type: 3}
-  m_PrefabInstance: {fileID: 2482801486642373175}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1722220300
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1722220295}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec41ef488498d294389de455465fe184, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &2482801486642373175
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -307,11 +289,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2482801486889798610, guid: 661f19b32875ba24b9ca09791b5ef495,
-        type: 3}
-      propertyPath: m_Text
-      value: C:\Users\William Pei\Desktop
-      objectReference: {fileID: 0}
     - target: {fileID: 2482801487325356148, guid: 661f19b32875ba24b9ca09791b5ef495,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -427,8 +404,7 @@ PrefabInstance:
       propertyPath: m_Name
       value: Settings Canvas
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 1034227293, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
+    m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
 --- !u!1001 &4014040991565268676
 PrefabInstance:
