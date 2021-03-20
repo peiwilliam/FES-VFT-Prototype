@@ -22,9 +22,7 @@ public class CSVWriter
         foreach (var file in di.GetFiles())
         {
             if (file.Name.Contains(_fileName + Convert.ToString(_count)))
-            {
-                _count++; 
-            }
+                _count++;
         }
 
         File.AppendAllText(_path + @"\" + _fileName + _count + _extension, _csv.ToString());
