@@ -43,6 +43,8 @@ public class SettingsManager : MonoBehaviour
         ["Rolling Average Window"] = "int"
     };
 
+    private Toggle toggle;
+
     private void Awake() 
     {
         SetUpSingleton(); //set a singleton
@@ -62,7 +64,7 @@ public class SettingsManager : MonoBehaviour
     {
         _fields.Clear(); //because objects get refreshed every time scene is reloaded, need to add "new" fields to dictionary
 
-        var fields = FindObjectsOfType<InputField>(); //array form, want to conver to list instead - easier to work with
+        var fields = FindObjectsOfType<InputField>(); //array form, want to conver to dictionary instead - easier to work with
 
         foreach (var field in fields)
         {
@@ -102,6 +104,26 @@ public class SettingsManager : MonoBehaviour
         SetInputs();
     }
 
+    public void ZeroBoard()
+    {
+        var isChecked = GameObject.Find("Zero Board").GetComponent<Toggle>().isOn;
+
+        if (isChecked)
+            PlayerPrefs.SetInt("Zero Board", 1);
+        else
+            PlayerPrefs.SetInt("Zero Board", 0);
+    }
+
+    public void FilterData()
+    {
+        var isChecked = GameObject.Find("Filter Data").GetComponent<Toggle>().isOn;
+
+        if (isChecked)
+            PlayerPrefs.SetInt("Filter Data", 1);
+        else
+            PlayerPrefs.SetInt("Filter Data", 0);
+    }
+
     private void SetInputs()
     {
         foreach (var nameAndType in _fieldNamesAndTypes)
@@ -122,6 +144,16 @@ public class SettingsManager : MonoBehaviour
                 else
                     PlayerPrefs.SetString(nameAndType.Key, (string)_defaultValues[nameAndType.Key]);
             }
+        }
+
+        var toggles = FindObjectsOfType<Toggle>();
+
+        foreach (var toggle in toggles)
+        {
+            if (toggle.name == "Zero Board")
+                toggle.GetComponent<Toggle>().isOn = Convert.ToBoolean(PlayerPrefs.GetInt("Zero Board"));
+            else if (toggle.name == "Filter Data")
+                toggle.GetComponent<Toggle>().isOn = Convert.ToBoolean(PlayerPrefs.GetInt("Filter Data"));
         }
     }
 }

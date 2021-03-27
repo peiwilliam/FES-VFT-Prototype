@@ -6,9 +6,9 @@ namespace FilterManager
     {
         private float[] _x;
 
-        public FIRComponent(int order)
+        public FIRComponent(int n)
         {
-            _x = new float[order];
+            _x = new float[n];
         }
 
         public float Solve(float input, float[] a)
@@ -28,7 +28,9 @@ namespace FilterManager
             }
 
             if (_x.Any(value => value == 0.0f)) //if any values in array are 0, just directly set output as the input.
+            {
                 output = input;
+            }
             else
             {
                 for (var i = 0; i < _x.Length; i++)
@@ -36,7 +38,7 @@ namespace FilterManager
                     output += _x[i] * a[i];
                 }
             }
-            
+
             return output;
         }
     }

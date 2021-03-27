@@ -14,7 +14,7 @@ public class CSVWriter
     public void WriteHeader()
     {
         _csv = new StringBuilder();
-        _csv.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight");
+        _csv.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy");
 
         _count = 1;
         var di = new DirectoryInfo(_path);
@@ -34,7 +34,7 @@ public class CSVWriter
         {
             foreach (var data in dataList)
             {
-                var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}";
+                var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}";
                 w.WriteLine(line);
                 w.Flush();
             }

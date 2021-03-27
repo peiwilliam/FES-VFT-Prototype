@@ -63,4 +63,14 @@ public class ZeroBoard : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    private void OnEnable() 
+    {
+        Debug.Log("Getting data");
+    }
+
+    private void OnDestroy() 
+    {
+        Debug.Log("Finished getting data");
+    }
 }

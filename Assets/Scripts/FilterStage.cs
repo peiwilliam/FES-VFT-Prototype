@@ -24,7 +24,7 @@ namespace FilterManager
                 IIRComponent2nd = new IIRComponent(2); //one less than fir because we're solving for filtered point
             }
 
-            if (order % 2 != 0)
+            if (order % 2 != 0 && firstStage)
             {
                 FIRComponent1st = new FIRComponent(2);
                 IIRComponent1st = new IIRComponent(1); //one less than fir because we're solving for filtered point
@@ -33,7 +33,7 @@ namespace FilterManager
 
         private void LowPassFilter(float zeta, float wc, int order, float sampleHz, bool firstStage)
         {
-            if (order % 2 != 0 && firstStage == true) //first order filter for odd filters
+            if (order % 2 != 0 && firstStage) //first order filter for odd filters
             {
                 var b0 = wc + 2.0f * sampleHz;
 
@@ -45,24 +45,26 @@ namespace FilterManager
 
                 B = new float[]
                 {
-                    (wc - 2.0f * sampleHz) / b0
+                    -(wc - 2.0f * sampleHz) / b0 //negative because subtraction in final equation
                 };
             }
             else //2nd order filter
             {
-                var b0 = 4.0f * Mathf.Pow(sampleHz, 2) + 4.0f * sampleHz * zeta * wc + Mathf.Pow(wc, 2);
+                var wc2 = Mathf.Pow(wc, 2);
+                var fs2 = Mathf.Pow(sampleHz, 2);
+                var b0 = 4.0f * fs2 + 4.0f * sampleHz * zeta * wc + wc2;
 
                 A = new float[]
                 {
-                    Mathf.Pow(wc, 2) / b0,
-                    2.0f * Mathf.Pow(wc, 2) / b0,
-                    Mathf.Pow(wc, 2) / b0
+                    wc2 / b0,
+                    2.0f * wc2 / b0,
+                    wc2 / b0
                 };
 
                 B = new float[]
                 {
-                    (2.0f * Mathf.Pow(wc, 2) - 8.0f * sampleHz * sampleHz) / b0,
-                    (4.0f * sampleHz * sampleHz - 4.0f * sampleHz * zeta * wc + Mathf.Pow(wc, 2)) / b0
+                    -(2.0f * wc2 - 8.0f * fs2) / b0, //negative because subtraction in final equation
+                    -(4.0f * fs2 - 4.0f * sampleHz * zeta * wc + wc2) / b0
                 };
             }
         }
@@ -81,24 +83,26 @@ namespace FilterManager
 
                 B = new float[]
                 {
-                    (1.0f - 2.0f * sampleHz * wc) / b0,
+                    -(1.0f - 2.0f * sampleHz * wc) / b0, //negative because subtraction in final equation
                 };
             }
             else //2nd order filter
             {
-                var b0 = 4.0f * Mathf.Pow(sampleHz, 2) + 4.0f * sampleHz * zeta / wc + 1 / (Mathf.Pow(wc, 2));
+                var wc2 = Mathf.Pow(wc, 2);
+                var fs2 = Mathf.Pow(sampleHz, 2);
+                var b0 = 4.0f * fs2 + 4.0f * sampleHz * zeta / wc + 1 / wc2;
                 
                 A = new float[]
                 {
-                    4.0f * Mathf.Pow(sampleHz, 2) / b0,
-                    -8.0f * Mathf.Pow(sampleHz, 2) / b0,
-                    4.0f * Mathf.Pow(sampleHz, 2) / b0
+                    4.0f * fs2 / b0,
+                    -8.0f * fs2 / b0,
+                    4.0f * fs2 / b0
                 };
 
                 B = new float[]
                 {
-                    (2 / (wc * wc) - 8.0f * Mathf.Pow(sampleHz, 2)) / b0,
-                    (4.0f * Mathf.Pow(sampleHz, 2) - 4.0f * sampleHz * zeta / wc + 1 / (Mathf.Pow(wc, 2))) / b0
+                    -(2 / wc2 - 8.0f * fs2) / b0, //negative because subtraction in final equation
+                    -(4.0f * fs2 - 4.0f * sampleHz * zeta / wc + 1 / wc2) / b0
                 };
             }
         }
