@@ -18,9 +18,7 @@ namespace FilterManager
             if (!_y.Any(value => value == 0.0f)) //once array is filled, start filtering
             {
                 for (var i = 0; i < _y.Length; i++)
-                {
                     output += _y[i] * b[i];
-                }
             }
 
             if (_y.Length == 2) //2nd order
@@ -29,9 +27,7 @@ namespace FilterManager
                 _y[0] = output;
             }
             else //1st order
-            {
                 _y[0] = output;
-            }
             
             return output;
         }

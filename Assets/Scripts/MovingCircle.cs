@@ -5,7 +5,6 @@ public class MovingCircle : MonoBehaviour
     [SerializeField] private float _circleVelocity = 3f;
 
     private Ellipse _ellipse;
-    private MovingCircle _movingCircle;
     private Vector3[] _ellipsePositions;
     private LineRenderer _lineRenderer;
     private Color _oldColour;
@@ -14,18 +13,13 @@ public class MovingCircle : MonoBehaviour
 
     private void Start() 
     {
-        _ellipse = FindObjectOfType<Ellipse>();
-        _movingCircle = FindObjectOfType<MovingCircle>();
-        _lineRenderer = _ellipse.GetComponent<LineRenderer>();
         var gameSession = FindObjectOfType<GameSession>();
-        var positions = new Vector3[_lineRenderer.positionCount];
-
-        _lineRenderer.GetPositions(positions); //pos has an out on it, so values are stored within pos only in the scope of the method
-        _ellipsePositions = positions;
+        _ellipse = gameSession.Ellipse;
+        _lineRenderer = gameSession.LineRenderer;
+        _ellipsePositions = gameSession.Positions;
+        _positionIndex = gameSession.EllipseIndex;
 
         _direction = Random.Range(0, 2); //0 is clockwise, 1 is counterclockwise
-
-        _positionIndex = gameSession.EllipseIndex;
     }
 
     private void Update() 

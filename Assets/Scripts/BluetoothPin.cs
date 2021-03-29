@@ -28,7 +28,8 @@ public class BluetoothPin : MonoBehaviour
             throw new Exception("Invalid Bluetooth MAC Address: " + btAddress);
 
         var bluetoothPin = "";
-        bool doubleZeroInAddr = false;
+        var doubleZeroInAddr = false;
+
         for (int i = btAddress.Length - 2; i >= 0; i -= 2)
         {
             string hex = btAddress.Substring(i, 2);
@@ -39,6 +40,7 @@ public class BluetoothPin : MonoBehaviour
         { 
             throw new Exception("Invalid Bluetooth MAC address");
         }
+
         return bluetoothPin;
     }
 }

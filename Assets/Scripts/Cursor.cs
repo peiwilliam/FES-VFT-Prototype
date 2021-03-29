@@ -79,13 +79,9 @@ public class Cursor : MonoBehaviour
             var cop = new Vector2();
 
             if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set default to zero in case it isn't set
-            {
                 cop = new Vector2(data.fCopX, data.fCopY);
-            }
             else
-            {
                 cop = new Vector2(data.copX, data.copY);
-            }
 
             pos.x = Mathf.Clamp(cop.x * _maxX / 2 + Camera.main.transform.position.x, _minX, _maxX);
             pos.y = Mathf.Clamp(cop.y * _maxY / 2 + Camera.main.transform.position.y, _minY, _maxY);
