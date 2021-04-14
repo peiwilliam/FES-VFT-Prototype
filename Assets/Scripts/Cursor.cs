@@ -21,45 +21,50 @@ public class Cursor : MonoBehaviour
     {
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
         {
-            if (PlayerPrefs.GetInt("Zero Board", 0) == 1) //set 0 as default in case it's not set
+            SetBoardConditions();
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        Move();
+    }
+
+    private void SetBoardConditions()
+    {
+        if (PlayerPrefs.GetInt("Zero Board", 0) == 1) //set 0 as default in case it's not set
+        {
+            var initSenVals = new float[]
             {
-                var initSenVals = new float[]
-                {
                     PlayerPrefs.GetFloat("Top Left Sensor"),
                     PlayerPrefs.GetFloat("Top Right Sensor"),
                     PlayerPrefs.GetFloat("Bottom Left Sensor"),
                     PlayerPrefs.GetFloat("Bottom Right Sensor")
-                };
-                
-                var copX = (initSenVals[1] + initSenVals[3] - initSenVals[0] - initSenVals[2]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
-                var copY = (initSenVals[0] + initSenVals[1] - initSenVals[2] - initSenVals[3]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
-                
-                _initialCOP = new Vector2(copX, copY);
-            }
-            else
-            {
-                _initialCOP = new Vector2(0, 0);
-            }
-            _writer = new CSVWriter();
-            _dataList = new List<WiiBoardData>();
+            };
 
-            _writer.WriteHeader();
+            var copX = (initSenVals[1] + initSenVals[3] - initSenVals[0] - initSenVals[2]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
+            var copY = (initSenVals[0] + initSenVals[1] - initSenVals[2] - initSenVals[3]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
 
-            if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set 0 as default in case it isn't set
-            {
-                _filterX = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"), 
-                                        1.0f / Time.fixedDeltaTime, //want freq, so 1/period
-                                        PlayerPrefs.GetInt("Filter Order"));
-                _filterY = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"), 
-                                        1.0f / Time.fixedDeltaTime,
-                                        PlayerPrefs.GetInt("Filter Order"));
-            }
+            _initialCOP = new Vector2(copX, copY);
         }
-    }
-    
-    private void FixedUpdate()
-    {
-        Move();
+        else
+        {
+            _initialCOP = new Vector2(0, 0);
+        }
+
+        if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set 0 as default in case it isn't set
+        {
+            _filterX = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"),
+                                    1.0f / Time.fixedDeltaTime, //want freq, so 1/period
+                                    PlayerPrefs.GetInt("Filter Order"));
+            _filterY = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"),
+                                    1.0f / Time.fixedDeltaTime,
+                                    PlayerPrefs.GetInt("Filter Order"));
+        }
+
+        _writer = new CSVWriter();
+        _dataList = new List<WiiBoardData>();
+        _writer.WriteHeader();
     }
 
     private void Move()
@@ -102,6 +107,19 @@ public class Cursor : MonoBehaviour
     {
         var boardSensorValues = Wii.GetBalanceBoard(0);
         var taredCOP = Wii.GetCenterOfBalance(0) - _initialCOP;
+
+        if (Mathf.Abs(taredCOP.x) > 1f || Mathf.Abs(taredCOP.y) > 1f) //cop should not extend outside the range of the board
+        {
+            if (taredCOP.x > 1f)
+                taredCOP.x = 1f;
+            else
+                taredCOP.x = 0f; // if it's not above 1 then it has to be below -1
+
+            if (taredCOP.y > 1f)
+                taredCOP.y = 1f;
+            else
+                taredCOP.y = 0f; // if it's not above 1 then it has to be below -1
+        }
 
         var fCopX = 0.0f;
         var fCopY = 0.0f;

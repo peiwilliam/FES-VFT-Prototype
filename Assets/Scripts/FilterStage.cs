@@ -6,10 +6,10 @@ namespace FilterManager
     {
         public float[] A { get; private set; }
         public float[] B { get; private set; } // only care about the first order term since all other terms have coeff of one
-        public FIRComponent FIRComponent2nd { get; private set;} //2nd order
-        public IIRComponent IIRComponent2nd { get; private set;}
-        public FIRComponent FIRComponent1st { get; private set;} //1st order
-        public IIRComponent IIRComponent1st { get; private set;}
+        public FIRComponent FIRComponent2nd { get; private set; } //2nd order
+        public IIRComponent IIRComponent2nd { get; private set; }
+        public FIRComponent FIRComponent1st { get; private set; } //1st order
+        public IIRComponent IIRComponent1st { get; private set; }
         
         public FilterStage(float zeta, float wc, int order, float sampleHz, bool high, bool firstStage = false) //first stage only for odd orders
         {

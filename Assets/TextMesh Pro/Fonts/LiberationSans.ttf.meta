@@ -3,12 +3,11 @@ guid: e3265ab4bf004d28a9537516768c1c75
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
-  fontSize: 300
-  forceTextureCase: -1
+  fontSize: 16
+  forceTextureCase: -2
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
-  fontName: Liberation Sans
   fontNames:
   - Liberation Sans
   fallbackFontReferences: []

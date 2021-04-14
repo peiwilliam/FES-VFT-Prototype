@@ -1,8 +1,12 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class MovingCircle : MonoBehaviour
 {
     [SerializeField] private float _circleVelocity = 3f;
+    [SerializeField] private float _deltaTimeScore = 0.2f;
+    [SerializeField] private float _gracePeriod = 1f;
+    [SerializeField] private int _score = 0;
 
     private Ellipse _ellipse;
     private Vector3[] _ellipsePositions;
@@ -10,6 +14,9 @@ public class MovingCircle : MonoBehaviour
     private Color _oldColour;
     private int _positionIndex;
     private int _direction;
+    private Coroutine _scoreIncreaseCoroutine;
+    private Coroutine _scoreDecreaseCoroutine;
+    private bool _isDecreasing = false;
 
     private void Start() 
     {
@@ -30,11 +37,23 @@ public class MovingCircle : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collider) 
     {
         DetectCursor.ChangeColourOnDetection(gameObject, out _oldColour);
+
+        if (_isDecreasing)
+        {
+            StopCoroutine(_scoreDecreaseCoroutine);
+            _isDecreasing = false;
+        }
+            
+        _scoreIncreaseCoroutine = StartCoroutine(IncreaseScore());
     }
 
     private void OnTriggerExit2D(Collider2D collider) 
     {
         DetectCursor.ChangeColourBack(gameObject, _oldColour);
+
+        StartCoroutine(GracePeriod());
+        StopCoroutine(_scoreIncreaseCoroutine);
+        _scoreDecreaseCoroutine = StartCoroutine(DecreaseScore());
     }
     
     private void MoveCircle()
@@ -71,5 +90,30 @@ public class MovingCircle : MonoBehaviour
         var movementThisFrame = _circleVelocity * Time.deltaTime;
         transform.position = Vector2.MoveTowards(transform.position, targetPosition, movementThisFrame);
         return targetPosition;
+    }
+
+    private IEnumerator IncreaseScore()
+    {
+        while (true)
+        {
+            _score++;
+            yield return new WaitForSeconds(_deltaTimeScore);
+        }
+    }
+
+    private IEnumerator DecreaseScore()
+    {
+        _isDecreasing = true;
+
+        while (true)
+        {
+            _score--;
+            yield return new WaitForSeconds(_deltaTimeScore);
+        }
+    }
+
+    private IEnumerator GracePeriod()
+    {
+        yield return new WaitForSeconds(_gracePeriod);
     }
 }
