@@ -13,4 +13,9 @@ public class StationaryCircle : MonoBehaviour
     {
         DetectCursor.ChangeColourBack(gameObject, _oldColour);
     }
+
+    private void Random()
+    {
+        
+    }
 }
