@@ -53,3 +53,4 @@ MonoBehaviour:
   _maxX: 17.777779
   _minY: 0
   _maxY: 10
+  _spawnTime: 10

@@ -51,7 +51,6 @@ public class MovingCircle : MonoBehaviour
     {
         DetectCursor.ChangeColourBack(gameObject, _oldColour);
 
-        StartCoroutine(GracePeriod());
         StopCoroutine(_scoreIncreaseCoroutine);
         _scoreDecreaseCoroutine = StartCoroutine(DecreaseScore());
     }
@@ -105,6 +104,8 @@ public class MovingCircle : MonoBehaviour
     {
         _isDecreasing = true;
 
+        yield return new WaitForSeconds(_gracePeriod);
+
         while (true)
         {
             _score--;
@@ -112,8 +113,5 @@ public class MovingCircle : MonoBehaviour
         }
     }
 
-    private IEnumerator GracePeriod()
-    {
-        yield return new WaitForSeconds(_gracePeriod);
-    }
+    public int GetScore() => _score;
 }

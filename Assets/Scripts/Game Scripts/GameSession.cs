@@ -1,35 +1,35 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class GameSession : MonoBehaviour
 {
-    // all games
+    [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
     
-    // ellipse game
+    [Header("Ellipse Game")]
     [SerializeField] private GameObject _movingCirclePrefab;
+    private MovingCircle _movingCircle;
     public Ellipse Ellipse { get; set; }
-    public int EllipseIndex { get; private set; }
     public LineRenderer LineRenderer { get; set; }
     public Vector3[] Positions { get; set; }
+    public int EllipseIndex { get; private set; }
     public int EllipseScore { get; private set; }
 
     // colour-matching game
     public int ColourMatchingScore { get; private set; }
 
-    // hunting game
+    [Header("Hunting Game")]
     [SerializeField] private GameObject _stationaryCirclePrefab;
     [SerializeField] private float _minX = 0f;
     [SerializeField] private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
     [SerializeField] private float _minY = 0f;
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
-    [SerializeField] private float _spawnTime = 5f;
+    [SerializeField] private float _spawnTime = 10f;
     public int HuntingScore { get; private set; }
 
-    // target game currently not working
+    // target game
     private TargetCircle _targetCircle;
     private Coroutine _increaseScore;
     public int TargetScore { get; private set; }
@@ -44,6 +44,7 @@ public class GameSession : MonoBehaviour
                 break;
             case "Ellipse":
                 EllipseGame();
+                _movingCircle = FindObjectOfType<MovingCircle>();
                 break;
             case "Hunting":
                 HuntingGame();
@@ -90,7 +91,9 @@ public class GameSession : MonoBehaviour
 
     private void HuntingGame() => StartCoroutine(SpawnCircles());
 
-    private void TargetGameScore() => TargetScore = _targetCircle.GetScore();
+    private void EllipseGameScore() => TargetScore = _targetCircle.GetScore();
+
+    private void TargetGameScore() => TargetScore = _movingCircle.GetScore();
 
     private IEnumerator SpawnCircles()
     {
