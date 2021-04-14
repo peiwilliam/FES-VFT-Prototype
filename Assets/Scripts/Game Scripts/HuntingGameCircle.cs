@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class StationaryCircle : MonoBehaviour
 {
@@ -14,8 +15,8 @@ public class StationaryCircle : MonoBehaviour
         DetectCursor.ChangeColourBack(gameObject, _oldColour);
     }
 
-    private void Random()
+    private IEnumerator Random()
     {
-        
+        yield return new WaitForSeconds(2f);
     }
 }
