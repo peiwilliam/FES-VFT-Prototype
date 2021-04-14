@@ -1,7 +1,8 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class StationaryCircle : MonoBehaviour
+public class ColourCircle : MonoBehaviour
 {
     private Color _oldColour;
     
@@ -13,10 +14,5 @@ public class StationaryCircle : MonoBehaviour
     private void OnTriggerExit2D(Collider2D collider) 
     {
         DetectCursor.ChangeColourBack(gameObject, _oldColour);
-    }
-
-    private IEnumerator Random()
-    {
-        yield return new WaitForSeconds(2f);
     }
 }

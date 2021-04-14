@@ -21,12 +21,13 @@ public class GameSession : MonoBehaviour
     public int ColourMatchingScore { get; private set; }
 
     [Header("Hunting Game")]
-    [SerializeField] private GameObject _stationaryCirclePrefab;
+    [SerializeField] private GameObject _huntingCirclePrefab;
     [SerializeField] private float _minX = 0f;
     [SerializeField] private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
     [SerializeField] private float _minY = 0f;
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
     [SerializeField] private float _spawnTime = 10f;
+    private HuntingCircle _huntingCircle;
     public int HuntingScore { get; private set; }
 
     // target game
@@ -47,6 +48,7 @@ public class GameSession : MonoBehaviour
                 _movingCircle = FindObjectOfType<MovingCircle>();
                 break;
             case "Hunting":
+                _huntingCircle = FindObjectOfType<HuntingCircle>();
                 HuntingGame();
                 break;
             case "Target":
@@ -91,7 +93,9 @@ public class GameSession : MonoBehaviour
 
     private void HuntingGame() => StartCoroutine(SpawnCircles());
 
-    private void EllipseGameScore() => TargetScore = _targetCircle.GetScore();
+    private void EllipseGameScore() => EllipseScore = _targetCircle.GetScore();
+
+    private void HuntingGameScore() => HuntingScore = _huntingCircle.GetScore();
 
     private void TargetGameScore() => TargetScore = _movingCircle.GetScore();
 
@@ -111,28 +115,28 @@ public class GameSession : MonoBehaviour
             switch (quad)
             {
                 case 1:
-                    pos = GetPositions(_maxX / 2f, _maxX - _stationaryCirclePrefab.transform.localScale.x, 
-                                       _maxY / 2f, _maxY - _stationaryCirclePrefab.transform.localScale.y, oldPos);
+                    pos = GetPositions(_maxX / 2f, _maxX - _huntingCirclePrefab.transform.localScale.x, 
+                                       _maxY / 2f, _maxY - _huntingCirclePrefab.transform.localScale.y, oldPos);
                     break;
                 case 2:
-                    pos = GetPositions(_minX + _stationaryCirclePrefab.transform.localScale.x, _maxX/2f, 
-                                       _maxY / 2f, _maxY - _stationaryCirclePrefab.transform.localScale.y, oldPos);
+                    pos = GetPositions(_minX + _huntingCirclePrefab.transform.localScale.x, _maxX/2f, 
+                                       _maxY / 2f, _maxY - _huntingCirclePrefab.transform.localScale.y, oldPos);
                     break;
                 case 3:
-                    pos = GetPositions(_minX + _stationaryCirclePrefab.transform.localScale.x, _maxX/2f, 
-                                       _minY + _stationaryCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
+                    pos = GetPositions(_minX + _huntingCirclePrefab.transform.localScale.x, _maxX/2f, 
+                                       _minY + _huntingCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
                     break;
                 case 4:
-                    pos = GetPositions(_maxX/2f, _maxX - _stationaryCirclePrefab.transform.localScale.x, 
-                                       _minY + _stationaryCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
+                    pos = GetPositions(_maxX/2f, _maxX - _huntingCirclePrefab.transform.localScale.x, 
+                                       _minY + _huntingCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
                     break;
             }
 
-            Instantiate(_stationaryCirclePrefab, new Vector3(pos[0], pos[1], 0), Quaternion.identity);
+            Instantiate(_huntingCirclePrefab, new Vector3(pos[0], pos[1], 0), Quaternion.identity);
 
             yield return new WaitForSeconds(_spawnTime);
 
-            Destroy(FindObjectOfType<StationaryCircle>().gameObject);
+            Destroy(FindObjectOfType<HuntingCircle>().gameObject);
 
             if (quads.Count == 4) //when the game initially starts there are still four quads, so this takes care of that
             {
