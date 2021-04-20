@@ -7,7 +7,8 @@ public class MovingCircle : MonoBehaviour
     [SerializeField] private float _deltaTimeScore = 0.2f;
     [SerializeField] private float _gracePeriod = 1f;
     [SerializeField] private int _score = 0;
-
+    [SerializeField] private bool _isDecreasing = false;
+    
     private Ellipse _ellipse;
     private Vector3[] _ellipsePositions;
     private LineRenderer _lineRenderer;
@@ -16,7 +17,7 @@ public class MovingCircle : MonoBehaviour
     private int _direction;
     private Coroutine _scoreIncreaseCoroutine;
     private Coroutine _scoreDecreaseCoroutine;
-    private bool _isDecreasing = false;
+    
 
     private void Start() 
     {

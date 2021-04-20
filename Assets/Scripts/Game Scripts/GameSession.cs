@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class GameSession : MonoBehaviour
@@ -10,6 +12,7 @@ public class GameSession : MonoBehaviour
     
     [Header("Ellipse Game")]
     [SerializeField] private GameObject _movingCirclePrefab;
+
     private MovingCircle _movingCircle;
     public Ellipse Ellipse { get; set; }
     public LineRenderer LineRenderer { get; set; }
@@ -17,8 +20,15 @@ public class GameSession : MonoBehaviour
     public int EllipseIndex { get; private set; }
     public int EllipseScore { get; private set; }
 
-    // colour-matching game
+    [Header("Colour Matching Game")]
+    [SerializeField] private float _colourDuration = 10f;
+    [SerializeField] private List<ColourCircle> _colourCircles;
+
+    private List<string> _colourTexts;
+    private Text _colourText;
+    private Coroutine _changeColour;
     public int ColourMatchingScore { get; private set; }
+    public ColourCircle TargetColourCircle { get; private set; }
 
     [Header("Hunting Game")]
     [SerializeField] private GameObject _huntingCirclePrefab;
@@ -27,6 +37,7 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _minY = 0f;
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
     [SerializeField] private float _spawnTime = 10f;
+    
     private HuntingCircle _huntingCircle;
     public int HuntingScore { get; private set; }
 
@@ -42,6 +53,9 @@ public class GameSession : MonoBehaviour
         switch (SceneManager.GetActiveScene().name)
         {
             case "Colour Matching":
+                var colourCircles = FindObjectsOfType<ColourCircle>();
+                _colourCircles = colourCircles.ToList();
+                ColourMatchingGame();
                 break;
             case "Ellipse":
                 EllipseGame();
@@ -66,15 +80,38 @@ public class GameSession : MonoBehaviour
         switch (SceneManager.GetActiveScene().name)
         {
             case "Colour Matching":
+                //ColourGameScore();
                 break;
             case "Ellipse":
+                EllipseGameScore();
                 break;
             case "Hunting":
+                HuntingGameScore();
                 break;
             case "Target":
                 TargetGameScore();
                 break;
         }
+    }
+
+    private void ColourMatchingGame()
+    {
+        //need to do it this convoluted way because findobjectsoftype finds other text objects in the game
+        _colourText = FindObjectOfType<Canvas>().transform.Find("Colour Text").gameObject.GetComponent<Text>();
+        _colourTexts = new List<string>() {"White", "Red", "Blue", "Green", "Purple", 
+                                           "Yellow", "Cyan", "Pink", "Grey", "Beige", 
+                                           "Brown", "Orange"};
+        
+        var averageDistance = 0f;
+
+        foreach (var circle in _colourCircles)
+            foreach (var otherCircle in _colourCircles)
+                averageDistance += Mathf.Sqrt(Mathf.Pow(circle.transform.position.x - otherCircle.transform.position.x, 2) + 
+                                              Mathf.Pow(circle.transform.position.y - otherCircle.transform.position.y, 2));
+
+        averageDistance /= Mathf.Pow(_colourCircles.Count, 2);
+
+        _changeColour = StartCoroutine(ColourSelection(averageDistance));
     }
 
     private void EllipseGame()
@@ -94,6 +131,8 @@ public class GameSession : MonoBehaviour
     private void HuntingGame() => StartCoroutine(SpawnCircles());
 
     private void EllipseGameScore() => EllipseScore = _targetCircle.GetScore();
+
+    //private void ColourGameScore() => ColourMatchingScore = _colourCircle.GetScore();
 
     private void HuntingGameScore() => HuntingScore = _huntingCircle.GetScore();
 
@@ -176,5 +215,39 @@ public class GameSession : MonoBehaviour
 
             return new float[] {xPos, yPos};
         }   
+    }
+
+    private IEnumerator ColourSelection(float averageDistance)
+    {
+        ColourCircle oldCircle = null;
+
+        while (true)
+        {
+            var randText = _colourTexts[Random.Range(0, _colourTexts.Count)];
+            TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
+            var randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+
+            if (oldCircle != null)
+            {
+                var dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
+                                      Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+
+                while (dist < averageDistance)
+                {
+                    TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
+                    randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+
+                    dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
+                                      Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+                }
+            }
+
+            _colourText.text = randText;
+            _colourText.color = randColour;
+
+            yield return new WaitForSeconds(_colourDuration);
+
+            oldCircle = TargetColourCircle;
+        }
     }
 }

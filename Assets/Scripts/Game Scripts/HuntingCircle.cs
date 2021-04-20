@@ -5,13 +5,13 @@ public class HuntingCircle : MonoBehaviour
 {
     [SerializeField] private float _deltaTimeScore = 0.2f;
     [SerializeField] private int _score;
+    [SerializeField] private bool _isDecreasing;
+    [SerializeField] private bool _hasEntered;
 
     private Color _oldColour;
     private Coroutine _enterCircle;
     private Coroutine _exitCircle;
     private Coroutine _gettingToCircle;
-    private bool _isDecreasing;
-    private bool _hasEntered;
     
     private void Start()
     {
