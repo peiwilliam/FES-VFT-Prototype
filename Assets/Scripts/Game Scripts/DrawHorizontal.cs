@@ -23,6 +23,7 @@ public class DrawHorizontal : MonoBehaviour
         _horizontal.SetPosition(1, new Vector3(2f*5f*16f/9f, Camera.main.transform.position.y));
     }
 
+// we only need this drawgizmos method once, don't need in both draw horizontal and drawvertical
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {

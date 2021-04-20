@@ -1,11 +1,7 @@
 ﻿using UnityEngine;
 
-public class WiiBoard : MonoBehaviour
+public class WiiBoard : MonoBehaviour //this class doesn't actually do that much, it's mostly just of the user experience
 {
-    //private Wiimote _wiiDevice;
-
-    //[SerializeField] private GameObject _wiiBoard;
-    
     private int whichRemote = 0;
 
     private void Awake() 

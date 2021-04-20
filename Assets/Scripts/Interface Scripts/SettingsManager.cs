@@ -43,8 +43,6 @@ public class SettingsManager : MonoBehaviour
         ["Rolling Average Window"] = "int"
     };
 
-    private Toggle toggle;
-
     private void Awake() 
     {
         SetUpSingleton(); //set a singleton
@@ -87,13 +85,9 @@ public class SettingsManager : MonoBehaviour
             else 
             {
                 if (Directory.Exists(_fields[nameAndType.Key].text))
-                {
                     PlayerPrefs.SetString(nameAndType.Key, _fields[nameAndType.Key].text);
-                }
                 else
-                {
                     _fields["Info"].text = "Config path doesn't exist. Please provide a valid path";
-                }
             }
         }
     }

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class CSVWriter
 {
     private StringBuilder _csv;
-    private string _fileName = "data";
+    private string _fileName = "data"; //todo: make name of file dependent on game
     private string _extension = ".csv";
     private string _path = Directory.GetCurrentDirectory();
     private int _count; // iterator to create unique csv file each time.

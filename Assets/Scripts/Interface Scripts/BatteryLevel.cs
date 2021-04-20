@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class BatteryLevel : MonoBehaviour
+public class BatteryLevel : MonoBehaviour //doesn't work, always shows 95% for some reason
 {
     private float _batteryLevel;
     

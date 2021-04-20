@@ -13,7 +13,7 @@ public class WiiBoardLoader : MonoBehaviour
         Instantiate(_wiiboard, new Vector3(0, 0, 0), Quaternion.identity);
     }
 
-    public void DisconnectBoard()
+    public void DisconnectBoard() //doesn't work consistently, might be because of unity editor
     {
         using(_btClient = new BluetoothClient())
         {

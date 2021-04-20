@@ -59,7 +59,7 @@ public class GameSession : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
+    private void FixedUpdate() //needed to just update the scores
     {
         switch (SceneManager.GetActiveScene().name)
         {
@@ -166,8 +166,6 @@ public class GameSession : MonoBehaviour
             {
                 xPos = UnityEngine.Random.Range(minX, maxX);
                 yPos = UnityEngine.Random.Range(minY, maxY);
-                print(xPos);
-                print(yPos);
             }
 
             return new float[] {xPos, yPos};
