@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 public class ColourCircle : MonoBehaviour
 {
-    [SerializeField] private float _deltaTimeScore = 0.2f;
-    [SerializeField] private int _score;
+    [SerializeField] private float _deltaTimeScore = 0.25f;
+    [SerializeField] private float _timeToGetScore = 3f;
+    [SerializeField] private int _score = 250;
     [SerializeField] private bool _isDecreasing;
     [SerializeField] private bool _hasEntered;
 
@@ -12,44 +14,62 @@ public class ColourCircle : MonoBehaviour
     private Coroutine _enterCircle;
     private Coroutine _exitCircle;
     private Coroutine _gettingToCircle;
+    private ColourCircle _currentCircle;
+    private GameSession _gameSession;
 
     private void Start()
     {
+        _gameSession = FindObjectOfType<GameSession>();
+
         if (!_hasEntered)
             _gettingToCircle = StartCoroutine(GettingToCircle());
     }
 
     private void OnTriggerEnter2D(Collider2D collider) 
     {
-        DetectCursor.ChangeColourOnDetection(gameObject, out _oldColour);
+        _currentCircle = _gameSession.TargetColourCircle;
 
-        _hasEntered = true; // tells the game that the player has entered at least once.
-
-        StopCoroutine(_gettingToCircle);
-
-        if (_isDecreasing)
+        if (gameObject.GetComponent<ColourCircle>() == _currentCircle)
         {
-            StopCoroutine(_exitCircle);
-            _isDecreasing = false;
-        }
+            DetectCursor.ChangeColourOnDetection(gameObject, out _oldColour);
 
-        _enterCircle = StartCoroutine(EnterCircle());
+            _hasEntered = true; // tells the game that the player has entered at least once.
+
+            StopCoroutine(_gettingToCircle);
+
+            if (_isDecreasing)
+            {
+                StopCoroutine(_exitCircle);
+                _isDecreasing = false;
+            }
+
+            _enterCircle = StartCoroutine(EnterCircle());
+        }
     }
 
     private void OnTriggerExit2D(Collider2D collider) 
     {
-        DetectCursor.ChangeColourBack(gameObject, _oldColour);
+        if (_enterCircle != null)
+        {
+            DetectCursor.ChangeColourBack(gameObject, _oldColour);
 
-        StopCoroutine(_enterCircle);
-        _exitCircle = StartCoroutine(ExitCircle());
+            StopCoroutine(_enterCircle);
+            _exitCircle = StartCoroutine(ExitCircle());
+        }
     }
 
     private IEnumerator EnterCircle()
     {
-        while (true)
+        while (_timeToGetScore > 0)
         {
-            _score++;
-            yield return new WaitForSeconds(_deltaTimeScore);
+            _timeToGetScore -= Time.deltaTime;
+
+            yield return null;
+        }
+
+        if (_timeToGetScore <= 0)
+        {
+            _gameSession.ConditionMet = true;
         }
     }
 
@@ -60,6 +80,10 @@ public class ColourCircle : MonoBehaviour
         while (true)
         {
             _score--;
+
+            if (_timeToGetScore > 0) //add time if not completed time inside circle
+                _timeToGetScore += 0.0625f;
+
             yield return new WaitForSeconds(_deltaTimeScore);
         }
     }
@@ -79,4 +103,13 @@ public class ColourCircle : MonoBehaviour
     }
 
     public int GetScore() => _score;
+
+    // public delegate void CompletedCircleEventHandler(object source, EventArgs eventArgs);
+    // public event CompletedCircleEventHandler CompletedCircle;
+
+    // protected virtual void OnCompletedCircle()
+    // {
+    //     if (CompletedCircle != null)
+    //         CompletedCircle(this, EventArgs.Empty);
+    // }
 }

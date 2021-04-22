@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 public class HuntingCircle : MonoBehaviour
 {
-    [SerializeField] private float _deltaTimeScore = 0.2f;
-    [SerializeField] private int _score;
+    [SerializeField] private float _deltaTimeScore = 0.25f;
+    [SerializeField] private float _timeToGetScore = 3f;
+    [SerializeField] private int _score = 250;
     [SerializeField] private bool _isDecreasing;
     [SerializeField] private bool _hasEntered;
 
@@ -12,9 +14,12 @@ public class HuntingCircle : MonoBehaviour
     private Coroutine _enterCircle;
     private Coroutine _exitCircle;
     private Coroutine _gettingToCircle;
+    private GameSession _gameSession;
     
     private void Start()
     {
+        _gameSession = FindObjectOfType<GameSession>();
+
         if (!_hasEntered)
             _gettingToCircle = StartCoroutine(GettingToCircle());
     }
@@ -46,10 +51,10 @@ public class HuntingCircle : MonoBehaviour
 
     private IEnumerator EnterCircle()
     {
-        while (true)
+        while (_timeToGetScore > 0)
         {
-            _score++;
-            yield return new WaitForSeconds(_deltaTimeScore);
+            _timeToGetScore -= Time.deltaTime;
+            yield return null;
         }
     }
 
@@ -60,6 +65,10 @@ public class HuntingCircle : MonoBehaviour
         while (true)
         {
             _score--;
+
+            if (_timeToGetScore > 0) //add time if not completed time inside circle
+                _timeToGetScore += 0.0625f;
+
             yield return new WaitForSeconds(_deltaTimeScore);
         }
     }
@@ -79,4 +88,13 @@ public class HuntingCircle : MonoBehaviour
     }
 
     public int GetScore() => _score;
+
+    public delegate void CompletedCircleEventHandler(object source, EventArgs eventArgs);
+    public event CompletedCircleEventHandler CompletedCircle;
+
+    protected virtual void OnCompletedCircle()
+    {
+        if (CompletedCircle != null)
+            CompletedCircle(this, EventArgs.Empty);
+    }
 }

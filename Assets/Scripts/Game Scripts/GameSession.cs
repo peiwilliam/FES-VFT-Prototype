@@ -23,12 +23,19 @@ public class GameSession : MonoBehaviour
     [Header("Colour Matching Game")]
     [SerializeField] private float _colourDuration = 10f;
     [SerializeField] private List<ColourCircle> _colourCircles;
+    [SerializeField] private bool _conditionMet;
 
     private List<string> _colourTexts;
     private Text _colourText;
     private Coroutine _changeColour;
     public int ColourMatchingScore { get; private set; }
     public ColourCircle TargetColourCircle { get; private set; }
+    //for the _conditionMet variable so that other classes can easily access
+    public bool ConditionMet 
+    {
+        get => _conditionMet;
+        set => _conditionMet = value;
+    }
 
     [Header("Hunting Game")]
     [SerializeField] private GameObject _huntingCirclePrefab;
@@ -80,7 +87,7 @@ public class GameSession : MonoBehaviour
         switch (SceneManager.GetActiveScene().name)
         {
             case "Colour Matching":
-                //ColourGameScore();
+                ColourGameScore();
                 break;
             case "Ellipse":
                 EllipseGameScore();
@@ -130,9 +137,9 @@ public class GameSession : MonoBehaviour
 
     private void HuntingGame() => StartCoroutine(SpawnCircles());
 
-    private void EllipseGameScore() => EllipseScore = _targetCircle.GetScore();
+    private void EllipseGameScore() => EllipseScore = _movingCircle.GetScore();
 
-    //private void ColourGameScore() => ColourMatchingScore = _colourCircle.GetScore();
+    private void ColourGameScore() => ColourMatchingScore = TargetColourCircle.GetScore();
 
     private void HuntingGameScore() => HuntingScore = _huntingCircle.GetScore();
 
@@ -223,31 +230,43 @@ public class GameSession : MonoBehaviour
 
         while (true)
         {
-            var randText = _colourTexts[Random.Range(0, _colourTexts.Count)];
-            TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
-            var randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+            PickColour(averageDistance, oldCircle);
+            _conditionMet = false;
+            _colourDuration = 10f;
 
-            if (oldCircle != null)
+            while (_colourDuration > 0 && !_conditionMet)
             {
-                var dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
-                                      Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+                _colourDuration -= Time.deltaTime;
 
-                while (dist < averageDistance)
-                {
-                    TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
-                    randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
-
-                    dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
-                                      Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
-                }
+                yield return null;
             }
-
-            _colourText.text = randText;
-            _colourText.color = randColour;
-
-            yield return new WaitForSeconds(_colourDuration);
 
             oldCircle = TargetColourCircle;
         }
+    }
+
+    private void PickColour(float averageDistance, ColourCircle oldCircle)
+    {
+        var randText = _colourTexts[Random.Range(0, _colourTexts.Count)];
+        TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
+        var randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+
+        if (oldCircle != null)
+        {
+            var dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
+                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+
+            while (dist < averageDistance)
+            {
+                TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
+                randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+
+                dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
+                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+            }
+        }
+
+        _colourText.text = randText;
+        _colourText.color = randColour;
     }
 }

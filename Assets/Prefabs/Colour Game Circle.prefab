@@ -117,3 +117,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 569c00c584c8d8241824c37c15f57302, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _deltaTimeScore: 0.25
+  _score: 250
+  _isDecreasing: 0
+  _hasEntered: 0

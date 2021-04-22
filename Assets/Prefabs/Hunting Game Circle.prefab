@@ -117,7 +117,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64e65fb1f40e0c941b14efc691c3a72c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _deltaTimeScore: 0.2
-  _score: 0
+  _deltaTimeScore: 0.25
+  _timeToGetScore: 3
+  _score: 250
   _isDecreasing: 0
   _hasEntered: 0
