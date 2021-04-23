@@ -5,6 +5,7 @@ using UnityEngine;
 public class ColourCircle : MonoBehaviour
 {
     [SerializeField] private float _deltaTimeScore = 0.25f;
+    [SerializeField] private float _gettingtoCircleBuffer = 5f;
     [SerializeField] private float _timeToGetScore = 3f;
     [SerializeField] private int _score = 250;
     [SerializeField] private bool _isDecreasing;
@@ -14,22 +15,32 @@ public class ColourCircle : MonoBehaviour
     private Coroutine _enterCircle;
     private Coroutine _exitCircle;
     private Coroutine _gettingToCircle;
-    private ColourCircle _currentCircle;
     private GameSession _gameSession;
 
     private void Start()
     {
         _gameSession = FindObjectOfType<GameSession>();
+    }
 
-        if (!_hasEntered)
+    private void FixedUpdate() 
+    {
+        if (!_hasEntered && gameObject.tag == "Target")
+        {
+            //these need to be reset as it's a new target
+            gameObject.GetComponent<ColourCircle>()._score = 250;
+            gameObject.GetComponent<ColourCircle>()._timeToGetScore = 3f;
+
             _gettingToCircle = StartCoroutine(GettingToCircle());
+        }
+        else if (gameObject.tag == "Untagged" && _gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
+        {
+            StopAllCoroutines();
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collider) 
     {
-        _currentCircle = _gameSession.TargetColourCircle;
-
-        if (gameObject.GetComponent<ColourCircle>() == _currentCircle)
+        if (gameObject.GetComponent<ColourCircle>() == _gameSession.TargetColourCircle)
         {
             DetectCursor.ChangeColourOnDetection(gameObject, out _oldColour);
 
@@ -70,6 +81,9 @@ public class ColourCircle : MonoBehaviour
         if (_timeToGetScore <= 0)
         {
             _gameSession.ConditionMet = true;
+            _hasEntered = false;
+            gameObject.tag = "Untagged";
+            _timeToGetScore = 3f;
         }
     }
 
@@ -80,36 +94,28 @@ public class ColourCircle : MonoBehaviour
         while (true)
         {
             _score--;
-
+            print("exitcircle");
             if (_timeToGetScore > 0) //add time if not completed time inside circle
                 _timeToGetScore += 0.0625f;
 
-            yield return new WaitForSeconds(_deltaTimeScore);
+            yield return new WaitForSecondsRealtime(_deltaTimeScore);
         }
     }
 
     private IEnumerator GettingToCircle()
     {
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSecondsRealtime(_gettingtoCircleBuffer);
 
         if (!_hasEntered)
         {
             while (true)
             {
+                print("gettingto");
                 _score--;
-                yield return new WaitForSeconds(_deltaTimeScore);
+                yield return new WaitForSecondsRealtime(_deltaTimeScore);
             }
         }
     }
 
     public int GetScore() => _score;
-
-    // public delegate void CompletedCircleEventHandler(object source, EventArgs eventArgs);
-    // public event CompletedCircleEventHandler CompletedCircle;
-
-    // protected virtual void OnCompletedCircle()
-    // {
-    //     if (CompletedCircle != null)
-    //         CompletedCircle(this, EventArgs.Empty);
-    // }
 }

@@ -43,7 +43,7 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
     [SerializeField] private float _minY = 0f;
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
-    [SerializeField] private float _spawnTime = 10f;
+    [SerializeField] private float _spawnDuration = 10f;
     
     private HuntingCircle _huntingCircle;
     public int HuntingScore { get; private set; }
@@ -84,16 +84,11 @@ public class GameSession : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // with these two games, the scores are not dependent on getting to targets, so it's just one cumulative score
         switch (SceneManager.GetActiveScene().name)
         {
-            case "Colour Matching":
-                ColourGameScore();
-                break;
             case "Ellipse":
                 EllipseGameScore();
-                break;
-            case "Hunting":
-                HuntingGameScore();
                 break;
             case "Target":
                 TargetGameScore();
@@ -137,14 +132,6 @@ public class GameSession : MonoBehaviour
 
     private void HuntingGame() => StartCoroutine(SpawnCircles());
 
-    private void EllipseGameScore() => EllipseScore = _movingCircle.GetScore();
-
-    private void ColourGameScore() => ColourMatchingScore = TargetColourCircle.GetScore();
-
-    private void HuntingGameScore() => HuntingScore = _huntingCircle.GetScore();
-
-    private void TargetGameScore() => TargetScore = _movingCircle.GetScore();
-
     private IEnumerator SpawnCircles()
     {
         var rand = new System.Random(); //use system.random because I have more control over what I randomize
@@ -180,7 +167,7 @@ public class GameSession : MonoBehaviour
 
             Instantiate(_huntingCirclePrefab, new Vector3(pos[0], pos[1], 0), Quaternion.identity);
 
-            yield return new WaitForSeconds(_spawnTime);
+            yield return new WaitForSeconds(_spawnDuration);
 
             Destroy(FindObjectOfType<HuntingCircle>().gameObject);
 
@@ -241,7 +228,10 @@ public class GameSession : MonoBehaviour
                 yield return null;
             }
 
+            TargetColourCircle.gameObject.tag = "Untagged";
             oldCircle = TargetColourCircle;
+            ColourGameScore();
+            print(ColourMatchingScore);
         }
     }
 
@@ -268,5 +258,14 @@ public class GameSession : MonoBehaviour
 
         _colourText.text = randText;
         _colourText.color = randColour;
+        TargetColourCircle.gameObject.tag = "Target";
     }
+
+    private void EllipseGameScore() => EllipseScore = _movingCircle.GetScore();
+
+    private void ColourGameScore() => ColourMatchingScore += TargetColourCircle.GetScore();
+
+    private void HuntingGameScore() => HuntingScore += _huntingCircle.GetScore();
+
+    private void TargetGameScore() => TargetScore = _movingCircle.GetScore();
 }

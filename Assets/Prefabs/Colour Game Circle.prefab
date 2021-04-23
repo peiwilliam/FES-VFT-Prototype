@@ -118,6 +118,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _deltaTimeScore: 0.25
+  _timeToGetScore: 3
   _score: 250
   _isDecreasing: 0
   _hasEntered: 0
+  _gettingToCircleCRStarted: 0

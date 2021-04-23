@@ -5,6 +5,7 @@ using UnityEngine;
 public class HuntingCircle : MonoBehaviour
 {
     [SerializeField] private float _deltaTimeScore = 0.25f;
+    [SerializeField] private float _gettingtoCircleBuffer = 5f;
     [SerializeField] private float _timeToGetScore = 3f;
     [SerializeField] private int _score = 250;
     [SerializeField] private bool _isDecreasing;
@@ -69,32 +70,23 @@ public class HuntingCircle : MonoBehaviour
             if (_timeToGetScore > 0) //add time if not completed time inside circle
                 _timeToGetScore += 0.0625f;
 
-            yield return new WaitForSeconds(_deltaTimeScore);
+            yield return new WaitForSecondsRealtime(_deltaTimeScore);
         }
     }
 
     private IEnumerator GettingToCircle()
     {
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSecondsRealtime(_gettingtoCircleBuffer);
 
         if (!_hasEntered)
         {
             while (true)
             {
                 _score--;
-                yield return new WaitForSeconds(_deltaTimeScore);
+                yield return new WaitForSecondsRealtime(_deltaTimeScore);
             }
         }
     }
 
     public int GetScore() => _score;
-
-    public delegate void CompletedCircleEventHandler(object source, EventArgs eventArgs);
-    public event CompletedCircleEventHandler CompletedCircle;
-
-    protected virtual void OnCompletedCircle()
-    {
-        if (CompletedCircle != null)
-            CompletedCircle(this, EventArgs.Empty);
-    }
 }
