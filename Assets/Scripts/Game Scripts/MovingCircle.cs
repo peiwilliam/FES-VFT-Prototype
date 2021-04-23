@@ -87,7 +87,7 @@ public class MovingCircle : MonoBehaviour
     private Vector3 NewPosition()
     {
         var targetPosition = _ellipsePositions[_positionIndex];
-        var movementThisFrame = _circleVelocity * Time.deltaTime;
+        var movementThisFrame = _circleVelocity * Time.deltaTime; //don't use realtime for this since it depend son the game frames
         transform.position = Vector2.MoveTowards(transform.position, targetPosition, movementThisFrame);
         return targetPosition;
     }
@@ -97,7 +97,7 @@ public class MovingCircle : MonoBehaviour
         while (true)
         {
             _score++;
-            yield return new WaitForSeconds(_deltaTimeScore);
+            yield return new WaitForSecondsRealtime(_deltaTimeScore);
         }
     }
 
@@ -105,7 +105,7 @@ public class MovingCircle : MonoBehaviour
     {
         _isDecreasing = true;
 
-        yield return new WaitForSeconds(_gracePeriod);
+        yield return new WaitForSecondsRealtime(_gracePeriod);
 
         while (true)
         {

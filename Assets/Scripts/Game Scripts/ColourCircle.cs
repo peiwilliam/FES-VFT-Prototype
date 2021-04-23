@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class ColourCircle : MonoBehaviour
 {
     [SerializeField] private float _deltaTimeScore = 0.25f;
-    [SerializeField] private float _gettingtoCircleBuffer = 5f;
+    [SerializeField] private float _gettingToCircleBuffer = 5f;
     [SerializeField] private float _timeToGetScore = 3f;
     [SerializeField] private int _score = 250;
     [SerializeField] private bool _isDecreasing;
@@ -22,7 +21,7 @@ public class ColourCircle : MonoBehaviour
         _gameSession = FindObjectOfType<GameSession>();
     }
 
-    private void FixedUpdate() 
+    private void Update() 
     {
         if (!_hasEntered && gameObject.tag == "Target")
         {
@@ -73,14 +72,14 @@ public class ColourCircle : MonoBehaviour
     {
         while (_timeToGetScore > 0)
         {
-            _timeToGetScore -= Time.deltaTime;
+            _timeToGetScore -= Time.unscaledDeltaTime;
 
             yield return null;
         }
 
         if (_timeToGetScore <= 0)
         {
-            _gameSession.ConditionMet = true;
+            _gameSession.ConditionColourMet = true;
             _hasEntered = false;
             gameObject.tag = "Untagged";
             _timeToGetScore = 3f;
@@ -94,7 +93,6 @@ public class ColourCircle : MonoBehaviour
         while (true)
         {
             _score--;
-            print("exitcircle");
             if (_timeToGetScore > 0) //add time if not completed time inside circle
                 _timeToGetScore += 0.0625f;
 
@@ -104,13 +102,12 @@ public class ColourCircle : MonoBehaviour
 
     private IEnumerator GettingToCircle()
     {
-        yield return new WaitForSecondsRealtime(_gettingtoCircleBuffer);
+        yield return new WaitForSecondsRealtime(_gettingToCircleBuffer);
 
         if (!_hasEntered)
         {
             while (true)
             {
-                print("gettingto");
                 _score--;
                 yield return new WaitForSecondsRealtime(_deltaTimeScore);
             }

@@ -22,19 +22,21 @@ public class GameSession : MonoBehaviour
 
     [Header("Colour Matching Game")]
     [SerializeField] private float _colourDuration = 10f;
+    [SerializeField] private bool _conditionColourMet;
     [SerializeField] private List<ColourCircle> _colourCircles;
-    [SerializeField] private bool _conditionMet;
+    [SerializeField] private List<string> _colourTexts = new List<string>() {"White", "Red", "Blue", "Green", "Purple", 
+                                                                             "Yellow", "Cyan", "Pink", "Grey", "Beige", 
+                                                                             "Brown", "Orange"}; //default values;
 
-    private List<string> _colourTexts;
     private Text _colourText;
     private Coroutine _changeColour;
     public int ColourMatchingScore { get; private set; }
     public ColourCircle TargetColourCircle { get; private set; }
     //for the _conditionMet variable so that other classes can easily access
-    public bool ConditionMet 
+    public bool ConditionColourMet 
     {
-        get => _conditionMet;
-        set => _conditionMet = value;
+        get => _conditionColourMet;
+        set => _conditionColourMet = value;
     }
 
     [Header("Hunting Game")]
@@ -43,10 +45,17 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
     [SerializeField] private float _minY = 0f;
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
-    [SerializeField] private float _spawnDuration = 10f;
+    [SerializeField] private float _huntingDuration = 10f;
+    [SerializeField] private bool _conditionHuntingMet;
     
     private HuntingCircle _huntingCircle;
     public int HuntingScore { get; private set; }
+    //for the _conditionMet variable so that other classes can easily access
+    public bool ConditionHuntingMet
+    {
+        get => _conditionHuntingMet;
+        set => _conditionHuntingMet = value;
+    }
 
     // target game
     private TargetCircle _targetCircle;
@@ -69,7 +78,6 @@ public class GameSession : MonoBehaviour
                 _movingCircle = FindObjectOfType<MovingCircle>();
                 break;
             case "Hunting":
-                _huntingCircle = FindObjectOfType<HuntingCircle>();
                 HuntingGame();
                 break;
             case "Target":
@@ -82,7 +90,7 @@ public class GameSession : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
+    private void Update() //not sure about between FixedUpdate vs Update for this method
     {
         // with these two games, the scores are not dependent on getting to targets, so it's just one cumulative score
         switch (SceneManager.GetActiveScene().name)
@@ -100,9 +108,6 @@ public class GameSession : MonoBehaviour
     {
         //need to do it this convoluted way because findobjectsoftype finds other text objects in the game
         _colourText = FindObjectOfType<Canvas>().transform.Find("Colour Text").gameObject.GetComponent<Text>();
-        _colourTexts = new List<string>() {"White", "Red", "Blue", "Green", "Purple", 
-                                           "Yellow", "Cyan", "Pink", "Grey", "Beige", 
-                                           "Brown", "Orange"};
         
         var averageDistance = 0f;
 
@@ -136,7 +141,6 @@ public class GameSession : MonoBehaviour
     {
         var rand = new System.Random(); //use system.random because I have more control over what I randomize
         var quads = new List<int>() {1, 2, 3, 4}; //quadrants
-
         var pos = new float[2]; //always will be size 2
         var prevQuad = 0;
 
@@ -149,27 +153,35 @@ public class GameSession : MonoBehaviour
             {
                 case 1:
                     pos = GetPositions(_maxX / 2f, _maxX - _huntingCirclePrefab.transform.localScale.x, 
-                                       _maxY / 2f, _maxY - _huntingCirclePrefab.transform.localScale.y, oldPos);
+                                    _maxY / 2f, _maxY - _huntingCirclePrefab.transform.localScale.y, oldPos);
                     break;
                 case 2:
                     pos = GetPositions(_minX + _huntingCirclePrefab.transform.localScale.x, _maxX/2f, 
-                                       _maxY / 2f, _maxY - _huntingCirclePrefab.transform.localScale.y, oldPos);
+                                    _maxY / 2f, _maxY - _huntingCirclePrefab.transform.localScale.y, oldPos);
                     break;
                 case 3:
                     pos = GetPositions(_minX + _huntingCirclePrefab.transform.localScale.x, _maxX/2f, 
-                                       _minY + _huntingCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
+                                    _minY + _huntingCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
                     break;
                 case 4:
                     pos = GetPositions(_maxX/2f, _maxX - _huntingCirclePrefab.transform.localScale.x, 
-                                       _minY + _huntingCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
+                                    _minY + _huntingCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
                     break;
             }
 
             Instantiate(_huntingCirclePrefab, new Vector3(pos[0], pos[1], 0), Quaternion.identity);
+            
+            _huntingCircle = FindObjectOfType<HuntingCircle>();
 
-            yield return new WaitForSeconds(_spawnDuration);
+            while (_huntingDuration > 0 && !_conditionHuntingMet)
+            {
+                _huntingDuration -= Time.unscaledDeltaTime;
+
+                yield return null;
+            }
 
             Destroy(FindObjectOfType<HuntingCircle>().gameObject);
+            HuntingGameScore();
 
             if (quads.Count == 4) //when the game initially starts there are still four quads, so this takes care of that
             {
@@ -218,12 +230,12 @@ public class GameSession : MonoBehaviour
         while (true)
         {
             PickColour(averageDistance, oldCircle);
-            _conditionMet = false;
+            _conditionColourMet = false;
             _colourDuration = 10f;
 
-            while (_colourDuration > 0 && !_conditionMet)
+            while (_colourDuration > 0 && !_conditionColourMet)
             {
-                _colourDuration -= Time.deltaTime;
+                _colourDuration -= Time.unscaledDeltaTime;
 
                 yield return null;
             }
@@ -231,7 +243,6 @@ public class GameSession : MonoBehaviour
             TargetColourCircle.gameObject.tag = "Untagged";
             oldCircle = TargetColourCircle;
             ColourGameScore();
-            print(ColourMatchingScore);
         }
     }
 

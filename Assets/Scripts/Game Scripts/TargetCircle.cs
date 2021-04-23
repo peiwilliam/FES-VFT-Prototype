@@ -17,7 +17,7 @@ public class TargetCircle : MonoBehaviour
         while (true)
         {
             _score += _scoreIncreaseRate;
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSecondsRealtime(0.2f);
         }   
     }
 
