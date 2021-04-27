@@ -33,7 +33,10 @@ public class ColourCircle : MonoBehaviour
         }
         else if (gameObject.tag == "Untagged" && _gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
         {
-            StopAllCoroutines();
+            if (_gettingToCircle != null)
+                StopAllCoroutines();
+            if (gameObject.GetComponent<SpriteRenderer>().color == new Color(0, 255, 0))
+                DetectCursor.ChangeColourBack(gameObject, _oldColour);
         }
     }
 
