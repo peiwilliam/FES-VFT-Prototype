@@ -69,5 +69,5 @@ MonoBehaviour:
   _maxX: 17.777779
   _minY: 0
   _maxY: 10
-  _spawnDuration: 10
+  _huntingDuration: 10
   _conditionHuntingMet: 0

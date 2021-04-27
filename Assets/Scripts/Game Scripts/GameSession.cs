@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 public class GameSession : MonoBehaviour
 {
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
+    [SerializeField] private float _totalGameTime;
     
     [Header("Ellipse Game")]
     [SerializeField] private GameObject _movingCirclePrefab;
@@ -24,9 +26,10 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _colourDuration = 10f;
     [SerializeField] private bool _conditionColourMet;
     [SerializeField] private List<ColourCircle> _colourCircles;
-    [SerializeField] private List<string> _colourTexts = new List<string>() {"White", "Red", "Blue", "Green", "Purple", 
+    [SerializeField] private List<string> _colourTexts = new List<string>() {"White", "Black", "Blue", "Green", "Purple", 
                                                                              "Yellow", "Cyan", "Pink", "Grey", "Beige", 
                                                                              "Brown", "Orange"}; //default values;
+    [SerializeField] private UnityEvent _colourChangeEvent;
 
     private Text _colourText;
     private Coroutine _changeColour;
@@ -71,6 +74,8 @@ public class GameSession : MonoBehaviour
             case "Colour Matching":
                 var colourCircles = FindObjectsOfType<ColourCircle>();
                 _colourCircles = colourCircles.ToList();
+                if (_colourChangeEvent == null)
+                    _colourChangeEvent = new UnityEvent(); 
                 ColourMatchingGame();
                 break;
             case "Ellipse":
@@ -90,7 +95,7 @@ public class GameSession : MonoBehaviour
         }
     }
 
-    private void Update() //not sure about between FixedUpdate vs Update for this method
+    private void Update() //probably use update, though case can be made for fixedupdate
     {
         // with these two games, the scores are not dependent on getting to targets, so it's just one cumulative score
         switch (SceneManager.GetActiveScene().name)
@@ -126,7 +131,6 @@ public class GameSession : MonoBehaviour
         Ellipse = FindObjectOfType<Ellipse>();
         var radii = Ellipse.GetRadii();
         var centre = Ellipse.GetCentre();
-        
         LineRenderer = Ellipse.GetComponent<LineRenderer>();
         Positions = new Vector3[LineRenderer.positionCount];
 
@@ -231,6 +235,7 @@ public class GameSession : MonoBehaviour
         while (true)
         {
             PickColour(averageDistance, oldCircle);
+            _colourChangeEvent.Invoke();
 
             while (_colourDuration > 0 && !_conditionColourMet)
             {

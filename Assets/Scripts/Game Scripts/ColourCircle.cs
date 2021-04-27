@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ColourCircle : MonoBehaviour
@@ -23,15 +25,9 @@ public class ColourCircle : MonoBehaviour
 
     private void Update() //need this for colour circle since the circles always exist in the game
     {
-        if (!_hasEntered && gameObject.tag == "Target")
-        {
-            //these need to be reset as it's a new target
-            gameObject.GetComponent<ColourCircle>()._score = 250;
-            gameObject.GetComponent<ColourCircle>()._timeToGetScore = 3f;
-
-            _gettingToCircle = StartCoroutine(GettingToCircle());
-        }
-        else if (gameObject.tag == "Untagged" && _gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
+        // if (!_hasEntered && gameObject.tag == "Target")
+        //     _gettingToCircle = StartCoroutine(GettingToCircle());
+        if (gameObject.tag == "Untagged" && _gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
         {
             if (_gettingToCircle != null)
                 StopAllCoroutines();
@@ -115,6 +111,13 @@ public class ColourCircle : MonoBehaviour
                 yield return new WaitForSecondsRealtime(_deltaTimeScore);
             }
         }
+    }
+
+    public void GetNewCircle()
+    {
+        _score = 250;
+        _timeToGetScore = 3f;
+        _gettingToCircle = StartCoroutine(GettingToCircle());
     }
 
     public int GetScore() => _score;
