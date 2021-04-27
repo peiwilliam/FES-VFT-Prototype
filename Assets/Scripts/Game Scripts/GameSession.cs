@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class GameSession : MonoBehaviour
@@ -10,6 +12,7 @@ public class GameSession : MonoBehaviour
     
     [Header("Ellipse Game")]
     [SerializeField] private GameObject _movingCirclePrefab;
+
     private MovingCircle _movingCircle;
     public Ellipse Ellipse { get; set; }
     public LineRenderer LineRenderer { get; set; }
@@ -17,17 +20,42 @@ public class GameSession : MonoBehaviour
     public int EllipseIndex { get; private set; }
     public int EllipseScore { get; private set; }
 
-    // colour-matching game
+    [Header("Colour Matching Game")]
+    [SerializeField] private float _colourDuration = 10f;
+    [SerializeField] private bool _conditionColourMet;
+    [SerializeField] private List<ColourCircle> _colourCircles;
+    [SerializeField] private List<string> _colourTexts = new List<string>() {"White", "Red", "Blue", "Green", "Purple", 
+                                                                             "Yellow", "Cyan", "Pink", "Grey", "Beige", 
+                                                                             "Brown", "Orange"}; //default values;
+
+    private Text _colourText;
+    private Coroutine _changeColour;
     public int ColourMatchingScore { get; private set; }
+    public ColourCircle TargetColourCircle { get; private set; }
+    //for the _conditionColourMet variable so that other classes can easily access
+    public bool ConditionColourMet 
+    {
+        get => _conditionColourMet;
+        set => _conditionColourMet = value;
+    }
 
     [Header("Hunting Game")]
-    [SerializeField] private GameObject _stationaryCirclePrefab;
+    [SerializeField] private GameObject _huntingCirclePrefab;
     [SerializeField] private float _minX = 0f;
     [SerializeField] private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
     [SerializeField] private float _minY = 0f;
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
-    [SerializeField] private float _spawnTime = 10f;
+    [SerializeField] private float _huntingDuration = 10f;
+    [SerializeField] private bool _conditionHuntingMet;
+    
+    private HuntingCircle _huntingCircle;
     public int HuntingScore { get; private set; }
+    //for the _conditionHuntingMet variable so that other classes can easily access
+    public bool ConditionHuntingMet
+    {
+        get => _conditionHuntingMet;
+        set => _conditionHuntingMet = value;
+    }
 
     // target game
     private TargetCircle _targetCircle;
@@ -41,6 +69,9 @@ public class GameSession : MonoBehaviour
         switch (SceneManager.GetActiveScene().name)
         {
             case "Colour Matching":
+                var colourCircles = FindObjectsOfType<ColourCircle>();
+                _colourCircles = colourCircles.ToList();
+                ColourMatchingGame();
                 break;
             case "Ellipse":
                 EllipseGame();
@@ -59,20 +90,35 @@ public class GameSession : MonoBehaviour
         }
     }
 
-    private void FixedUpdate() //needed to just update the scores
+    private void Update() //not sure about between FixedUpdate vs Update for this method
     {
+        // with these two games, the scores are not dependent on getting to targets, so it's just one cumulative score
         switch (SceneManager.GetActiveScene().name)
         {
-            case "Colour Matching":
-                break;
             case "Ellipse":
-                break;
-            case "Hunting":
+                EllipseGameScore();
                 break;
             case "Target":
                 TargetGameScore();
                 break;
         }
+    }
+
+    private void ColourMatchingGame()
+    {
+        //need to do it this convoluted way because findobjectsoftype finds other text objects in the game
+        _colourText = FindObjectOfType<Canvas>().transform.Find("Colour Text").gameObject.GetComponent<Text>();
+        
+        var averageDistance = 0f;
+
+        foreach (var circle in _colourCircles)
+            foreach (var otherCircle in _colourCircles)
+                averageDistance += Mathf.Sqrt(Mathf.Pow(circle.transform.position.x - otherCircle.transform.position.x, 2) + 
+                                              Mathf.Pow(circle.transform.position.y - otherCircle.transform.position.y, 2));
+
+        averageDistance /= Mathf.Pow(_colourCircles.Count, 2);
+
+        _changeColour = StartCoroutine(ColourSelection(averageDistance));
     }
 
     private void EllipseGame()
@@ -91,15 +137,10 @@ public class GameSession : MonoBehaviour
 
     private void HuntingGame() => StartCoroutine(SpawnCircles());
 
-    private void EllipseGameScore() => TargetScore = _targetCircle.GetScore();
-
-    private void TargetGameScore() => TargetScore = _movingCircle.GetScore();
-
     private IEnumerator SpawnCircles()
     {
         var rand = new System.Random(); //use system.random because I have more control over what I randomize
         var quads = new List<int>() {1, 2, 3, 4}; //quadrants
-
         var pos = new float[2]; //always will be size 2
         var prevQuad = 0;
 
@@ -111,28 +152,36 @@ public class GameSession : MonoBehaviour
             switch (quad)
             {
                 case 1:
-                    pos = GetPositions(_maxX / 2f, _maxX - _stationaryCirclePrefab.transform.localScale.x, 
-                                       _maxY / 2f, _maxY - _stationaryCirclePrefab.transform.localScale.y, oldPos);
+                    pos = GetPositions(_maxX / 2f, _maxX - _huntingCirclePrefab.transform.localScale.x, 
+                                    _maxY / 2f, _maxY - _huntingCirclePrefab.transform.localScale.y, oldPos);
                     break;
                 case 2:
-                    pos = GetPositions(_minX + _stationaryCirclePrefab.transform.localScale.x, _maxX/2f, 
-                                       _maxY / 2f, _maxY - _stationaryCirclePrefab.transform.localScale.y, oldPos);
+                    pos = GetPositions(_minX + _huntingCirclePrefab.transform.localScale.x, _maxX/2f, 
+                                    _maxY / 2f, _maxY - _huntingCirclePrefab.transform.localScale.y, oldPos);
                     break;
                 case 3:
-                    pos = GetPositions(_minX + _stationaryCirclePrefab.transform.localScale.x, _maxX/2f, 
-                                       _minY + _stationaryCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
+                    pos = GetPositions(_minX + _huntingCirclePrefab.transform.localScale.x, _maxX/2f, 
+                                    _minY + _huntingCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
                     break;
                 case 4:
-                    pos = GetPositions(_maxX/2f, _maxX - _stationaryCirclePrefab.transform.localScale.x, 
-                                       _minY + _stationaryCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
+                    pos = GetPositions(_maxX/2f, _maxX - _huntingCirclePrefab.transform.localScale.x, 
+                                    _minY + _huntingCirclePrefab.transform.localScale.y, _maxY/2f, oldPos);
                     break;
             }
 
-            Instantiate(_stationaryCirclePrefab, new Vector3(pos[0], pos[1], 0), Quaternion.identity);
+            Instantiate(_huntingCirclePrefab, new Vector3(pos[0], pos[1], 0), Quaternion.identity);
+            
+            _huntingCircle = FindObjectOfType<HuntingCircle>();
 
-            yield return new WaitForSeconds(_spawnTime);
+            while (_huntingDuration > 0 && !_conditionHuntingMet)
+            {
+                _huntingDuration -= Time.unscaledDeltaTime;
 
-            Destroy(FindObjectOfType<StationaryCircle>().gameObject);
+                yield return null;
+            }
+
+            Destroy(FindObjectOfType<HuntingCircle>().gameObject);
+            HuntingGameScore();
 
             if (quads.Count == 4) //when the game initially starts there are still four quads, so this takes care of that
             {
@@ -145,6 +194,9 @@ public class GameSession : MonoBehaviour
                 prevQuad = quad;
                 quads.Remove(quad);
             }
+
+            _huntingDuration = 10f; //reset values to loop again
+            _conditionHuntingMet = false;
         }   
     }
 
@@ -171,4 +223,62 @@ public class GameSession : MonoBehaviour
             return new float[] {xPos, yPos};
         }   
     }
+
+    private IEnumerator ColourSelection(float averageDistance)
+    {
+        ColourCircle oldCircle = null;
+
+        while (true)
+        {
+            PickColour(averageDistance, oldCircle);
+
+            while (_colourDuration > 0 && !_conditionColourMet)
+            {
+                _colourDuration -= Time.unscaledDeltaTime;
+
+                yield return null;
+            }
+
+            TargetColourCircle.gameObject.tag = "Untagged";
+            oldCircle = TargetColourCircle;
+            ColourGameScore();
+
+            _conditionColourMet = false;
+            _colourDuration = 10f;
+        }
+    }
+
+    private void PickColour(float averageDistance, ColourCircle oldCircle)
+    {
+        var randText = _colourTexts[Random.Range(0, _colourTexts.Count)];
+        TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
+        var randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+
+        if (oldCircle != null)
+        {
+            var dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
+                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+
+            while (dist < averageDistance)
+            {
+                TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
+                randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+
+                dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
+                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+            }
+        }
+
+        _colourText.text = randText;
+        _colourText.color = randColour;
+        TargetColourCircle.gameObject.tag = "Target";
+    }
+
+    private void EllipseGameScore() => EllipseScore = _movingCircle.GetScore();
+
+    private void ColourGameScore() => ColourMatchingScore += TargetColourCircle.GetScore();
+
+    private void HuntingGameScore() => HuntingScore += _huntingCircle.GetScore();
+
+    private void TargetGameScore() => TargetScore = _movingCircle.GetScore();
 }

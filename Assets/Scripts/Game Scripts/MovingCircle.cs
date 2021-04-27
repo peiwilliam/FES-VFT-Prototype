@@ -7,7 +7,8 @@ public class MovingCircle : MonoBehaviour
     [SerializeField] private float _deltaTimeScore = 0.2f;
     [SerializeField] private float _gracePeriod = 1f;
     [SerializeField] private int _score = 0;
-
+    [SerializeField] private bool _isDecreasing = false;
+    
     private Ellipse _ellipse;
     private Vector3[] _ellipsePositions;
     private LineRenderer _lineRenderer;
@@ -16,7 +17,7 @@ public class MovingCircle : MonoBehaviour
     private int _direction;
     private Coroutine _scoreIncreaseCoroutine;
     private Coroutine _scoreDecreaseCoroutine;
-    private bool _isDecreasing = false;
+    
 
     private void Start() 
     {
@@ -86,7 +87,7 @@ public class MovingCircle : MonoBehaviour
     private Vector3 NewPosition()
     {
         var targetPosition = _ellipsePositions[_positionIndex];
-        var movementThisFrame = _circleVelocity * Time.deltaTime;
+        var movementThisFrame = _circleVelocity * Time.deltaTime; //don't use realtime for this since it depend son the game frames
         transform.position = Vector2.MoveTowards(transform.position, targetPosition, movementThisFrame);
         return targetPosition;
     }
@@ -96,7 +97,7 @@ public class MovingCircle : MonoBehaviour
         while (true)
         {
             _score++;
-            yield return new WaitForSeconds(_deltaTimeScore);
+            yield return new WaitForSecondsRealtime(_deltaTimeScore);
         }
     }
 
@@ -104,7 +105,7 @@ public class MovingCircle : MonoBehaviour
     {
         _isDecreasing = true;
 
-        yield return new WaitForSeconds(_gracePeriod);
+        yield return new WaitForSecondsRealtime(_gracePeriod);
 
         while (true)
         {

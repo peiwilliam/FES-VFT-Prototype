@@ -48,9 +48,7 @@ public class Cursor : MonoBehaviour
             _initialCOP = new Vector2(copX, copY);
         }
         else
-        {
             _initialCOP = new Vector2(0, 0);
-        }
 
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set 0 as default in case it isn't set
         {

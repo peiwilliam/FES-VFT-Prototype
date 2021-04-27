@@ -28,7 +28,7 @@ RectTransform:
   m_GameObject: {fileID: 488172988132930045}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.5500002, y: 2.5500002, z: 0}
+  m_LocalScale: {x: 2.4, y: 2.4, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -76,7 +76,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 0
   m_Sprite: {fileID: -2413806693520163455, guid: b4317f535fc748b429af066f2c7d6b59,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -114,6 +114,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 488172988132930045}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2bd5c26324c4f524b81fdc316269ca43, type: 3}
+  m_Script: {fileID: 11500000, guid: 569c00c584c8d8241824c37c15f57302, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _deltaTimeScore: 0.25
+  _timeToGetScore: 3
+  _score: 250
+  _isDecreasing: 0
+  _hasEntered: 0
+  _gettingToCircleCRStarted: 0

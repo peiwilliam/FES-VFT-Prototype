@@ -5,6 +5,7 @@ public class TargetCircle : MonoBehaviour
 {
     [SerializeField] private int _score;
     [SerializeField] private int _scoreIncreaseRate = 1; //default is 1, can be changed
+    
     private Coroutine _increaseScore;
     
     private void OnTriggerEnter2D(Collider2D collider) => _increaseScore = StartCoroutine(IncreaseScore());
@@ -16,7 +17,7 @@ public class TargetCircle : MonoBehaviour
         while (true)
         {
             _score += _scoreIncreaseRate;
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSecondsRealtime(0.2f);
         }   
     }
 
