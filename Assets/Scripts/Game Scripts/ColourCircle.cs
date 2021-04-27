@@ -21,7 +21,7 @@ public class ColourCircle : MonoBehaviour
         _gameSession = FindObjectOfType<GameSession>();
     }
 
-    private void Update() 
+    private void Update() //need this for colour circle since the circles always exist in the game
     {
         if (!_hasEntered && gameObject.tag == "Target")
         {

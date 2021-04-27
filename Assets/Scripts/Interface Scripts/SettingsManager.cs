@@ -48,6 +48,19 @@ public class SettingsManager : MonoBehaviour
     private void Awake() 
     {
         SetUpSingleton(); //set a singleton
+
+        foreach (var nameAndType in _fieldNamesAndTypes)
+        {
+            if (!PlayerPrefs.HasKey(nameAndType.Key)) //if opening up game for first time, set all values to default
+            {
+                if (nameAndType.Value == "int")
+                    PlayerPrefs.SetInt(nameAndType.Key, (int)_defaultValues[nameAndType.Key]);
+                else if (nameAndType.Value == "float")
+                    PlayerPrefs.SetFloat(nameAndType.Key, (float)_defaultValues[nameAndType.Key]);
+                else
+                    PlayerPrefs.SetString(nameAndType.Key, (string)_defaultValues[nameAndType.Key]);
+            }
+        }
     }
 
     private void SetUpSingleton()
@@ -96,6 +109,8 @@ public class SettingsManager : MonoBehaviour
                 }
             }
         }
+
+        PlayerPrefs.Save();
     }
 
     public void ResetToDefaults()

@@ -32,7 +32,7 @@ public class GameSession : MonoBehaviour
     private Coroutine _changeColour;
     public int ColourMatchingScore { get; private set; }
     public ColourCircle TargetColourCircle { get; private set; }
-    //for the _conditionMet variable so that other classes can easily access
+    //for the _conditionColourMet variable so that other classes can easily access
     public bool ConditionColourMet 
     {
         get => _conditionColourMet;
@@ -50,7 +50,7 @@ public class GameSession : MonoBehaviour
     
     private HuntingCircle _huntingCircle;
     public int HuntingScore { get; private set; }
-    //for the _conditionMet variable so that other classes can easily access
+    //for the _conditionHuntingMet variable so that other classes can easily access
     public bool ConditionHuntingMet
     {
         get => _conditionHuntingMet;
@@ -194,6 +194,9 @@ public class GameSession : MonoBehaviour
                 prevQuad = quad;
                 quads.Remove(quad);
             }
+
+            _huntingDuration = 10f; //reset values to loop again
+            _conditionHuntingMet = false;
         }   
     }
 
@@ -230,8 +233,6 @@ public class GameSession : MonoBehaviour
         while (true)
         {
             PickColour(averageDistance, oldCircle);
-            _conditionColourMet = false;
-            _colourDuration = 10f;
 
             while (_colourDuration > 0 && !_conditionColourMet)
             {
@@ -243,6 +244,9 @@ public class GameSession : MonoBehaviour
             TargetColourCircle.gameObject.tag = "Untagged";
             oldCircle = TargetColourCircle;
             ColourGameScore();
+
+            _conditionColourMet = false;
+            _colourDuration = 10f;
         }
     }
 
