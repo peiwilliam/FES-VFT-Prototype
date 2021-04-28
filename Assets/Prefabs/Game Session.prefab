@@ -45,6 +45,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _cursorPrefab: {fileID: 5487399919639020038, guid: d58700753d8039f4c9ed0cb58cf30ddc,
     type: 3}
+  _totalGameTime: 130
+  _timeText: {fileID: 0}
   _movingCirclePrefab: {fileID: 4634348226491055553, guid: d6994e6e74bc47f4f806e8a6aa49f8ce,
     type: 3}
   _colourDuration: 10
@@ -63,6 +65,21 @@ MonoBehaviour:
   - Beige
   - Brown
   - Orange
+  _colourChangeEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 7066776131360315390, guid: f3e8b68345c52d84194b78e3a216a06c,
+          type: 3}
+        m_MethodName: NewCircle
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   _huntingCirclePrefab: {fileID: 4634348226491055553, guid: cb91ff7ff688b9b4ea7ae6eecb30009a,
     type: 3}
   _minX: 0

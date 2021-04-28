@@ -10,7 +10,11 @@ public class GameSession : MonoBehaviour
 {
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
-    [SerializeField] private float _totalGameTime;
+    [SerializeField] private float _totalGameTime = 130f;
+    [SerializeField] private Text _timeText;
+
+    private float _totalGameDeltaTime = 1f;
+    private Coroutine _timer;
     
     [Header("Ellipse Game")]
     [SerializeField] private GameObject _movingCirclePrefab;
@@ -30,7 +34,7 @@ public class GameSession : MonoBehaviour
                                                                              "Yellow", "Cyan", "Pink", "Grey", "Beige", 
                                                                              "Brown", "Orange"}; //default values;
     [SerializeField] private UnityEvent _colourChangeEvent;
-
+    
     private Text _colourText;
     private Coroutine _changeColour;
     public int ColourMatchingScore { get; private set; }
@@ -93,6 +97,8 @@ public class GameSession : MonoBehaviour
                         _targetCircle = circle;
                 break;
         }
+
+        _timer = StartCoroutine(StartTimer());
     }
 
     private void Update() //probably use update, though case can be made for fixedupdate
@@ -107,6 +113,11 @@ public class GameSession : MonoBehaviour
                 TargetGameScore();
                 break;
         }
+
+        _timeText.text = _totalGameTime.ToString();
+
+        if (_totalGameTime <= 0)
+            FindObjectOfType<SceneLoader>().LoadStartScene();
     }
 
     private void ColourMatchingGame()
@@ -277,6 +288,15 @@ public class GameSession : MonoBehaviour
         _colourText.text = randText;
         _colourText.color = randColour;
         TargetColourCircle.gameObject.tag = "Target";
+    }
+
+    private IEnumerator StartTimer()
+    {
+        while (_totalGameTime >= 0)
+        {
+            _totalGameTime -= _totalGameDeltaTime;
+            yield return new WaitForSecondsRealtime(_totalGameDeltaTime);
+        }
     }
 
     private void EllipseGameScore() => EllipseScore = _movingCircle.GetScore();

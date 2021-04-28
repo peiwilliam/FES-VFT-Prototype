@@ -121,6 +121,12 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!20 &82668878 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 1253585847395589746, guid: 4a1c09db50ca30540b1a76f22ed30f60,
+    type: 3}
+  m_PrefabInstance: {fileID: 747501223}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &534604259
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -128,6 +134,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
+      propertyPath: _timeText
+      value: 
+      objectReference: {fileID: 1507627510}
     - target: {fileID: 6779056450887742546, guid: 80eff38156b517d47a986db4dfd768f1,
         type: 3}
       propertyPath: m_RootOrder
@@ -458,22 +468,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 7153614972997210792, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
-        type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 4014040992644144350, guid: 082d4707194eafa4580b5cdb311e3da9,
-        type: 3}
-    - target: {fileID: 7153614972997210792, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
-        type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: LoadStartScene
-      objectReference: {fileID: 0}
     - target: {fileID: 7153614973304575424, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
         type: 3}
       propertyPath: m_Name
       value: Game Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 7153614973304575427, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
+        type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 82668878}
     - target: {fileID: 7153614973304575436, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
         type: 3}
       propertyPath: m_Pivot.x
@@ -581,6 +585,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
+--- !u!114 &1507627510 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 550384915498152259, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
+    type: 3}
+  m_PrefabInstance: {fileID: 1507627509}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1874602330
 PrefabInstance:
   m_ObjectHideFlags: 0

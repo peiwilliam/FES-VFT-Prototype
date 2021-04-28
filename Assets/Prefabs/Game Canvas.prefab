@@ -165,7 +165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c1338d4ed99eec4fb8d91b404f622dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gameSession: {fileID: 0}
+  _gameSession: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
 --- !u!1 &3953552797968238958
 GameObject:
   m_ObjectHideFlags: 0
@@ -515,7 +515,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 4014040992644144350, guid: 082d4707194eafa4580b5cdb311e3da9,
+          type: 3}
         m_MethodName: LoadStartScene
         m_Mode: 1
         m_Arguments:
@@ -578,8 +579,9 @@ Canvas:
   m_GameObject: {fileID: 7153614973304575424}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
-  m_Camera: {fileID: 0}
+  m_RenderMode: 1
+  m_Camera: {fileID: 1253585847395589746, guid: 4a1c09db50ca30540b1a76f22ed30f60,
+    type: 3}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
