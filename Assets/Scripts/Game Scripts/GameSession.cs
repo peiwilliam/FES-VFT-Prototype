@@ -305,5 +305,5 @@ public class GameSession : MonoBehaviour
 
     private void HuntingGameScore() => HuntingScore += _huntingCircle.GetScore();
 
-    private void TargetGameScore() => TargetScore = _movingCircle.GetScore();
+    private void TargetGameScore() => TargetScore = _targetCircle.GetScore();
 }
