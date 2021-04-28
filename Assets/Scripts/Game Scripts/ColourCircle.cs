@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using UnityEngine;
 
 public class ColourCircle : MonoBehaviour
@@ -25,11 +23,9 @@ public class ColourCircle : MonoBehaviour
 
     private void Update() //need this for colour circle since the circles always exist in the game
     {
-        // if (!_hasEntered && gameObject.tag == "Target")
-        //     _gettingToCircle = StartCoroutine(GettingToCircle());
-        if (gameObject.tag == "Untagged" && _gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
+        if (gameObject.tag == "Untagged") 
         {
-            if (_gettingToCircle != null)
+            if (_gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
                 StopAllCoroutines();
             if (gameObject.GetComponent<SpriteRenderer>().color == new Color(0, 255, 0))
                 DetectCursor.ChangeColourBack(gameObject, _oldColour);
@@ -44,7 +40,8 @@ public class ColourCircle : MonoBehaviour
 
             _hasEntered = true; // tells the game that the player has entered at least once.
 
-            StopCoroutine(_gettingToCircle);
+            if (_gettingToCircle != null) //need to add this account for when cursor is on a target when game starts
+                StopCoroutine(_gettingToCircle);
 
             if (_isDecreasing)
             {
@@ -103,7 +100,7 @@ public class ColourCircle : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(_gettingToCircleBuffer);
 
-        if (!_hasEntered)
+        if (!_hasEntered) //need it here because the coroutine operates independetly from the initial condition
         {
             while (true)
             {

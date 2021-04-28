@@ -120,6 +120,6 @@ MonoBehaviour:
   _deltaTimeScore: 0.25
   _gettingToCircleBuffer: 5
   _timeToGetScore: 3
-  _score: 250
+  _score: 251
   _isDecreasing: 0
   _hasEntered: 0

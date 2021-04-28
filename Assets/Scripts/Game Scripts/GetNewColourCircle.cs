@@ -13,7 +13,6 @@ public class GetNewColourCircle : MonoBehaviour //helper class to help make even
 
     public void NewCircle()
     {
-        //these need to be reset as it's a new target
         var targetCircle = _colourCircles.Find(n => n.tag == "Target");
         targetCircle.GetNewCircle();
     }

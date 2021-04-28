@@ -64,10 +64,15 @@ public class GameSession : MonoBehaviour
         set => _conditionHuntingMet = value;
     }
 
-    // target game
-    private TargetCircle _targetCircle;
+    [Header("Target Game")]
+    [SerializeField] private List<TargetCircle> _targetCircles;
+
     private Coroutine _increaseScore;
-    public int TargetScore { get; private set; }
+    public float TargetScore { get; private set; }
+    public List<TargetCircle> TargetCirlces
+    {
+        get => _targetCircles;
+    }
 
     private void Start()
     {
@@ -78,23 +83,22 @@ public class GameSession : MonoBehaviour
             case "Colour Matching":
                 var colourCircles = FindObjectsOfType<ColourCircle>();
                 _colourCircles = colourCircles.ToList();
+
                 if (_colourChangeEvent == null)
                     _colourChangeEvent = new UnityEvent(); 
+
                 ColourMatchingGame();
                 break;
             case "Ellipse":
                 EllipseGame();
                 _movingCircle = FindObjectOfType<MovingCircle>();
+
                 break;
             case "Hunting":
                 HuntingGame();
                 break;
             case "Target":
-                var circles = FindObjectsOfType<TargetCircle>();
-
-                foreach (var circle in circles)
-                    if (circle.name == "Centre Target")
-                        _targetCircle = circle;
+                _targetCircles = FindObjectsOfType<TargetCircle>().ToList();
                 break;
         }
 
@@ -190,7 +194,7 @@ public class GameSession : MonoBehaviour
 
             while (_huntingDuration > 0 && !_conditionHuntingMet)
             {
-                _huntingDuration -= Time.unscaledDeltaTime;
+                _huntingDuration -= Time.deltaTime;
 
                 yield return null;
             }
@@ -305,5 +309,13 @@ public class GameSession : MonoBehaviour
 
     private void HuntingGameScore() => HuntingScore += _huntingCircle.GetScore();
 
-    private void TargetGameScore() => TargetScore = _targetCircle.GetScore();
+    private void TargetGameScore()
+    {
+        var updatedScore = 0f;
+
+        foreach (var circle in _targetCircles)
+            updatedScore += circle.GetScore();
+
+        TargetScore = updatedScore;
+    } 
 }
