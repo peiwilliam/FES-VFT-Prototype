@@ -33,24 +33,35 @@ public class TargetCircle : MonoBehaviour
         _isInCircle = false;
 
         if (gameObject.tag == "Target")
+        {
             _multiplyScore = false;
 
-        if (_multiplier != null)
-            StopCoroutine(_multiplier);
+            if (_multiplier != null)
+            {
+                StopCoroutine(_multiplier);
+                _multiplier = null;
+            }
+        }
 
         StopCoroutine(_increaseScore);
     }
 
     private void OnTriggerStay2D(Collider2D collider) 
     {
-        if (gameObject.tag == "Target")
+        if (gameObject.tag == "Target" && _multiplier == null)
             _multiplier = StartCoroutine(Multiplier());
 
         if (_nextCircle != null) //the centre ring doesn't have a next ring
         {
-            if (_nextCircle.IsInCircle) // if the cursor is in the next circle, the outer bigger circles don't contribute points.
-                StopCoroutine(_increaseScore);
+            if (_nextCircle.IsInCircle && _increaseScore != null) // if the cursor is in the next circle, the outer bigger circles don't contribute points.
+            {
+                StopCoroutine(_increaseScore); //stopping a coroutine does not make it null
+                _increaseScore = null;
+            }
+            else if (_increaseScore == null && !_nextCircle.IsInCircle)
+                _increaseScore = StartCoroutine(IncreaseScore());
         }
+        
     }
 
     private IEnumerator IncreaseScore()
