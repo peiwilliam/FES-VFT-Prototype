@@ -23,17 +23,9 @@ public class ColourCircle : MonoBehaviour
 
     private void Update() //need this for colour circle since the circles always exist in the game
     {
-        if (!_hasEntered && gameObject.tag == "Target")
+        if (gameObject.tag == "Untagged") 
         {
-            //these need to be reset as it's a new target
-            gameObject.GetComponent<ColourCircle>()._score = 250;
-            gameObject.GetComponent<ColourCircle>()._timeToGetScore = 3f;
-
-            _gettingToCircle = StartCoroutine(GettingToCircle());
-        }
-        else if (gameObject.tag == "Untagged" && _gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
-        {
-            if (_gettingToCircle != null)
+            if (_gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
                 StopAllCoroutines();
             if (gameObject.GetComponent<SpriteRenderer>().color == new Color(0, 255, 0))
                 DetectCursor.ChangeColourBack(gameObject, _oldColour);
@@ -48,7 +40,8 @@ public class ColourCircle : MonoBehaviour
 
             _hasEntered = true; // tells the game that the player has entered at least once.
 
-            StopCoroutine(_gettingToCircle);
+            if (_gettingToCircle != null) //need to add this account for when cursor is on a target when game starts
+                StopCoroutine(_gettingToCircle);
 
             if (_isDecreasing)
             {
@@ -107,7 +100,7 @@ public class ColourCircle : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(_gettingToCircleBuffer);
 
-        if (!_hasEntered)
+        if (!_hasEntered) //need it here because the coroutine operates independetly from the initial condition
         {
             while (true)
             {
@@ -115,6 +108,13 @@ public class ColourCircle : MonoBehaviour
                 yield return new WaitForSecondsRealtime(_deltaTimeScore);
             }
         }
+    }
+
+    public void GetNewCircle()
+    {
+        _score = 250;
+        _timeToGetScore = 3f;
+        _gettingToCircle = StartCoroutine(GettingToCircle());
     }
 
     public int GetScore() => _score;

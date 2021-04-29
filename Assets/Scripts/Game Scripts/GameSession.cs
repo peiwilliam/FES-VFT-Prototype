@@ -3,12 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 public class GameSession : MonoBehaviour
 {
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
+    [SerializeField] private float _totalGameTime = 130f;
+    [SerializeField] private Text _timeText;
+
+    private float _totalGameDeltaTime = 1f;
+    private Coroutine _timer;
     
     [Header("Ellipse Game")]
     [SerializeField] private GameObject _movingCirclePrefab;
@@ -24,10 +30,11 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _colourDuration = 10f;
     [SerializeField] private bool _conditionColourMet;
     [SerializeField] private List<ColourCircle> _colourCircles;
-    [SerializeField] private List<string> _colourTexts = new List<string>() {"White", "Red", "Blue", "Green", "Purple", 
+    [SerializeField] private List<string> _colourTexts = new List<string>() {"White", "Black", "Blue", "Green", "Purple", 
                                                                              "Yellow", "Cyan", "Pink", "Grey", "Beige", 
                                                                              "Brown", "Orange"}; //default values;
-
+    [SerializeField] private UnityEvent _colourChangeEvent;
+    
     private Text _colourText;
     private Coroutine _changeColour;
     public int ColourMatchingScore { get; private set; }
@@ -57,10 +64,15 @@ public class GameSession : MonoBehaviour
         set => _conditionHuntingMet = value;
     }
 
-    // target game
-    private TargetCircle _targetCircle;
+    [Header("Target Game")]
+    [SerializeField] private List<TargetCircle> _targetCircles;
+
     private Coroutine _increaseScore;
-    public int TargetScore { get; private set; }
+    public float TargetScore { get; private set; }
+    public List<TargetCircle> TargetCirlces
+    {
+        get => _targetCircles;
+    }
 
     private void Start()
     {
@@ -71,26 +83,29 @@ public class GameSession : MonoBehaviour
             case "Colour Matching":
                 var colourCircles = FindObjectsOfType<ColourCircle>();
                 _colourCircles = colourCircles.ToList();
+
+                if (_colourChangeEvent == null)
+                    _colourChangeEvent = new UnityEvent(); 
+
                 ColourMatchingGame();
                 break;
             case "Ellipse":
                 EllipseGame();
                 _movingCircle = FindObjectOfType<MovingCircle>();
+
                 break;
             case "Hunting":
                 HuntingGame();
                 break;
             case "Target":
-                var circles = FindObjectsOfType<TargetCircle>();
-
-                foreach (var circle in circles)
-                    if (circle.name == "Centre Target")
-                        _targetCircle = circle;
+                _targetCircles = FindObjectsOfType<TargetCircle>().ToList();
                 break;
         }
+
+        _timer = StartCoroutine(StartTimer());
     }
 
-    private void Update() //not sure about between FixedUpdate vs Update for this method
+    private void Update() //probably use update, though case can be made for fixedupdate
     {
         // with these two games, the scores are not dependent on getting to targets, so it's just one cumulative score
         switch (SceneManager.GetActiveScene().name)
@@ -102,6 +117,11 @@ public class GameSession : MonoBehaviour
                 TargetGameScore();
                 break;
         }
+
+        _timeText.text = _totalGameTime.ToString();
+
+        if (_totalGameTime <= 0)
+            FindObjectOfType<SceneLoader>().LoadStartScene();
     }
 
     private void ColourMatchingGame()
@@ -126,7 +146,6 @@ public class GameSession : MonoBehaviour
         Ellipse = FindObjectOfType<Ellipse>();
         var radii = Ellipse.GetRadii();
         var centre = Ellipse.GetCentre();
-        
         LineRenderer = Ellipse.GetComponent<LineRenderer>();
         Positions = new Vector3[LineRenderer.positionCount];
 
@@ -175,7 +194,7 @@ public class GameSession : MonoBehaviour
 
             while (_huntingDuration > 0 && !_conditionHuntingMet)
             {
-                _huntingDuration -= Time.unscaledDeltaTime;
+                _huntingDuration -= Time.deltaTime;
 
                 yield return null;
             }
@@ -231,6 +250,7 @@ public class GameSession : MonoBehaviour
         while (true)
         {
             PickColour(averageDistance, oldCircle);
+            _colourChangeEvent.Invoke();
 
             while (_colourDuration > 0 && !_conditionColourMet)
             {
@@ -274,11 +294,28 @@ public class GameSession : MonoBehaviour
         TargetColourCircle.gameObject.tag = "Target";
     }
 
+    private IEnumerator StartTimer()
+    {
+        while (_totalGameTime >= 0)
+        {
+            _totalGameTime -= _totalGameDeltaTime;
+            yield return new WaitForSecondsRealtime(_totalGameDeltaTime);
+        }
+    }
+
     private void EllipseGameScore() => EllipseScore = _movingCircle.GetScore();
 
     private void ColourGameScore() => ColourMatchingScore += TargetColourCircle.GetScore();
 
     private void HuntingGameScore() => HuntingScore += _huntingCircle.GetScore();
 
-    private void TargetGameScore() => TargetScore = _movingCircle.GetScore();
+    private void TargetGameScore()
+    {
+        var updatedScore = 0f;
+
+        foreach (var circle in _targetCircles)
+            updatedScore += circle.GetScore();
+
+        TargetScore = updatedScore;
+    } 
 }

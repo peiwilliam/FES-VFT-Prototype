@@ -121,6 +121,18 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!114 &22804545 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1,
+    type: 3}
+  m_PrefabInstance: {fileID: 1277459149}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98a30e54efb80084aba62f901c65f0dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &78952446
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -256,7 +268,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd2b7c8d60f38ee4485bfa50d84d2f84, type: 3}
+  m_Script: {fileID: 11500000, guid: af65ef215dac92f46849188c5f9fbb87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &709439970
@@ -281,6 +293,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Game Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 7153614973304575427, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
+        type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 1416271719}
     - target: {fileID: 7153614973304575436, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
         type: 3}
       propertyPath: m_Pivot.x
@@ -386,8 +403,25 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8041094670606321291, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
+        type: 3}
+      propertyPath: _gameSession
+      value: 
+      objectReference: {fileID: 22804545}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
+--- !u!114 &709439971 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 550384915498152259, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
+    type: 3}
+  m_PrefabInstance: {fileID: 709439970}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1277459149
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -395,6 +429,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
+      propertyPath: _timeText
+      value: 
+      objectReference: {fileID: 709439971}
     - target: {fileID: 6779056450887742546, guid: 80eff38156b517d47a986db4dfd768f1,
         type: 3}
       propertyPath: m_RootOrder
@@ -592,6 +630,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4a1c09db50ca30540b1a76f22ed30f60, type: 3}
+--- !u!20 &1416271719 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 1253585847395589746, guid: 4a1c09db50ca30540b1a76f22ed30f60,
+    type: 3}
+  m_PrefabInstance: {fileID: 1416271718}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3321479319653500012
 PrefabInstance:
   m_ObjectHideFlags: 0

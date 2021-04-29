@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class HuntingCircle : MonoBehaviour
@@ -31,7 +30,8 @@ public class HuntingCircle : MonoBehaviour
 
         _hasEntered = true; // tells the game that the player has entered at least once.
 
-        StopCoroutine(_gettingToCircle);
+        if (_gettingToCircle != null) //need to add this account for when cursor is on a target when game starts
+            StopCoroutine(_gettingToCircle);
 
         if (_isDecreasing)
         {
@@ -85,7 +85,7 @@ public class HuntingCircle : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(_gettingToCircleBuffer);
 
-        if (!_hasEntered)
+        if (!_hasEntered) //need it here because the coroutine operates independetly from the initial condition
         {
             while (true)
             {
