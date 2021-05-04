@@ -726,21 +726,41 @@ PrefabInstance:
       propertyPath: _nextCircle
       value: 
       objectReference: {fileID: 1084774857}
+    - target: {fileID: 1847211676590045071, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: _gameSession
+      value: 
+      objectReference: {fileID: 24867746}
     - target: {fileID: 1847211676870386470, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
       propertyPath: _nextCircle
       value: 
       objectReference: {fileID: 464085994}
+    - target: {fileID: 1847211676870386470, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: _gameSession
+      value: 
+      objectReference: {fileID: 24867746}
     - target: {fileID: 1847211677633494080, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
       propertyPath: _nextCircle
       value: 
       objectReference: {fileID: 845438425}
+    - target: {fileID: 1847211677633494080, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: _gameSession
+      value: 
+      objectReference: {fileID: 24867746}
     - target: {fileID: 1847211677717946956, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
       propertyPath: _nextCircle
       value: 
       objectReference: {fileID: 1515640250}
+    - target: {fileID: 1847211677717946956, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: _gameSession
+      value: 
+      objectReference: {fileID: 24867746}
     - target: {fileID: 2250062575775494096, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
       propertyPath: m_Name
@@ -826,5 +846,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Target
       objectReference: {fileID: 0}
+    - target: {fileID: 6875115185037267487, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: _gameSession
+      value: 
+      objectReference: {fileID: 24867746}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 16c2f8c592c7f2942981c5da857f36d1, type: 3}

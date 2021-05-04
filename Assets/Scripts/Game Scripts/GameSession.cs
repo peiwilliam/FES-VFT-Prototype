@@ -66,12 +66,14 @@ public class GameSession : MonoBehaviour
 
     [Header("Target Game")]
     [SerializeField] private List<TargetCircle> _targetCircles;
+    [SerializeField] private float _deltaTimeScore = 0.25f;
 
     private Coroutine _increaseScore;
     public float TargetScore { get; private set; }
-    public List<TargetCircle> TargetCirlces
+    public float DeltaTimeScore
     {
-        get => _targetCircles;
+        get => _deltaTimeScore;
+        set => _deltaTimeScore = value;
     }
 
     private void Start()

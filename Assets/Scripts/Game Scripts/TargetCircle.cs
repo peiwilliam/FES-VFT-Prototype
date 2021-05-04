@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 
@@ -6,12 +5,12 @@ public class TargetCircle : MonoBehaviour
 {
     [SerializeField] private float _score;
     [SerializeField] private float _scoreIncreaseRate = 1f;
-    [SerializeField] private float _deltaTimeScore = 0.25f;
     [SerializeField] private float _scoreMultiplier = 1.5f;
     [SerializeField] private float _timeNeededForMultiplier = 5f;
     [SerializeField] private bool _isInCircle;
     [SerializeField] private bool _multiplyScore;
     [SerializeField] private TargetCircle _nextCircle;
+    [SerializeField] private GameSession _gameSession;
     
     private Coroutine _increaseScore;
     private Coroutine _multiplier;
@@ -67,12 +66,21 @@ public class TargetCircle : MonoBehaviour
     {
         while (true)
         {
+            while (_gameSession.DeltaTimeScore > 0)
+            {
+                _gameSession.DeltaTimeScore -= Time.unscaledDeltaTime;
+
+                yield return null;
+            }
+            if (_gameSession.DeltaTimeScore <= 0)
+                _gameSession.DeltaTimeScore = 0.25f;
+
             if (_multiplyScore && gameObject.tag == "Target")
                 _score += _scoreMultiplier*_scoreIncreaseRate;
             else
                 _score += _scoreIncreaseRate;
 
-            yield return new WaitForSecondsRealtime(_deltaTimeScore);
+            //yield return new WaitForSecondsRealtime(_deltaTimeScore);
         }   
     }
 
