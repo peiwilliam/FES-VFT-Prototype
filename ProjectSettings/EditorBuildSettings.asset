@@ -29,4 +29,13 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Setup/Bluetooth PIN.unity
     guid: 2668c360ccce41d43bbc66abafb57f75
+  - enabled: 1
+    path: Assets/Scenes/Setup/PD Parameters.unity
+    guid: ed19fb61ace5729429b98e0534dea4ae
+  - enabled: 1
+    path: Assets/Scenes/Setup/Stim Parameters.unity
+    guid: e8445346a22192a42a7c6490e712a073
+  - enabled: 1
+    path: Assets/Scenes/Game Transitions/Familiarization Transition.unity
+    guid: 1a8e7f680246cd347a15579ea8681e3c
   m_configObjects: {}

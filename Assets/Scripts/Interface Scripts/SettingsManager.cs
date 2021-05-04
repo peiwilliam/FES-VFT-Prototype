@@ -21,7 +21,13 @@ public class SettingsManager : MonoBehaviour
         ["Length Offset"] = 0.0f,
         ["Star Multiplier"] = 120,
         ["Config Root Path"] = Directory.GetCurrentDirectory(),
-        ["Rolling Average Window"] = 20
+        ["Rolling Average Window"] = 20,
+        ["RPF Max"] = 50,
+        ["RDF Max"] = 50,
+        ["LPF Max"] = 50,
+        ["LDF Max"] = 50,
+        ["Height"] = 170,
+        ["Mass"] = 65
     };
 
     // dictionaries for iterating through values easier
@@ -40,7 +46,13 @@ public class SettingsManager : MonoBehaviour
         ["Length Offset"] = "float",
         ["Star Multiplier"] = "int",
         ["Config Root Path"] = "string",
-        ["Rolling Average Window"] = "int"
+        ["Rolling Average Window"] = "int",
+        ["RPF Max"] = "int",
+        ["RDF Max"] = "int",
+        ["LPF Max"] = "int",
+        ["LDF Max"] = "int",
+        ["Height"] = "int",
+        ["Mass"] = "float"
     };
 
     private void Awake() 

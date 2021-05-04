@@ -5,6 +5,8 @@ public class SceneLoader : MonoBehaviour
 {
     [SerializeField] private ZeroBoard _zeroBoard;
 
+    public bool Familiarization { get; private set; }
+
     public void LoadNextScene()
     {
         var currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
@@ -12,6 +14,8 @@ public class SceneLoader : MonoBehaviour
     }
 
     public void LoadStartScene() => SceneManager.LoadScene(0);
+
+    public void ConnectToBoard() => SceneManager.LoadScene("Bluetooth PIN");
 
     public void LoadSettings() => SceneManager.LoadScene("Settings");
 
@@ -25,9 +29,13 @@ public class SceneLoader : MonoBehaviour
 
     public void LoadHunting() => SceneManager.LoadScene("Hunting");
 
-    public void ConnectToBoard() => SceneManager.LoadScene("Bluetooth PIN");
-
     public void QuitGame() => Application.Quit();
+
+    public void BeginFamiliarization()
+    {
+        SceneManager.LoadScene("Colour Matching");
+        Familiarization = true;
+    }
 
     private void OnEnable() 
     {

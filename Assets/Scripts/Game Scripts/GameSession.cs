@@ -30,9 +30,10 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _colourDuration = 10f;
     [SerializeField] private bool _conditionColourMet;
     [SerializeField] private List<ColourCircle> _colourCircles;
+    //default colours, need to change if the colours have been changed
     [SerializeField] private List<string> _colourTexts = new List<string>() {"White", "Black", "Blue", "Green", "Purple", 
                                                                              "Yellow", "Cyan", "Pink", "Grey", "Beige", 
-                                                                             "Brown", "Orange"}; //default values;
+                                                                             "Brown", "Orange"};
     [SerializeField] private UnityEvent _colourChangeEvent;
     
     private Text _colourText;
@@ -70,6 +71,7 @@ public class GameSession : MonoBehaviour
 
     private Coroutine _increaseScore;
     public float TargetScore { get; private set; }
+    //for the _deltaTimeScore variable so that other classes can easily access
     public float DeltaTimeScore
     {
         get => _deltaTimeScore;

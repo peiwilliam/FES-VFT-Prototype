@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class TargetCircle : MonoBehaviour
 {
+    // normally delta time would be in this class, but because circles are interrelated, the variable is created in GameSession
     [SerializeField] private float _score;
     [SerializeField] private float _scoreIncreaseRate = 1f;
     [SerializeField] private float _scoreMultiplier = 1.5f;
