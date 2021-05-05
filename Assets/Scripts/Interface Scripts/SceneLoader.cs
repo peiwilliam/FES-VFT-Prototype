@@ -5,7 +5,7 @@ public class SceneLoader : MonoBehaviour
 {
     [SerializeField] private ZeroBoard _zeroBoard;
 
-    public bool Familiarization { get; private set; }
+    private static bool _beginFamiliarization;
 
     public void LoadNextScene()
     {
@@ -31,10 +31,12 @@ public class SceneLoader : MonoBehaviour
 
     public void QuitGame() => Application.Quit();
 
-    public void BeginFamiliarization()
+    public void BeginAssesment() => SceneManager.LoadScene("Assessment");
+
+    public void BeginFamiliarization() 
     {
         SceneManager.LoadScene("Colour Matching");
-        Familiarization = true;
+        _beginFamiliarization = true;
     }
 
     private void OnEnable() 
