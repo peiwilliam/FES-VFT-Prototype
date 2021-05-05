@@ -73,15 +73,14 @@ public class TargetCircle : MonoBehaviour
 
                 yield return null;
             }
+
             if (_gameSession.DeltaTimeScore <= 0)
-                _gameSession.DeltaTimeScore = 0.25f;
+                _gameSession.DeltaTimeScore += 0.25f; //+= to account for if the time is negative and to subtract that from 0.25s
 
             if (_multiplyScore && gameObject.tag == "Target")
                 _score += _scoreMultiplier*_scoreIncreaseRate;
             else
                 _score += _scoreIncreaseRate;
-
-            //yield return new WaitForSecondsRealtime(_deltaTimeScore);
         }   
     }
 

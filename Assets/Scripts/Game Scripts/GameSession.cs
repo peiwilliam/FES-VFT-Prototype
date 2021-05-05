@@ -218,7 +218,7 @@ public class GameSession : MonoBehaviour
                 quads.Remove(quad);
             }
 
-            _huntingDuration = 10f; //reset values to loop again
+            _huntingDuration += 10f; //reset values to loop again, += to account for when the time is negative and to subtract form 10f
             _conditionHuntingMet = false;
         }   
     }
@@ -267,8 +267,8 @@ public class GameSession : MonoBehaviour
             oldCircle = TargetColourCircle;
             ColourGameScore();
 
+            _colourDuration = 10f; //reset values to loop again, += to account for when the time is negative and to subtract form 10f
             _conditionColourMet = false;
-            _colourDuration = 10f;
         }
     }
 
@@ -278,7 +278,7 @@ public class GameSession : MonoBehaviour
         TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
         var randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
 
-        if (oldCircle != null)
+        if (oldCircle != null) //only start checking distances after the first circle is spawned
         {
             var dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
                                   Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
@@ -293,6 +293,7 @@ public class GameSession : MonoBehaviour
             }
         }
 
+        // once a colour is picked, set text, colour and add taget to target circle
         _colourText.text = randText;
         _colourText.color = randColour;
         TargetColourCircle.gameObject.tag = "Target";
@@ -317,7 +318,7 @@ public class GameSession : MonoBehaviour
     {
         var updatedScore = 0f;
 
-        foreach (var circle in _targetCircles)
+        foreach (var circle in _targetCircles) //each circle stores an independent score, so need to check each one to get total
             updatedScore += circle.GetScore();
 
         TargetScore = updatedScore;
