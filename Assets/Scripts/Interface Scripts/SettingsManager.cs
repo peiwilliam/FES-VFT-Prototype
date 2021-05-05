@@ -27,7 +27,7 @@ public class SettingsManager : MonoBehaviour
         ["LPF Max"] = 50,
         ["LDF Max"] = 50,
         ["Height"] = 170,
-        ["Mass"] = 65
+        ["Mass"] = 65f
     };
 
     // dictionaries for iterating through values easier
