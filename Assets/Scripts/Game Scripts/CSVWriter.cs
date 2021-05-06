@@ -2,11 +2,12 @@
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class CSVWriter
 {
     private StringBuilder _csv;
-    private string _fileName = "data"; //todo: make name of file dependent on game
+    private string _fileName = SceneManager.GetActiveScene().name; //todo: make name of file dependent on game
     private string _extension = ".csv";
     private string _path = Directory.GetCurrentDirectory();
     private int _count; // iterator to create unique csv file each time.
@@ -28,16 +29,13 @@ public class CSVWriter
         File.AppendAllText(_path + @"\" + _fileName + _count + _extension, _csv.ToString());
     }
 
-    public void WriteData(List<WiiBoardData> dataList)
+    public async void WriteDataAsync(WiiBoardData data)
     {
         using (var w = new StreamWriter(_path + @"\" + _fileName + _count + _extension, true)) // true to append and not overwrite
         {
-            foreach (var data in dataList)
-            {
-                var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}";
-                w.WriteLine(line);
-                w.Flush();
-            }
+            var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}";
+            await w.WriteLineAsync(line);
+            await w.FlushAsync();
         }
     }
 }

@@ -151,7 +151,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1101780330}
-  m_RootOrder: 5
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -438,17 +438,17 @@ PrefabInstance:
     - target: {fileID: 4014040992644144351, guid: 082d4707194eafa4580b5cdb311e3da9,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 445.12122
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4014040992644144351, guid: 082d4707194eafa4580b5cdb311e3da9,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 239.27776
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4014040992644144351, guid: 082d4707194eafa4580b5cdb311e3da9,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1429.2653
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4014040992644144351, guid: 082d4707194eafa4580b5cdb311e3da9,
         type: 3}
@@ -580,21 +580,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Game Camera
       objectReference: {fileID: 0}
-    - target: {fileID: 1253585847395589746, guid: 4a1c09db50ca30540b1a76f22ed30f60,
-        type: 3}
-      propertyPath: m_BackGroundColor.b
-      value: 0.764151
-      objectReference: {fileID: 0}
-    - target: {fileID: 1253585847395589746, guid: 4a1c09db50ca30540b1a76f22ed30f60,
-        type: 3}
-      propertyPath: m_BackGroundColor.g
-      value: 0.546646
-      objectReference: {fileID: 0}
-    - target: {fileID: 1253585847395589746, guid: 4a1c09db50ca30540b1a76f22ed30f60,
-        type: 3}
-      propertyPath: m_BackGroundColor.r
-      value: 0.40730688
-      objectReference: {fileID: 0}
     - target: {fileID: 1253585847395589773, guid: 4a1c09db50ca30540b1a76f22ed30f60,
         type: 3}
       propertyPath: m_RootOrder
@@ -679,12 +664,12 @@ PrefabInstance:
     - target: {fileID: 6779056450887742546, guid: 80eff38156b517d47a986db4dfd768f1,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 8.668812
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6779056450887742546, guid: 80eff38156b517d47a986db4dfd768f1,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.817675
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6779056450887742546, guid: 80eff38156b517d47a986db4dfd768f1,
         type: 3}

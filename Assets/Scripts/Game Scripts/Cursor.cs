@@ -13,7 +13,6 @@ public class Cursor : MonoBehaviour
     private const float _Length = 433; //units are mm
     private const float _Width = 228; //units are mm
     private CSVWriter _writer;
-    private List<WiiBoardData> _dataList;
     private Filter _filterX;
     private Filter _filterY;
 
@@ -61,7 +60,6 @@ public class Cursor : MonoBehaviour
         }
 
         _writer = new CSVWriter();
-        _dataList = new List<WiiBoardData>();
         _writer.WriteHeader();
     }
 
@@ -70,13 +68,8 @@ public class Cursor : MonoBehaviour
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
         {
             var data = GetBoardValues();
-            _dataList.Add(data);
 
-            if (_dataList.Count >= 100)
-            {
-                _writer.WriteData(_dataList);
-                _dataList.Clear();
-            }
+            _writer.WriteDataAsync(data);
 
             var pos = new Vector2(transform.position.x, transform.position.y);
             var cop = new Vector2();
