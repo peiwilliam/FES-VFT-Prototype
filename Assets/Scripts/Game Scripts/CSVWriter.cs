@@ -1,13 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
 public class CSVWriter
 {
     private StringBuilder _csv;
-    private string _fileName = SceneManager.GetActiveScene().name; //todo: make name of file dependent on game
+    private string _fileName = SceneManager.GetActiveScene().name;
     private string _extension = ".csv";
     private string _path = Directory.GetCurrentDirectory();
     private int _count; // iterator to create unique csv file each time.

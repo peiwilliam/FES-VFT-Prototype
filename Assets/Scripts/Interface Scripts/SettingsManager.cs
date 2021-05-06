@@ -27,7 +27,8 @@ public class SettingsManager : MonoBehaviour
         ["LPF Max"] = 50,
         ["LDF Max"] = 50,
         ["Height"] = 170,
-        ["Mass"] = 65f
+        ["Mass"] = 65f,
+        ["Ankle Fraction"] = 0.971f
     };
 
     // dictionaries for iterating through values easier
@@ -52,7 +53,8 @@ public class SettingsManager : MonoBehaviour
         ["LPF Max"] = "int",
         ["LDF Max"] = "int",
         ["Height"] = "int",
-        ["Mass"] = "float"
+        ["Mass"] = "float",
+        ["Ankle Fraction"] = "float"
     };
 
     private void Awake() 
