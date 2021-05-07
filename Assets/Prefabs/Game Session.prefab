@@ -43,9 +43,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98a30e54efb80084aba62f901c65f0dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _ecDone: 0
+  _eoDone: 0
+  _instructions: []
+  _instructionsBox: {fileID: 0}
   _cursorPrefab: {fileID: 5487399919639020038, guid: d58700753d8039f4c9ed0cb58cf30ddc,
     type: 3}
-  _totalGameTime: 130
+  _totalGameTime: 100
   _timeText: {fileID: 0}
   _movingCirclePrefab: {fileID: 4634348226491055553, guid: d6994e6e74bc47f4f806e8a6aa49f8ce,
     type: 3}
@@ -88,3 +92,5 @@ MonoBehaviour:
   _maxY: 10
   _huntingDuration: 10
   _conditionHuntingMet: 0
+  _targetCircles: []
+  _deltaTimeScore: 0.25

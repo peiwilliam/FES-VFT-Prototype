@@ -161,18 +161,21 @@ public class GameSession : MonoBehaviour
     {
         if (SceneManager.GetActiveScene().name == "Assessment")
         {
-            if (_timer != null)
+            if (_timer != null) //timer for the assessment has started
             {
                 Assessment();
 
-                if (_totalGameTime <= 0 && _ecDone && !_eoDone) //reset for eyes open condition
+                if (_totalGameTime <= 0) //reset for eyes open condition
                 {
-                    _timer = null;
-                    _instructionsBox.text = _instructions[1];
-                    _totalGameTime = 100;
+                    if (_ecDone && !_eoDone)
+                    {
+                        _timer = null;
+                        _instructionsBox.text = _instructions[1];
+                        _totalGameTime = 100;
+                    }
+                    else if (_ecDone && _eoDone)
+                        FindObjectOfType<SceneLoader>().LoadStartScene();
                 }
-                else
-                    FindObjectOfType<SceneLoader>().LoadStartScene();
             }
         }
     }
@@ -377,7 +380,7 @@ public class GameSession : MonoBehaviour
 
     private IEnumerator StartTimer()
     {
-        while (_totalGameTime >= 0)
+        while (_totalGameTime > 0)
         {
             yield return new WaitForSecondsRealtime(_totalGameDeltaTime);
             _totalGameTime -= _totalGameDeltaTime;

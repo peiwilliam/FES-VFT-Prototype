@@ -32,18 +32,18 @@ public class Cursor : MonoBehaviour
     {
         if (PlayerPrefs.GetInt("Zero Board", 0) == 1) //set 0 as default in case it's not set
         {
-            var initSenVals = new float[]
-            {
-                    PlayerPrefs.GetFloat("Top Left Sensor"),
-                    PlayerPrefs.GetFloat("Top Right Sensor"),
-                    PlayerPrefs.GetFloat("Bottom Left Sensor"),
-                    PlayerPrefs.GetFloat("Bottom Right Sensor")
-            };
+            // var initSenVals = new float[] //don't really need this atm, the idle values are really weird, so not worth doing this
+            // {
+            //         PlayerPrefs.GetFloat("Top Left Sensor"),
+            //         PlayerPrefs.GetFloat("Top Right Sensor"),
+            //         PlayerPrefs.GetFloat("Bottom Left Sensor"),
+            //         PlayerPrefs.GetFloat("Bottom Right Sensor")
+            // };
 
-            var copX = (initSenVals[1] + initSenVals[3] - initSenVals[0] - initSenVals[2]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
-            var copY = (initSenVals[0] + initSenVals[1] - initSenVals[2] - initSenVals[3]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
+            // var copX = (initSenVals[1] + initSenVals[3] - initSenVals[0] - initSenVals[2]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
+            // var copY = (initSenVals[0] + initSenVals[1] - initSenVals[2] - initSenVals[3]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
 
-            _initialCOP = new Vector2(copX, copY);
+            // _initialCOP = new Vector2(copX, copY);
         }
         else
             _initialCOP = new Vector2(0, 0);
