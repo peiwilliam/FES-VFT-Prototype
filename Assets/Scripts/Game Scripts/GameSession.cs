@@ -8,9 +8,22 @@ using UnityEngine.SceneManagement;
 
 public class GameSession : MonoBehaviour
 {
+    [Header("Assessment")]
+    [SerializeField] private bool _ecDone;
+    [SerializeField] private bool _eoDone;
+    [SerializeField] private List<string> _instructions;
+    [SerializeField] private InputField _instructionsBox;
+
+    private Cursor _cursor;
+
+    private static List<float> _xPosAssessEC; //cursor position during ec assessment
+    private static List<float> _yPosAssessEC;
+    private static List<float> _xPosAssessEO; //cursor position during eo assessment
+    private static List<float> _yPosAssessEO;
+    
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
-    [SerializeField] private float _totalGameTime = 130f;
+    [SerializeField] private float _totalGameTime = 100f;
     [SerializeField] private Text _timeText;
 
     private float _totalGameDeltaTime = 1f;
@@ -84,6 +97,21 @@ public class GameSession : MonoBehaviour
 
         switch (SceneManager.GetActiveScene().name)
         {
+            case "Assessment":
+                _xPosAssessEC = new List<float>();
+                _yPosAssessEC = new List<float>();
+                _xPosAssessEO = new List<float>();
+                _yPosAssessEO = new List<float>();
+                _instructions = new List<string>()
+                {
+                    "Please cross your arms and close your eyes. The eyes closed assessment will be performed first.",
+                    "Please keep your arms crossed and open your eyes. Keep your eyes on the centre target."
+                };
+
+                _cursor = FindObjectOfType<Cursor>();
+
+                SetupAssessment();
+                break;
             case "Colour Matching":
                 var colourCircles = FindObjectsOfType<ColourCircle>();
                 _colourCircles = colourCircles.ToList();
@@ -106,7 +134,8 @@ public class GameSession : MonoBehaviour
                 break;
         }
 
-        _timer = StartCoroutine(StartTimer());
+        if (SceneManager.GetActiveScene().name != "Assessment") //timer for assessment started manually
+            StartCoroutine(StartTimer());
     }
 
     private void Update() //probably use update, though case can be made for fixedupdate
@@ -124,8 +153,55 @@ public class GameSession : MonoBehaviour
 
         _timeText.text = _totalGameTime.ToString();
 
-        if (_totalGameTime <= 0)
+        if ((_totalGameTime <= 0 && SceneManager.GetActiveScene().name != "Assessment") || _eoDone)
             FindObjectOfType<SceneLoader>().LoadStartScene();
+    }
+
+    private void FixedUpdate() //fixed update to keep it in sync with cursor data
+    {
+        if (SceneManager.GetActiveScene().name == "Assessment")
+        {
+            if (_timer != null)
+            {
+                Assessment();
+
+                if (_totalGameTime <= 0 && _ecDone && !_eoDone) //reset for eyes open condition
+                {
+                    _timer = null;
+                    _instructionsBox.text = _instructions[1];
+                    _totalGameTime = 100;
+                }
+                else
+                    FindObjectOfType<SceneLoader>().LoadStartScene();
+            }
+        }
+    }
+
+    private void SetupAssessment()
+    {
+        _instructionsBox.text = _instructions[0];
+        _instructionsBox.transform.Find("Instructions Text").GetComponent<Text>().fontSize = 30;
+    }
+
+    private void Assessment()
+    {
+        if (!_ecDone)
+        {
+            var data = _cursor.GetBoardValues();
+            _xPosAssessEC.Add(data.copX);
+            _yPosAssessEC.Add(data.copY);
+        }
+        else
+        {
+            var data = _cursor.GetBoardValues();
+            _xPosAssessEO.Add(data.copX);
+            _yPosAssessEO.Add(data.copY);
+        }
+    }
+
+    public void StartAssessmentTimer()
+    {
+        _timer = StartCoroutine(StartTimer());
     }
 
     private void ColourMatchingGame()
@@ -303,8 +379,16 @@ public class GameSession : MonoBehaviour
     {
         while (_totalGameTime >= 0)
         {
-            _totalGameTime -= _totalGameDeltaTime;
             yield return new WaitForSecondsRealtime(_totalGameDeltaTime);
+            _totalGameTime -= _totalGameDeltaTime;
+        }
+
+        if (SceneManager.GetActiveScene().name == "Assessment")
+        {
+            if (!_ecDone)
+                _ecDone = true;
+            else if (!_eoDone)
+                _eoDone = true;
         }
     }
 

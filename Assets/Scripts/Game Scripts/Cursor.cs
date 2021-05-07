@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using FilterManager;
+﻿using FilterManager;
 using UnityEngine;
 
 public class Cursor : MonoBehaviour
@@ -94,7 +93,7 @@ public class Cursor : MonoBehaviour
         }
     }
 
-    private WiiBoardData GetBoardValues()
+    public WiiBoardData GetBoardValues()
     {
         var boardSensorValues = Wii.GetBalanceBoard(0);
         var taredCOP = Wii.GetCenterOfBalance(0) - _initialCOP;

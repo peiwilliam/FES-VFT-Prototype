@@ -408,6 +408,11 @@ PrefabInstance:
       propertyPath: _gameSession
       value: 
       objectReference: {fileID: 22804545}
+    - target: {fileID: 8120697900936396649, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
+        type: 3}
+      propertyPath: _gameSession
+      value: 
+      objectReference: {fileID: 22804545}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
 --- !u!114 &709439971 stripped

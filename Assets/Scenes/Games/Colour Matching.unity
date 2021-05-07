@@ -206,6 +206,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1790017125400813058, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 7153614973304575424, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
         type: 3}
       propertyPath: m_Name
@@ -326,6 +331,16 @@ PrefabInstance:
       propertyPath: _gameSession
       value: 
       objectReference: {fileID: 2092397994}
+    - target: {fileID: 8120697900936396649, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
+        type: 3}
+      propertyPath: _gameSession
+      value: 
+      objectReference: {fileID: 2092397994}
+    - target: {fileID: 8964262809675997098, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
 --- !u!224 &1101780330 stripped
