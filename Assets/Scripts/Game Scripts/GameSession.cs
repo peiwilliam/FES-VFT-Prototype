@@ -20,7 +20,7 @@ public class GameSession : MonoBehaviour
     private static List<float> _yPosAssessEC;
     private static List<float> _xPosAssessEO; //cursor position during eo assessment
     private static List<float> _yPosAssessEO;
-    
+
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
     [SerializeField] private float _totalGameTime = 100f;
@@ -28,6 +28,7 @@ public class GameSession : MonoBehaviour
 
     private float _totalGameDeltaTime = 1f;
     private Coroutine _timer;
+    private SceneLoader _sceneLoader;
     
     [Header("Ellipse Game")]
     [SerializeField] private GameObject _movingCirclePrefab;
@@ -94,6 +95,8 @@ public class GameSession : MonoBehaviour
     private void Start()
     {
         Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //need cursor for all games
+        
+        _sceneLoader = FindObjectOfType<SceneLoader>();
 
         switch (SceneManager.GetActiveScene().name)
         {
@@ -154,7 +157,12 @@ public class GameSession : MonoBehaviour
         _timeText.text = _totalGameTime.ToString();
 
         if ((_totalGameTime <= 0 && SceneManager.GetActiveScene().name != "Assessment") || _eoDone)
-            FindObjectOfType<SceneLoader>().LoadStartScene();
+        {
+            if (SceneLoader.IsFamiliarization())
+                _sceneLoader.LoadFamiliarizationTransition();
+            else   
+                _sceneLoader.LoadStartScene();
+        }
     }
 
     private void FixedUpdate() //fixed update to keep it in sync with cursor data
@@ -174,7 +182,7 @@ public class GameSession : MonoBehaviour
                         _totalGameTime = 100;
                     }
                     else if (_ecDone && _eoDone)
-                        FindObjectOfType<SceneLoader>().LoadStartScene();
+                        _sceneLoader.LoadStartScene();
                 }
             }
         }

@@ -33,11 +33,20 @@ public class SceneLoader : MonoBehaviour
 
     public void BeginAssesment() => SceneManager.LoadScene("Assessment");
 
-    public void BeginFamiliarization() 
+    public void BeginFamiliarization()
     {
-        SceneManager.LoadScene("Colour Matching");
+        SceneManager.LoadScene("Start Familiarization");
         _beginFamiliarization = true;
     }
+
+    public void LoadFamiliarizationTransition() => SceneManager.LoadScene("Familiarization Transition");
+
+    public void BeginExperimentation() 
+    {
+        SceneManager.LoadScene("Start Experimentation");
+    }
+
+    public static bool IsFamiliarization() => _beginFamiliarization;
 
     private void OnEnable() 
     {
