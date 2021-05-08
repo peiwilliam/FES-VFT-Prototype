@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class SceneLoader : MonoBehaviour
@@ -6,16 +9,10 @@ public class SceneLoader : MonoBehaviour
     [SerializeField] private ZeroBoard _zeroBoard;
 
     private static bool _beginFamiliarization;
-    private static int _gameIndex = 1;
-
-    private void Start() 
-    {
-        // var name = SceneManager.GetActiveScene().name;
-        // var nameMatch = name == "Colour Matching" || name == "Ellipse" || name == "Target" || name == "Hunting";
-
-        // if (_beginFamiliarization && nameMatch && !_inFamiliarization)
-        //     _inFamiliarization = true;
-    }
+    private static int _gameIndex = 1; //starting value
+    private static bool _beginExperimentation;
+    private static List<int> _gameIndices = new List<int> {2, 3, 4, 5}; //starting values +1 from 1,2,3,4 because of build index
+    private static int _gameIndicesIndex;
 
     public void LoadNextScene()
     {
@@ -26,7 +23,14 @@ public class SceneLoader : MonoBehaviour
     public void LoadNextGame()
     {
         var currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        SceneManager.LoadScene(currentSceneIndex + _gameIndex);
+
+        if (SceneManager.GetActiveScene().name == "Experimentation Transition")
+        {
+            _gameIndex = _gameIndices[++_gameIndicesIndex];
+            SceneManager.LoadScene(currentSceneIndex + _gameIndex);
+        }
+        else
+            SceneManager.LoadScene(currentSceneIndex + _gameIndex);
     }
 
     public void LoadStartScene() => SceneManager.LoadScene(0);
@@ -47,19 +51,7 @@ public class SceneLoader : MonoBehaviour
 
     public void QuitGame() => Application.Quit();
 
-    public void BeginAssesment() => SceneManager.LoadScene("Assessment");
-
-    // public void BeginFamiliarization()
-    // {
-    //     SceneManager.LoadScene("Familiarization Transition");
-    //     _beginFamiliarization = true;
-    // }
-
-    // public void LoadFamiliarizationTransition() 
-    // {
-    //     SceneManager.LoadScene("Familiarization Transition");
-    //     _gameIndex++; //increase the index whenever we go to the transition so we can go to the next game
-    // } 
+    public void BeginAssesment() => SceneManager.LoadScene("Assessment"); 
 
     public void Familiarization()
     {
@@ -71,14 +63,25 @@ public class SceneLoader : MonoBehaviour
         SceneManager.LoadScene("Familiarization Transition");
     }
 
-    public void BeginExperimentation() 
+    public void Experimentation() 
     {
-        SceneManager.LoadScene("Start Experimentation");
+        if (!_beginExperimentation)
+            _beginExperimentation = true;
+        else if (_gameIndices == new List<int> {1, 2, 3, 4})
+        {
+            
+        }
+
+        _gameIndex = _gameIndices[_gameIndicesIndex++]; //zero first then increment
+
+        SceneManager.LoadScene("Experimentation Transition");
     }
 
     public static bool GetFamiliarization() => _beginFamiliarization;
 
     public static int GetGameIndex() => _gameIndex;
+
+    public static bool GetExperimentation() => _beginExperimentation;
 
     private void OnEnable() 
     {

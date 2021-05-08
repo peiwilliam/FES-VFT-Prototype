@@ -478,5 +478,33 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 2000394133}
-    m_RemovedComponents: []
+    - target: {fileID: 7334898862549320019, guid: 0b10ccd94a7bcd540aac0804606059c9,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: LoadNextGame
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 7334898862681719335, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+--- !u!1 &7334898862681719332 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7334898862004869619, guid: 0b10ccd94a7bcd540aac0804606059c9,
+    type: 3}
+  m_PrefabInstance: {fileID: 7334898862681719331}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7334898862681719333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7334898862681719332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29f8fd9a00f04664bacf81e80445426e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _infoText:
+  - Experimentation will begin once you click Next. The order of the games will be
+    randomized.
+  - Click Next to start the next game. Otherwise click Exit to exit the experimentation.
