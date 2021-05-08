@@ -8,7 +8,7 @@ public class FamiliarizationTransition : MonoBehaviour
 
     private void Start()
     {
-        if (SceneLoader.GetFamiliarization()[0] && !SceneLoader.GetFamiliarization()[1])
+        if (SceneLoader.GetFamiliarization() && SceneLoader.GetGameIndex() == 1)
             gameObject.GetComponent<Text>().text = _infoText[0]; //only show this when familiarization has started
         else
             gameObject.GetComponent<Text>().text = _infoText[1];

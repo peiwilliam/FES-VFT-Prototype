@@ -158,7 +158,7 @@ public class GameSession : MonoBehaviour
 
         if ((_totalGameTime <= 0 && SceneManager.GetActiveScene().name != "Assessment") || _eoDone)
         {
-            if (SceneLoader.GetFamiliarization()[0] && SceneLoader.GetGameIndex() < 4)
+            if (SceneLoader.GetFamiliarization() && SceneLoader.GetGameIndex() < 4)
                 _sceneLoader.Familiarization();
             else   
                 _sceneLoader.LoadStartScene();
