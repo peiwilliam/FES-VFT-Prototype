@@ -5,6 +5,7 @@ public class MovingCircle : MonoBehaviour
 {
     [SerializeField] private float _circleVelocity = 3f;
     [SerializeField] private float _deltaTimeScore = 0.2f;
+    [SerializeField] private float _startingGracePeriod = 5f;
     [SerializeField] private float _gracePeriod = 1f;
     [SerializeField] private int _score = 0;
     [SerializeField] private bool _isDecreasing = false;
@@ -17,7 +18,7 @@ public class MovingCircle : MonoBehaviour
     private int _direction;
     private Coroutine _scoreIncreaseCoroutine;
     private Coroutine _scoreDecreaseCoroutine;
-    
+    private Coroutine _initialGracePeriod;
 
     private void Start() 
     {
@@ -28,6 +29,8 @@ public class MovingCircle : MonoBehaviour
         _positionIndex = gameSession.EllipseIndex;
 
         _direction = Random.Range(0, 2); //0 is clockwise, 1 is counterclockwise
+
+        _initialGracePeriod = StartCoroutine(StartOfGame());
     }
 
     private void Update() 
@@ -38,6 +41,12 @@ public class MovingCircle : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collider) 
     {
         DetectCursor.ChangeColourOnDetection(gameObject, out _oldColour);
+
+        if (_initialGracePeriod != null)
+        {
+            StopCoroutine(_initialGracePeriod);
+            _initialGracePeriod = null;
+        }
 
         if (_isDecreasing)
         {
@@ -106,6 +115,17 @@ public class MovingCircle : MonoBehaviour
         _isDecreasing = true;
 
         yield return new WaitForSecondsRealtime(_gracePeriod);
+
+        while (true)
+        {
+            _score--;
+            yield return new WaitForSeconds(_deltaTimeScore);
+        }
+    }
+
+    private IEnumerator StartOfGame()
+    {
+        yield return new WaitForSeconds(_startingGracePeriod);
 
         while (true)
         {

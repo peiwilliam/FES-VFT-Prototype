@@ -622,7 +622,7 @@ PrefabInstance:
     - target: {fileID: 6002298768468845484, guid: fc409bd79f93a6d4d80f0a78b6e3712f,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: LoadNextScene
+      value: Familiarization
       objectReference: {fileID: 0}
     - target: {fileID: 6002298768468845484, guid: fc409bd79f93a6d4d80f0a78b6e3712f,
         type: 3}
