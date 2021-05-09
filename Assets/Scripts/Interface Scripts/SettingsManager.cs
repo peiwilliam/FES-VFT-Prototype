@@ -28,7 +28,7 @@ public class SettingsManager : MonoBehaviour
         ["LDF Max"] = 50,
         ["Height"] = 170,
         ["Mass"] = 65f,
-        ["Ankle Fraction"] = 0.971f
+        ["Ankle Mass Fraction"] = 0.971f
     };
 
     // dictionaries for iterating through values easier
@@ -54,16 +54,16 @@ public class SettingsManager : MonoBehaviour
         ["LDF Max"] = "int",
         ["Height"] = "int",
         ["Mass"] = "float",
-        ["Ankle Fraction"] = "float"
+        ["Ankle Mass Fraction"] = "float"
     };
 
     private void Awake() 
     {
-        SetUpSingleton(); //set a singleton
+        // SetUpSingleton(); //set a singleton
 
         foreach (var nameAndType in _fieldNamesAndTypes)
         {
-            if (!PlayerPrefs.HasKey(nameAndType.Key)) //if opening up game for first time, set all values to default
+            if (!PlayerPrefs.HasKey(nameAndType.Key)) //if opening up game for first time, set all values to default, missing values also set to default
             {
                 if (nameAndType.Value == "int")
                     PlayerPrefs.SetInt(nameAndType.Key, (int)_defaultValues[nameAndType.Key]);
@@ -75,15 +75,15 @@ public class SettingsManager : MonoBehaviour
         }
     }
 
-    private void SetUpSingleton()
-    {
-        var numberOfObj = FindObjectsOfType<SettingsManager>().Length;
+    // private void SetUpSingleton()
+    // {
+    //     var numberOfObj = FindObjectsOfType<SettingsManager>().Length;
 
-        if (numberOfObj > 1)
-            Destroy(gameObject);
-        else
-            DontDestroyOnLoad(gameObject);
-    }
+    //     if (numberOfObj > 1)
+    //         Destroy(gameObject);
+    //     else
+    //         DontDestroyOnLoad(gameObject);
+    // }
 
     public void SetInputFields() 
     {

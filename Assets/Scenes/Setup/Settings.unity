@@ -199,6 +199,75 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af65ef215dac92f46849188c5f9fbb87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1001 &1573870603
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1493450959658431212, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_Name
+      value: Settings Manager
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3263389013692827047, guid: b1a8f777d9bdd4343b11ed51c895cef5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b1a8f777d9bdd4343b11ed51c895cef5, type: 3}
 --- !u!1 &1647488131
 GameObject:
   m_ObjectHideFlags: 0
@@ -403,6 +472,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Settings Canvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 7167836940181498518, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_Name
+      value: Ankle Mass Fraction
+      objectReference: {fileID: 0}
+    - target: {fileID: 8168365229771782755, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_Name
+      value: Ankle Mass Fraction Text
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}

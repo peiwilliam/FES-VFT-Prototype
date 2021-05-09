@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,10 +7,11 @@ public class SceneLoader : MonoBehaviour
     [SerializeField] private ZeroBoard _zeroBoard;
 
     private static bool _beginFamiliarization;
-    private static int _gameIndex = 1; //starting value
     private static bool _beginExperimentation;
-    private static List<int> _gameIndices = new List<int> {2, 3, 4, 5}; //starting values +1 from 1,2,3,4 because of build index
+    private static bool _indicesRandomized;
+    private static int _gameIndex = 1; //starting value
     private static int _gameIndicesIndex;
+    private static List<int> _gameIndices = new List<int> {2, 3, 4, 5}; //starting values +1 from 1,2,3,4 because of build index
 
     public void LoadNextScene()
     {
@@ -26,7 +25,7 @@ public class SceneLoader : MonoBehaviour
 
         if (SceneManager.GetActiveScene().name == "Experimentation Transition")
         {
-            _gameIndex = _gameIndices[++_gameIndicesIndex];
+            _gameIndex = _gameIndices[_gameIndicesIndex++]; //current value then increment
             SceneManager.LoadScene(currentSceneIndex + _gameIndex);
         }
         else
@@ -57,7 +56,7 @@ public class SceneLoader : MonoBehaviour
     {
         if (!_beginFamiliarization)
             _beginFamiliarization = true;
-        else if (_gameIndex < 4)
+        else if (_gameIndex <= 4)
             _gameIndex++;
 
         SceneManager.LoadScene("Familiarization Transition");
@@ -67,12 +66,12 @@ public class SceneLoader : MonoBehaviour
     {
         if (!_beginExperimentation)
             _beginExperimentation = true;
-        else if (_gameIndices == new List<int> {1, 2, 3, 4})
+        
+        if (!_indicesRandomized) //check if unshuffled
         {
-            
+            KnuthShuffleIndices();
+            _indicesRandomized = true;
         }
-
-        _gameIndex = _gameIndices[_gameIndicesIndex++]; //zero first then increment
 
         SceneManager.LoadScene("Experimentation Transition");
     }
@@ -82,6 +81,24 @@ public class SceneLoader : MonoBehaviour
     public static int GetGameIndex() => _gameIndex;
 
     public static bool GetExperimentation() => _beginExperimentation;
+
+    public static int GetGameIndicesIndex() => _gameIndicesIndex;
+
+    private void KnuthShuffleIndices() //taken from here: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+    {
+        for (var i = _gameIndices.Count - 1; i > 0; i--)
+        {
+            var randomValue = Random.value;
+
+            if (Random.value == 1f) //very unlikely to happen, but want to make sure that it never happens
+                randomValue = Random.value; //will almost certainly not return 1 again if it happens
+
+            var j = Mathf.FloorToInt(randomValue * (i + 1));
+            var temp = _gameIndices[i];
+            _gameIndices[i] = _gameIndices[j];
+            _gameIndices[j] = temp;
+        }
+    }
 
     private void OnEnable() 
     {

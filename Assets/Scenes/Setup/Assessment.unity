@@ -136,6 +136,20 @@ PrefabInstance:
       propertyPath: _instructionsBox
       value: 
       objectReference: {fileID: 6350752961590934863}
+    - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
+      propertyPath: _instructions.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
+      propertyPath: _instructions.Array.data[0]
+      value: Please cross your arms and close your eyes. The eyes closed assessment
+        will be performed first.
+      objectReference: {fileID: 0}
+    - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
+      propertyPath: _instructions.Array.data[1]
+      value: Please keep your arms crossed and open your eyes. Keep your eyes on
+        the centre target.
+      objectReference: {fileID: 0}
     - target: {fileID: 6779056450887742546, guid: 80eff38156b517d47a986db4dfd768f1,
         type: 3}
       propertyPath: m_RootOrder

@@ -105,11 +105,6 @@ public class GameSession : MonoBehaviour
                 _yPosAssessEC = new List<float>();
                 _xPosAssessEO = new List<float>();
                 _yPosAssessEO = new List<float>();
-                _instructions = new List<string>()
-                {
-                    "Please cross your arms and close your eyes. The eyes closed assessment will be performed first.",
-                    "Please keep your arms crossed and open your eyes. Keep your eyes on the centre target."
-                };
 
                 _cursor = FindObjectOfType<Cursor>();
 
@@ -156,10 +151,13 @@ public class GameSession : MonoBehaviour
 
         _timeText.text = _totalGameTime.ToString();
 
+        //how to handle transitions for all scenes other than assessment
         if ((_totalGameTime <= 0 && SceneManager.GetActiveScene().name != "Assessment") || _eoDone)
         {
             if (SceneLoader.GetFamiliarization() && SceneLoader.GetGameIndex() < 4)
                 _sceneLoader.Familiarization();
+            else if (SceneLoader.GetExperimentation() && SceneLoader.GetGameIndicesIndex() < 4)
+                _sceneLoader.Experimentation();
             else   
                 _sceneLoader.LoadStartScene();
         }
