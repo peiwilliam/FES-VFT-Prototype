@@ -32,7 +32,17 @@ public class SceneLoader : MonoBehaviour
             SceneManager.LoadScene(currentSceneIndex + _gameIndex);
     }
 
-    public void LoadStartScene() => SceneManager.LoadScene(0);
+    public void LoadStartScene() 
+    {
+        SceneManager.LoadScene(0);
+
+        //when we return to start scene, we want to reset all of the static variables
+        _beginFamiliarization = false;
+        _beginExperimentation = false;
+        _indicesRandomized = false;
+        _gameIndex = 1;
+        _gameIndicesIndex = 0;
+    }
 
     public void ConnectToBoard() => SceneManager.LoadScene("Bluetooth PIN");
 
