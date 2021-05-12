@@ -3,9 +3,11 @@ using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class SettingsManager : MonoBehaviour
 {
+    // dictionaries for iterating through values easier
     // default values
     private static Dictionary<string, object> _defaultValues = new Dictionary<string, object>()
     {
@@ -28,10 +30,17 @@ public class SettingsManager : MonoBehaviour
         ["LDF Max"] = 50,
         ["Height"] = 170,
         ["Mass"] = 65f,
-        ["Ankle Mass Fraction"] = 0.971f
+        ["Ankle Mass Fraction"] = 0.971f,
+        ["Kp Coefficient"] = 0.24432f,
+        ["Kd Coefficient"] = 0.22418f,
+        ["K Coefficient"] = 0.75024f,
+        ["Duration of Target"] = 10f,
+        ["Duration to Get Points"] = 3f,
+        ["Limit of Stability Front"] = 0f,
+        ["Limit of Stability Back"] = 0f,
+        ["Limit of Stability Left"] = 0f,
+        ["Limit of Stability Right"] = 0f,
     };
-
-    // dictionaries for iterating through values easier
     private static Dictionary<string, InputField> _fields = new Dictionary<string, InputField>();
     private static Dictionary<string, string> _fieldNamesAndTypes = new Dictionary<string, string>() 
     {
@@ -54,36 +63,36 @@ public class SettingsManager : MonoBehaviour
         ["LDF Max"] = "int",
         ["Height"] = "int",
         ["Mass"] = "float",
-        ["Ankle Mass Fraction"] = "float"
+        ["Ankle Mass Fraction"] = "float",
+        ["Kp Coefficient"] = "float",
+        ["Kd Coefficient"] = "float",
+        ["K Coefficient"] = "float",
+        ["Duration of Target"] = "float",
+        ["Duration to Get Points"] = "float",
+        ["Limit of Stability Front"] = "float",
+        ["Limit of Stability Back"] = "float",
+        ["Limit of Stability Left"] = "float",
+        ["Limit of Stability Right"] = "float"
     };
 
     private void Awake() 
     {
-        // SetUpSingleton(); //set a singleton
-
-        foreach (var nameAndType in _fieldNamesAndTypes)
+        if (SceneManager.GetActiveScene().buildIndex == 0) //only do this at the start screen
         {
-            if (!PlayerPrefs.HasKey(nameAndType.Key)) //if opening up game for first time, set all values to default, missing values also set to default
+            foreach (var nameAndType in _fieldNamesAndTypes)
             {
-                if (nameAndType.Value == "int")
-                    PlayerPrefs.SetInt(nameAndType.Key, (int)_defaultValues[nameAndType.Key]);
-                else if (nameAndType.Value == "float")
-                    PlayerPrefs.SetFloat(nameAndType.Key, (float)_defaultValues[nameAndType.Key]);
-                else
-                    PlayerPrefs.SetString(nameAndType.Key, (string)_defaultValues[nameAndType.Key]);
+                if (!PlayerPrefs.HasKey(nameAndType.Key)) //if opening up game for first time, set all values to default, missing values also set to default
+                {
+                    if (nameAndType.Value == "int")
+                        PlayerPrefs.SetInt(nameAndType.Key, (int)_defaultValues[nameAndType.Key]);
+                    else if (nameAndType.Value == "float")
+                        PlayerPrefs.SetFloat(nameAndType.Key, (float)_defaultValues[nameAndType.Key]);
+                    else
+                        PlayerPrefs.SetString(nameAndType.Key, (string)_defaultValues[nameAndType.Key]);
+                }
             }
         }
     }
-
-    // private void SetUpSingleton()
-    // {
-    //     var numberOfObj = FindObjectsOfType<SettingsManager>().Length;
-
-    //     if (numberOfObj > 1)
-    //         Destroy(gameObject);
-    //     else
-    //         DontDestroyOnLoad(gameObject);
-    // }
 
     public void SetInputFields() 
     {

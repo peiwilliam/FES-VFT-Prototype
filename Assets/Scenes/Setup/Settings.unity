@@ -468,20 +468,15 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2482801487843221985, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 2482801487843221988, guid: 661f19b32875ba24b9ca09791b5ef495,
         type: 3}
       propertyPath: m_Name
       value: Settings Canvas
-      objectReference: {fileID: 0}
-    - target: {fileID: 7167836940181498518, guid: 661f19b32875ba24b9ca09791b5ef495,
-        type: 3}
-      propertyPath: m_Name
-      value: Ankle Mass Fraction
-      objectReference: {fileID: 0}
-    - target: {fileID: 8168365229771782755, guid: 661f19b32875ba24b9ca09791b5ef495,
-        type: 3}
-      propertyPath: m_Name
-      value: Ankle Mass Fraction Text
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
