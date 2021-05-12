@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using KnuthShuffle;
 
 public class SceneLoader : MonoBehaviour
 {
@@ -79,7 +80,8 @@ public class SceneLoader : MonoBehaviour
         
         if (!_indicesRandomized) //check if unshuffled
         {
-            KnuthShuffleIndices();
+            var shuffler = new KnuthShuffler();
+            _gameIndices = shuffler.KnuthShuffle(_gameIndices);
             _indicesRandomized = true;
         }
 

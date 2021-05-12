@@ -5,14 +5,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using KnuthShuffle;
 
 public class GameSession : MonoBehaviour
 {
     [Header("Assessment")]
     [SerializeField] private bool _ecDone;
     [SerializeField] private bool _eoDone;
-    [SerializeField] private List<string> _instructions;
-    [SerializeField] private InputField _instructionsBox;
+    [SerializeField] private List<string> _assessInstructions;
+    [SerializeField] private InputField _assessInstructionsBox;
 
     private Cursor _cursor;
 
@@ -20,6 +21,24 @@ public class GameSession : MonoBehaviour
     private static List<float> _yPosAssessEC;
     private static List<float> _xPosAssessEO; //cursor position during eo assessment
     private static List<float> _yPosAssessEO;
+
+    [Header("Limits of Stability")]
+    [SerializeField] private InputField _losInstructionsBox;
+    
+    private Dictionary<string, string> _losInstructions;
+
+    //dictionary to keep track of which positions have been done
+    private static Dictionary<string, bool> _directions = new Dictionary<string, bool>() 
+    {
+        ["Forward"] = false,
+        ["Backward"] = false,
+        ["Left"] = false,
+        ["Right"] = false,
+        ["Forward Left"] = false,
+        ["Backward Right"] = false,
+        ["Forward Right"] = false,
+        ["Backward Left"] = false
+    };
 
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
@@ -110,6 +129,10 @@ public class GameSession : MonoBehaviour
 
                 SetupAssessment();
                 break;
+            case "LOS":
+                _cursor = FindObjectOfType<Cursor>();
+
+                break;
             case "Colour Matching":
                 var colourCircles = FindObjectsOfType<ColourCircle>();
                 _colourCircles = colourCircles.ToList();
@@ -132,7 +155,9 @@ public class GameSession : MonoBehaviour
                 break;
         }
 
-        if (SceneManager.GetActiveScene().name != "Assessment") //timer for assessment started manually
+        var sceneName = SceneManager.GetActiveScene().name;
+
+        if (sceneName != "Assessment" || sceneName != "LOS") //timer for assessment started manually
             StartCoroutine(StartTimer());
     }
 
@@ -176,7 +201,7 @@ public class GameSession : MonoBehaviour
                     if (_ecDone && !_eoDone)
                     {
                         _timer = null;
-                        _instructionsBox.text = _instructions[1];
+                        _assessInstructionsBox.text = _assessInstructions[1];
                         _totalGameTime = 100;
                     }
                     else if (_ecDone && _eoDone)
@@ -186,11 +211,7 @@ public class GameSession : MonoBehaviour
         }
     }
 
-    private void SetupAssessment()
-    {
-        _instructionsBox.text = _instructions[0];
-        _instructionsBox.transform.Find("Instructions Text").GetComponent<Text>().fontSize = 30;
-    }
+    private void SetupAssessment() => _assessInstructionsBox.text = _assessInstructions[0];
 
     private void Assessment()
     {
@@ -211,6 +232,26 @@ public class GameSession : MonoBehaviour
     public void StartAssessmentTimer()
     {
         _timer = StartCoroutine(StartTimer());
+    }
+
+    public void StartLOS()
+    {
+        _losInstructions = new Dictionary<string, string>()
+        {
+            ["Forward"] = "Please lean forward as far as you can and hold for 3 seconds.",
+            ["Backward"] = "Please lean backward as far as you can and hold for 3 seconds.",
+            ["Left"] = "Please lean left as far as you can and hold for 3 seconds.",
+            ["Right"] = "Please lean right as far as you can and hold for 3 seconds.",
+            ["Forward Right"] = "Please lean forward right as far as you can and hold for 3 seconds.",
+            ["Backward Left"] = "Please lean backward left as far as you can and hold for 3 seconds.",
+            ["Forward Left"] = "Please lean forward left as far as you can and hold for 3 seconds.",
+            ["Backward Right"] = "Please lean backward right as far as you can and hold for 3 seconds."
+        };
+
+        var names = _losInstructions.Keys.ToList(); //make a list of the directions
+        var shuffler = new KnuthShuffler();
+        shuffler.KnuthShuffle(names);
+
     }
 
     private void ColourMatchingGame()
