@@ -249,8 +249,7 @@ public class GameSession : MonoBehaviour
         };
 
         var names = _losInstructions.Keys.ToList(); //make a list of the directions
-        var shuffler = new KnuthShuffler();
-        shuffler.KnuthShuffle(names);
+        names = KnuthShuffler.Shuffle(names);
 
     }
 

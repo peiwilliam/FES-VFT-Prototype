@@ -7,7 +7,7 @@ namespace KnuthShuffle
     {
         //taken from here: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
         
-        public List<T> KnuthShuffle<T>(List<T> list)
+        public static List<T> Shuffle<T>(List<T> list)
         {
             for (var i = list.Count - 1; i > 0; i--)
             {
@@ -25,7 +25,7 @@ namespace KnuthShuffle
             return list;
         }
 
-        public T[] KnuthShuffle<T>(T[] array)
+        public static T[] Shuffle<T>(T[] array)
         {
             for (var i = array.Length - 1; i > 0; i--)
             {
