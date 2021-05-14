@@ -63,6 +63,8 @@ public class SceneLoader : MonoBehaviour
 
     public void BeginAssesment() => SceneManager.LoadScene("Assessment"); 
 
+    public void BeginSensitivity() => SceneManager.LoadScene("LOS");
+
     public void Familiarization()
     {
         if (!_beginFamiliarization)
@@ -80,7 +82,6 @@ public class SceneLoader : MonoBehaviour
         
         if (!_indicesRandomized) //check if unshuffled
         {
-            var shuffle = new KnuthShuffler();
             _gameIndices = KnuthShuffler.Shuffle(_gameIndices);
             _indicesRandomized = true;
         }

@@ -14,7 +14,7 @@ namespace KnuthShuffle
                 var randomValue = Random.value;
 
                 if (Random.value == 1f) //very unlikely to happen, but want to make sure that it never happens
-                    randomValue = Random.value; //will almost certainly not return 1 again if it happens
+                    randomValue = Random.value; //will almost certainly not return 1 again
 
                 var j = Mathf.FloorToInt(randomValue * (i + 1));
                 var temp = list[i];
@@ -32,7 +32,7 @@ namespace KnuthShuffle
                 var randomValue = Random.value;
 
                 if (Random.value == 1f) //very unlikely to happen, but want to make sure that it never happens
-                    randomValue = Random.value; //will almost certainly not return 1 again if it happens
+                    randomValue = Random.value; //will almost certainly not return 1 again
 
                 var j = Mathf.FloorToInt(randomValue * (i + 1));
                 var temp = array[i];
