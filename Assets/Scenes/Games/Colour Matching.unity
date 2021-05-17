@@ -43,7 +43,7 @@ RenderSettings:
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 11
+  serializedVersion: 12
   m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
@@ -98,7 +98,8 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 1
+  m_LightingSettings: {fileID: 4890085278179872738, guid: 2f827bd484d527b4b94e133ae853f6ea,
+    type: 2}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -118,6 +119,8 @@ NavMeshSettings:
     manualTileSize: 0
     tileSize: 256
     accuratePlacement: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
@@ -536,6 +539,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -789,6 +793,66 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Circle Container
+      objectReference: {fileID: 0}
+    - target: {fileID: 7066776131420946467, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: White
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552821906161305, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Beige
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552822056431240, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Pink
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552822249541601, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Grey
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552822321914668, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Yellow
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552822640093812, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Orange
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552822748248761, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Cyan
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552823035085008, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Blue
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552823232959688, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Black
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552823374560334, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Purple
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552823762727277, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Brown
+      objectReference: {fileID: 0}
+    - target: {fileID: 7265552823914116093, guid: f3e8b68345c52d84194b78e3a216a06c,
+        type: 3}
+      propertyPath: m_Name
+      value: Green
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f3e8b68345c52d84194b78e3a216a06c, type: 3}

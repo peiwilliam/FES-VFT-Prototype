@@ -17,10 +17,7 @@ public class GameSession : MonoBehaviour
 
     private Cursor _cursor;
 
-    private static List<float> _xPosAssessEC; //cursor position during ec assessment
-    private static List<float> _yPosAssessEC;
-    private static List<float> _xPosAssessEO; //cursor position during eo assessment
-    private static List<float> _yPosAssessEO;
+    private static Dictionary<string, List<WiiBoardData>> _qsAssessment;
 
     [Header("Limits of Stability")]
     [SerializeField] private InputField _losInstructionsBox;
@@ -29,31 +26,18 @@ public class GameSession : MonoBehaviour
     [SerializeField] private bool _shuffled;
     [SerializeField] private List<SpriteRenderer> _rectangles;
     
+    //list of direction names
+    //private static List<string> _directionNames = _directions.Keys.ToList();
+    private static List<string> _directionNames = new List<string>()
+    {
+        "Forward", "Back", "Left", "Right", "Forward Left", "Backward Right", "Forward Right", "Backward Left"
+    };
     //dictionary of instructions text for each direction
-    private static Dictionary<string, string> _losInstructions = new Dictionary<string, string>()
-    {
-        ["Forward"] = "Please lean forward as far as you can and hold for 3 seconds.",
-        ["Back"] = "Please lean backward as far as you can and hold for 3 seconds.",
-        ["Left"] = "Please lean left as far as you can and hold for 3 seconds.",
-        ["Right"] = "Please lean right as far as you can and hold for 3 seconds.",
-        ["Forward Left"] = "Please lean forward left as far as you can and hold for 3 seconds.",
-        ["Backward Right"] = "Please lean backward right as far as you can and hold for 3 seconds.",
-        ["Forward Right"] = "Please lean forward right as far as you can and hold for 3 seconds.",
-        ["Backward Left"] = "Please lean backward left as far as you can and hold for 3 seconds."
-    };
+    private static Dictionary<string, string> _losInstructions = _directionNames.ToDictionary(v => v, v => "Please lean " + v.ToLower() + " as far as you can and hold for 3 seconds.");
     //dictionary to keep track of which positions have been done
-    private static Dictionary<string, bool> _directions = new Dictionary<string, bool>() 
-    {
-        ["Forward"] = false,
-        ["Back"] = false,
-        ["Left"] = false,
-        ["Right"] = false,
-        ["Forward Left"] = false,
-        ["Backward Right"] = false,
-        ["Forward Right"] = false,
-        ["Backward Left"] = false
-    };
-    private static List<string> _directionNames = _directions.Keys.ToList();
+    private static Dictionary<string, bool> _directions = _directionNames.ToDictionary(v => v, v => false);
+    //dictionary to keep track of wiiboard data in each direction
+    private static Dictionary<string, List<WiiBoardData>> _limits;
 
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
@@ -79,9 +63,7 @@ public class GameSession : MonoBehaviour
     [SerializeField] private bool _conditionColourMet;
     [SerializeField] private List<ColourCircle> _colourCircles;
     //default colours, need to change if the colours have been changed
-    [SerializeField] private List<string> _colourTexts = new List<string>() {"White", "Black", "Blue", "Green", "Purple", 
-                                                                             "Yellow", "Cyan", "Pink", "Grey", "Beige", 
-                                                                             "Brown", "Orange"};
+    [SerializeField] private List<string> _colourTexts;
     [SerializeField] private UnityEvent _colourChangeEvent;
     
     private Text _colourText;
@@ -136,23 +118,24 @@ public class GameSession : MonoBehaviour
         switch (sceneName)
         {
             case "Assessment":
-                _xPosAssessEC = new List<float>();
-                _yPosAssessEC = new List<float>();
-                _xPosAssessEO = new List<float>();
-                _yPosAssessEO = new List<float>();
-
                 _cursor = FindObjectOfType<Cursor>();
+                _qsAssessment = new Dictionary<string, List<WiiBoardData>>() 
+                {
+                    ["EC"] = new List<WiiBoardData>(),
+                    ["EO"] = new List<WiiBoardData>()
+                };
                
                 SetupAssessment();
                 break;
             case "LOS":
+                //first one is for the keys, the second is for the values
+                _limits = _directionNames.ToDictionary(v => v, v => new List<WiiBoardData>());
                 _cursor = FindObjectOfType<Cursor>();
-                // _rectangles = FindObjectsOfType<SpriteRenderer>().ToList();
-                // _rectangles.RemoveAll(n => n.tag == "Cursor"); //remove the cursor from the list
+                
                 break;
             case "Colour Matching":
-                var colourCircles = FindObjectsOfType<ColourCircle>();
-                _colourCircles = colourCircles.ToList();
+                _colourCircles = FindObjectsOfType<ColourCircle>().ToList();
+                _colourTexts = new List<string>(from circle in _colourCircles select circle.name);
 
                 if (_colourChangeEvent == null)
                     _colourChangeEvent = new UnityEvent(); 
@@ -246,18 +229,12 @@ public class GameSession : MonoBehaviour
 
     private void Assessment() //haven't actually checked if this works yet
     {
+        var data = _cursor.GetBoardValues();
+
         if (!_ecDone)
-        {
-            var data = _cursor.GetBoardValues();
-            _xPosAssessEC.Add(data.copX);
-            _yPosAssessEC.Add(data.copY);
-        }
+            _qsAssessment["EC"].Add(data);
         else
-        {
-            var data = _cursor.GetBoardValues();
-            _xPosAssessEO.Add(data.copX);
-            _yPosAssessEO.Add(data.copY);
-        }
+            _qsAssessment["EO"].Add(data);
     }
 
     public void StartAssessmentTimer() => _timer = StartCoroutine(StartTimer());
