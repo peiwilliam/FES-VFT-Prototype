@@ -1,5 +1,6 @@
 ﻿using FilterManager;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Cursor : MonoBehaviour
 {
@@ -14,6 +15,7 @@ public class Cursor : MonoBehaviour
     private CSVWriter _writer;
     private Filter _filterX;
     private Filter _filterY;
+    private GameSession _gameSession;
 
     private void Start() 
     {
@@ -21,6 +23,8 @@ public class Cursor : MonoBehaviour
         {
             SetBoardConditions();
         }
+
+        _gameSession = FindObjectOfType<GameSession>();
     }
 
     private void FixedUpdate()
@@ -113,8 +117,9 @@ public class Cursor : MonoBehaviour
 
         var fCopX = 0.0f;
         var fCopY = 0.0f;
+        var sceneName = SceneManager.GetActiveScene().name;
 
-        if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set 0 to default in case it isn't set
+        if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && sceneName != "Assessment" && sceneName != "LOS") //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
         {
             fCopX = _filterX.Compute(taredCOP.x);
             fCopY = _filterY.Compute(taredCOP.y);

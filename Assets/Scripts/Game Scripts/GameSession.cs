@@ -25,19 +25,14 @@ public class GameSession : MonoBehaviour
     [SerializeField] private int _counter;
     [SerializeField] private bool _shuffled;
     [SerializeField] private List<SpriteRenderer> _rectangles;
+    [SerializeField] private string _direction;
     
-    //list of direction names
-    //private static List<string> _directionNames = _directions.Keys.ToList();
-    private static List<string> _directionNames = new List<string>()
-    {
-        "Forward", "Back", "Left", "Right", "Forward Left", "Backward Right", "Forward Right", "Backward Left"
-    };
-    //dictionary of instructions text for each direction
-    private static Dictionary<string, string> _losInstructions = _directionNames.ToDictionary(v => v, v => "Please lean " + v.ToLower() + " as far as you can and hold for 3 seconds.");
-    //dictionary to keep track of which positions have been done
-    private static Dictionary<string, bool> _directions = _directionNames.ToDictionary(v => v, v => false);
+    private List<string> _directionNames = new List<string>(); //list of direction names
+    private Dictionary<string, string> _losInstructions; //dictionary of instructions text for each direction
+    private Dictionary<string, List<WiiBoardData>> _directionData;
+
     //dictionary to keep track of wiiboard data in each direction
-    private static Dictionary<string, List<WiiBoardData>> _limits;
+    private static Dictionary<string, float> _limits;
 
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
@@ -52,6 +47,7 @@ public class GameSession : MonoBehaviour
     [SerializeField] private GameObject _movingCirclePrefab;
 
     private MovingCircle _movingCircle;
+
     public Ellipse Ellipse { get; set; }
     public LineRenderer LineRenderer { get; set; }
     public Vector3[] Positions { get; set; }
@@ -68,6 +64,7 @@ public class GameSession : MonoBehaviour
     
     private Text _colourText;
     private Coroutine _changeColour;
+
     public int ColourMatchingScore { get; private set; }
     public ColourCircle TargetColourCircle { get; private set; }
     //for the _conditionColourMet variable so that other classes can easily access
@@ -87,6 +84,7 @@ public class GameSession : MonoBehaviour
     [SerializeField] private bool _conditionHuntingMet;
     
     private HuntingCircle _huntingCircle;
+
     public int HuntingScore { get; private set; }
     //for the _conditionHuntingMet variable so that other classes can easily access
     public bool ConditionHuntingMet
@@ -100,6 +98,7 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _deltaTimeScore = 0.25f;
 
     private Coroutine _increaseScore;
+
     public float TargetScore { get; private set; }
     //for the _deltaTimeScore variable so that other classes can easily access
     public float DeltaTimeScore
@@ -128,14 +127,16 @@ public class GameSession : MonoBehaviour
                 SetupAssessment();
                 break;
             case "LOS":
-                //first one is for the keys, the second is for the values
-                _limits = _directionNames.ToDictionary(v => v, v => new List<WiiBoardData>());
                 _cursor = FindObjectOfType<Cursor>();
+                _directionNames = new List<string>(from rectangle in _rectangles select rectangle.name); //linq syntax
+                //first one is for the keys, the second is for the values
+                _directionData = _directionNames.ToDictionary(v => v, v => new List<WiiBoardData>());
+                _losInstructions = _directionNames.ToDictionary(v => v, v => "Please lean " + v.ToLower() + " as far as you can and hold for 3 seconds.");
                 
                 break;
             case "Colour Matching":
                 _colourCircles = FindObjectsOfType<ColourCircle>().ToList();
-                _colourTexts = new List<string>(from circle in _colourCircles select circle.name);
+                _colourTexts = new List<string>(from circle in _colourCircles select circle.name); //linq syntax
 
                 if (_colourChangeEvent == null)
                     _colourChangeEvent = new UnityEvent(); 
@@ -164,26 +165,14 @@ public class GameSession : MonoBehaviour
         // with these two games, the scores are not dependent on getting to targets, so it's just one cumulative score
         switch (SceneManager.GetActiveScene().name)
         {
+            case "LOS":
+                LOS();
+                break;
             case "Ellipse":
                 EllipseGameScore();
                 break;
             case "Target":
                 TargetGameScore();
-                break;
-            case "LOS":
-                foreach (var rectangle in _rectangles)
-                {
-                    if (rectangle.tag == "Target" && rectangle.color != new Color(0, 255, 0))
-                    {
-                        rectangle.color = new Color(0f, 1f, 0f);
-                        rectangle.sortingOrder = 1;
-                    }
-                    else if (rectangle.tag == "Untagged" && rectangle.color != new Color(0, 71, 255))
-                    {
-                        rectangle.color = new Color(0f, 0.2775006f, 1f);
-                        rectangle.sortingOrder = 0;
-                    }
-                }
                 break;
         }
 
@@ -202,26 +191,52 @@ public class GameSession : MonoBehaviour
         }
     }
 
+    private void LOS()
+    {
+        foreach (var rectangle in _rectangles)
+        {
+            if (rectangle.tag == "Target" && rectangle.color != Color.green)
+            {
+                rectangle.color = Color.green;
+                rectangle.sortingOrder = 1;
+            }
+            else if (rectangle.tag == "Untagged" && rectangle.color != new Color(0, 0.2775006f, 1f))
+            {
+                rectangle.color = new Color(0f, 0.2775006f, 1f);
+                rectangle.sortingOrder = 0;
+            }
+        }
+    }
+
     private void FixedUpdate() //fixed update to keep it in sync with cursor data
     {
-        if (SceneManager.GetActiveScene().name == "Assessment")
+        switch (SceneManager.GetActiveScene().name)
         {
-            if (_timer != null) //timer for the assessment has started
-            {
-                Assessment();
-
-                if (_totalGameTime <= 0) //reset for eyes open condition
+            case "Assessment":
+                if (_timer != null) //timer for the assessment has started
                 {
-                    if (_ecDone && !_eoDone)
+                    Assessment();
+
+                    if (_totalGameTime <= 0) //reset for eyes open condition
                     {
-                        _timer = null;
-                        _assessInstructionsBox.text = _assessInstructions[1];
-                        _totalGameTime = 100;
+                        if (_ecDone && !_eoDone)
+                        {
+                            _timer = null;
+                            _assessInstructionsBox.text = _assessInstructions[1];
+                            _totalGameTime = 100;
+                        }
+                        else if (_ecDone && _eoDone)
+                            _sceneLoader.LoadStartScene();
                     }
-                    else if (_ecDone && _eoDone)
-                        _sceneLoader.LoadStartScene();
                 }
-            }
+                break;
+            case "LOS":
+                var data = _cursor.GetBoardValues();
+
+                if (!string.IsNullOrEmpty(_direction))
+                    _directionData[_direction].Add(data);
+
+                break;
         }
     }
 
@@ -245,7 +260,12 @@ public class GameSession : MonoBehaviour
             GameObject.FindGameObjectWithTag("Target").tag = "Untagged";
 
         if (_counter == _directionNames.Count) //do this check at the beginning so that the last direction isn't just ended
-            SceneManager.LoadScene(0);
+        {
+            _sceneLoader.LoadStartScene();
+            var windowLength = (int) (1/Time.fixedDeltaTime);
+            
+            GetLimits(windowLength);
+        }
         else
         {
             if (!_shuffled)
@@ -254,11 +274,49 @@ public class GameSession : MonoBehaviour
                 _shuffled = true;
             }
 
-            var direction = _directionNames[_counter++];
-            _losInstructionsBox.text = _losInstructions[direction]; //want incrementation after using _counter
-            var rectangle = _rectangles.Find(n => n.name == direction);
+            _direction = _directionNames[_counter++];
+            _losInstructionsBox.text = _losInstructions[_direction]; //want incrementation after using _counter
+            var rectangle = _rectangles.Find(n => n.name == _direction);
             rectangle.tag = "Target";
         }
+    }
+
+    private void GetLimits(int windowLength)
+    {
+        _limits = new Dictionary<string, float>();
+        var averages = new List<float>();
+        
+        if (_directionData.Values == null) //check if the board was used, if it's just cursor, the vales will be null
+        {
+            foreach (var direction in _directionData)
+            {
+                switch (direction.Key)
+                {
+                    case "Forward":
+                    case "Back":
+                        for (var i = 0; i <= direction.Value.Count - windowLength; i++)
+                        {
+                            var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copY));
+                            averages.Add(rangeOfValues.Average());
+                        }
+
+                        break;
+                    case "Left":
+                    case "Right":
+                        for (var i = 0; i <= direction.Value.Count - windowLength; i++)
+                        {
+                            var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copX));
+                            averages.Add(rangeOfValues.Average());
+                        }
+
+                        break;
+                }
+
+                _limits.Add(direction.Key, averages.Max());
+            }
+        }
+        
+        return;
     }
 
     private void ColourMatchingGame()
