@@ -9,7 +9,7 @@ public class Ellipse : MonoBehaviour
  
     private LineRenderer _lineRenderer;
 
-    private void Start() 
+    private void Awake() //needs to be awake not start, game doesn't work in build if it's start even though it works in editor
     {
         _lineRenderer = GetComponent<LineRenderer>();
         SetupEllipse();

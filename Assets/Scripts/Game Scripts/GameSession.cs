@@ -45,10 +45,15 @@ public class GameSession : MonoBehaviour
     
     [Header("Ellipse Game")]
     [SerializeField] private GameObject _movingCirclePrefab;
+    [SerializeField] private Ellipse _ellipse;
 
     private MovingCircle _movingCircle;
 
-    public Ellipse Ellipse { get; set; }
+    // for the _ellipse variable so that moving circle can also get access to ellipse
+    public Ellipse Ellipse
+    {
+        get => _ellipse;
+    }
     public LineRenderer LineRenderer { get; set; }
     public Vector3[] Positions { get; set; }
     public int EllipseIndex { get; private set; }
@@ -338,14 +343,10 @@ public class GameSession : MonoBehaviour
 
     private void EllipseGame()
     {
-        Ellipse = FindObjectOfType<Ellipse>();
-        var radii = Ellipse.GetRadii();
-        var centre = Ellipse.GetCentre();
         LineRenderer = Ellipse.GetComponent<LineRenderer>();
         Positions = new Vector3[LineRenderer.positionCount];
-
         LineRenderer.GetPositions(Positions); //pos has an out on it
-        EllipseIndex = UnityEngine.Random.Range(0, Positions.Length);
+        EllipseIndex = Random.Range(0, Positions.Length);
         Instantiate(_movingCirclePrefab, new Vector3(Positions[EllipseIndex].x, Positions[EllipseIndex].y, 0), Quaternion.identity);
     }
 
@@ -416,22 +417,17 @@ public class GameSession : MonoBehaviour
 
     private float[] GetPositions(float minX, float maxX, float minY, float maxY, float[] oldPos)
     {
-        if (oldPos == new float[] {0f, 0f})
-        {
-            var xPos = UnityEngine.Random.Range(minX, maxX);
-            var yPos = UnityEngine.Random.Range(minY, maxY);
+        var xPos = Random.Range(minX, maxX);
+        var yPos = Random.Range(minY, maxY);
 
+        if (oldPos == new float[] {0f, 0f})
             return new float[] {xPos, yPos};
-        }
         else //checks to make sure that the new circle always spawns a decent distance away, threshold set at quarter of total x dist
         {
-            var xPos = UnityEngine.Random.Range(minX, maxX);
-            var yPos = UnityEngine.Random.Range(minY, maxY);
-
             while (Mathf.Sqrt(Mathf.Pow(xPos - oldPos[0], 2) + Mathf.Pow(yPos - oldPos[1], 2)) <= 2f*5f*16f/9f*0.25f)
             {
-                xPos = UnityEngine.Random.Range(minX, maxX);
-                yPos = UnityEngine.Random.Range(minY, maxY);
+                xPos = Random.Range(minX, maxX);
+                yPos = Random.Range(minY, maxY);
             }
 
             return new float[] {xPos, yPos};
