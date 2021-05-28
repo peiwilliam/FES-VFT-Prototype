@@ -13,18 +13,15 @@ namespace FilterManager
 
         public float Solve(float input, float[] a)
         {
-            float output = 0.0f;
-
-            if (_x.Length == 3) //2nd order
+            var output = 0.0f;
+            
+            //we only need the four loop for fir because iir won't ever need to go above 3 terms
+            for (var i = _x.Length - 1; i >= 0; i--) 
             {
-                _x[2] = _x[1];
-                _x[1] = _x[0];
-                _x[0] = input;
-            }
-            else //1st order
-            {
-                _x[1] = _x[0];
-                _x[0] = input;
+                if (i == 0)
+                    _x[i] = input;
+                else
+                    _x[i] = _x[i - 1];
             }
 
             if (_x.Any(value => value == 0.0f)) //if any values in array are 0, just directly set output as the input.

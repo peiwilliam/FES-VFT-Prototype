@@ -13,7 +13,6 @@ public class SettingsManager : MonoBehaviour
     {
         ["Controller Frequency"] = 20,
         ["Trial Duration"] = 100,
-        ["CoM Height"] = 54.7f,
         ["Ramp Duration"] = 1.0f,
         ["Max A/P Fraction"] = 18.0926f,
         ["Ankle Fraction"] = 2.0f,
@@ -31,6 +30,8 @@ public class SettingsManager : MonoBehaviour
         ["Height"] = 170,
         ["Mass"] = 65f,
         ["Ankle Mass Fraction"] = 0.971f,
+        ["CoM Height"] = 54.7f,
+        ["Inertia Coefficient"] = 0.319f,
         ["Kp Coefficient"] = 0.24432f,
         ["Kd Coefficient"] = 0.22418f,
         ["K Coefficient"] = 0.75024f,
@@ -46,7 +47,7 @@ public class SettingsManager : MonoBehaviour
     {
         ["Controller Frequency"] = "int",
         ["Trial Duration"] = "int",
-        ["CoM Height"] = "float",
+        
         ["Ramp Duration"] = "float",
         ["Max A/P Fraction"] = "float",
         ["Ankle Fraction"] = "float",
@@ -64,6 +65,8 @@ public class SettingsManager : MonoBehaviour
         ["Height"] = "int",
         ["Mass"] = "float",
         ["Ankle Mass Fraction"] = "float",
+        ["CoM Height"] = "float",
+        ["Inertia Coefficient"] = "float",
         ["Kp Coefficient"] = "float",
         ["Kd Coefficient"] = "float",
         ["K Coefficient"] = "float",
@@ -101,11 +104,7 @@ public class SettingsManager : MonoBehaviour
         var fields = FindObjectsOfType<InputField>(); //array form, want to conver to dictionary instead - easier to work with
 
         foreach (var field in fields)
-        {
             _fields.Add(field.name, field);
-        }
-
-        _fields.Remove("Battery Level"); //remove battery level so it doesn't interfere
 
         SetInputs();
     }

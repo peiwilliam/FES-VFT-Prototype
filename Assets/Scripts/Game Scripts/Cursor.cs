@@ -12,9 +12,9 @@ public class Cursor : MonoBehaviour
 
     private const float _Length = 433; //units are mm
     private const float _Width = 228; //units are mm
-    private CSVWriter _writer;
     private Filter _filterX;
     private Filter _filterY;
+    private CSVWriter _writer;
     private GameSession _gameSession;
 
     private void Start() 
@@ -54,12 +54,13 @@ public class Cursor : MonoBehaviour
 
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set 0 as default in case it isn't set
         {
-            _filterX = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"),
-                                    1.0f / Time.fixedDeltaTime, //want freq, so 1/period
-                                    PlayerPrefs.GetInt("Filter Order"));
-            _filterY = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"),
-                                    1.0f / Time.fixedDeltaTime,
-                                    PlayerPrefs.GetInt("Filter Order"));
+            // no longer used, using moving average filter now.
+            // _filterX = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"),
+            //                         1.0f / Time.fixedDeltaTime, //want freq, so 1/period
+            //                         PlayerPrefs.GetInt("Filter Order"));
+            // _filterY = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"),
+            //                         1.0f / Time.fixedDeltaTime,
+            //                         PlayerPrefs.GetInt("Filter Order"));
         }
 
         _writer = new CSVWriter();
@@ -121,8 +122,8 @@ public class Cursor : MonoBehaviour
 
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && sceneName != "Assessment" && sceneName != "LOS") //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
         {
-            fCopX = _filterX.Compute(taredCOP.x);
-            fCopY = _filterY.Compute(taredCOP.y);
+            fCopX = _filterX.ComputeMA(taredCOP.x);
+            fCopY = _filterY.ComputeMA(taredCOP.y);
         }
         
         var data = new WiiBoardData(Time.fixedUnscaledTime, 
