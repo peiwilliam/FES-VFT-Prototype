@@ -10,12 +10,25 @@ public class Cursor : MonoBehaviour
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
     [SerializeField] private Vector2 _initialCOP;
 
-    private const float _Length = 433; //units are mm
-    private const float _Width = 228; //units are mm
+    private const float _Length = 433; // mm
+    private const float _Width = 228; // mm
+    private const float _G = 9.81f; // m/s^2
+    private float _mass = PlayerPrefs.GetFloat("Mass");
+    private float _height = PlayerPrefs.GetFloat("Height");
+    private float _m; // kg
+    private float _h; // m
+    private float _i; // kgm^2
     private Filter _filterX;
     private Filter _filterY;
     private CSVWriter _writer;
     private GameSession _gameSession;
+
+    private void Awake() //want to compute these values before anything starts
+    {
+        _m = PlayerPrefs.GetFloat("Ankle Mass Fraction")*_mass;
+        _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
+        _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);   
+    }
 
     private void Start() 
     {
@@ -54,13 +67,8 @@ public class Cursor : MonoBehaviour
 
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set 0 as default in case it isn't set
         {
-            // no longer used, using moving average filter now.
-            // _filterX = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"),
-            //                         1.0f / Time.fixedDeltaTime, //want freq, so 1/period
-            //                         PlayerPrefs.GetInt("Filter Order"));
-            // _filterY = new Filter(PlayerPrefs.GetFloat("Cutoff Frequency"),
-            //                         1.0f / Time.fixedDeltaTime,
-            //                         PlayerPrefs.GetInt("Filter Order"));
+            _filterX = new Filter(PlayerPrefs.GetInt("Filter Order"));
+            _filterY = new Filter(PlayerPrefs.GetInt("Filter Order"));
         }
 
         _writer = new CSVWriter();
@@ -116,14 +124,17 @@ public class Cursor : MonoBehaviour
                 taredCOP.y = 0f; // if it's not above 1 then it has to be below -1
         }
 
-        var fCopX = 0.0f;
-        var fCopY = 0.0f;
+        var comX = 0.0f;
+        var comY = 0.0f;
         var sceneName = SceneManager.GetActiveScene().name;
 
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && sceneName != "Assessment" && sceneName != "LOS") //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
         {
-            fCopX = _filterX.ComputeMA(taredCOP.x);
-            fCopY = _filterY.ComputeMA(taredCOP.y);
+            comX = taredCOP.x - _i/(_m*_G*_h);
+            comY = taredCOP.y - _i/(_m*_G*_h);
+
+            comX = _filterX.ComputeMA(taredCOP.x);
+            comY = _filterY.ComputeMA(taredCOP.y);
         }
         
         var data = new WiiBoardData(Time.fixedUnscaledTime, 
@@ -132,7 +143,7 @@ public class Cursor : MonoBehaviour
                                     boardSensorValues.x, 
                                     boardSensorValues.w, 
                                     boardSensorValues.z,
-                                    fCopX, fCopY);
+                                    comX, comY);
         return data;
     }
 }

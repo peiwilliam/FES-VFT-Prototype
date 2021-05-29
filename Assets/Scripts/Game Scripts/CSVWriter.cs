@@ -14,7 +14,7 @@ public class CSVWriter
     public void WriteHeader()
     {
         _csv = new StringBuilder();
-        _csv.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy");
+        _csv.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, COMx, COMy");
 
         _count = 1;
         var di = new DirectoryInfo(_path);
