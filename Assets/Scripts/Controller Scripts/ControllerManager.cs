@@ -45,10 +45,6 @@ namespace ControllerManager
             _kp = _kpc*_m*_G*_height; //active/neural controller
             _kd = _kdc*_m*_G*_height;
             _k = _kc*_m*_G*_height; //mechanical/passive controller
-
-
-            
-            
         }
 
 

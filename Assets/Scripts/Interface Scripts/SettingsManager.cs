@@ -22,7 +22,7 @@ public class SettingsManager : MonoBehaviour
         ["Length Offset"] = 0.0f,
         ["Star Multiplier"] = 120,
         ["Config Root Path"] = Directory.GetCurrentDirectory(),
-        ["Rolling Average Window"] = 20,
+        ["Rolling Average Window"] = 2,
         ["RPF Max"] = 50,
         ["RDF Max"] = 50,
         ["LPF Max"] = 50,
@@ -47,7 +47,6 @@ public class SettingsManager : MonoBehaviour
     {
         ["Controller Frequency"] = "int",
         ["Trial Duration"] = "int",
-        
         ["Ramp Duration"] = "float",
         ["Max A/P Fraction"] = "float",
         ["Ankle Fraction"] = "float",

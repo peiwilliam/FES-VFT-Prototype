@@ -13,8 +13,8 @@ public class Cursor : MonoBehaviour
     private const float _Length = 433; // mm
     private const float _Width = 228; // mm
     private const float _G = 9.81f; // m/s^2
-    private float _mass = PlayerPrefs.GetFloat("Mass");
-    private float _height = PlayerPrefs.GetFloat("Height");
+    private float _mass;
+    private float _height;
     private float _m; // kg
     private float _h; // m
     private float _i; // kgm^2
@@ -25,6 +25,8 @@ public class Cursor : MonoBehaviour
 
     private void Awake() //want to compute these values before anything starts
     {
+        _mass = PlayerPrefs.GetFloat("Mass");
+        _height = PlayerPrefs.GetFloat("Height");
         _m = PlayerPrefs.GetFloat("Ankle Mass Fraction")*_mass;
         _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
         _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);   
@@ -130,7 +132,7 @@ public class Cursor : MonoBehaviour
 
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && sceneName != "Assessment" && sceneName != "LOS") //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
         {
-            comX = taredCOP.x - _i/(_m*_G*_h);
+            comX = taredCOP.x - _i/(_m*_G*_h); //incomplete, need to figure out a way to get COM from wii balance board
             comY = taredCOP.y - _i/(_m*_G*_h);
 
             comX = _filterX.ComputeMA(taredCOP.x);

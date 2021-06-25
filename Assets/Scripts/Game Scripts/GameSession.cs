@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using KnuthShuffle;
+using TMPro;
 
 public class GameSession : MonoBehaviour
 {
@@ -66,8 +67,8 @@ public class GameSession : MonoBehaviour
     //default colours, need to change if the colours have been changed
     [SerializeField] private List<string> _colourTexts;
     [SerializeField] private UnityEvent _colourChangeEvent;
-    
-    private Text _colourText;
+
+    private TextMeshProUGUI _colourText;
     private Coroutine _changeColour;
 
     public int ColourMatchingScore { get; private set; }
@@ -267,7 +268,7 @@ public class GameSession : MonoBehaviour
         if (_counter == _directionNames.Count) //do this check at the beginning so that the last direction isn't just ended
         {
             _sceneLoader.LoadStartScene();
-            var windowLength = (int) (1/Time.fixedDeltaTime);
+            var windowLength = PlayerPrefs.GetInt("Rolling Average Window");
             
             GetLimits(windowLength);
         }
@@ -279,8 +280,8 @@ public class GameSession : MonoBehaviour
                 _shuffled = true;
             }
 
-            _direction = _directionNames[_counter++];
-            _losInstructionsBox.text = _losInstructions[_direction]; //want incrementation after using _counter
+            _direction = _directionNames[_counter++]; //want incrementation after using _counter
+            _losInstructionsBox.text = _losInstructions[_direction];
             var rectangle = _rectangles.Find(n => n.name == _direction);
             rectangle.tag = "Target";
         }
@@ -291,7 +292,7 @@ public class GameSession : MonoBehaviour
         _limits = new Dictionary<string, float>();
         var averages = new List<float>();
         
-        if (_directionData.Values == null) //check if the board was used, if it's just cursor, the vales will be null
+        if (_directionData.Values != null) //check if the board was used, if it's just cursor, the vales will be null
         {
             foreach (var direction in _directionData)
             {
@@ -320,14 +321,17 @@ public class GameSession : MonoBehaviour
                 _limits.Add(direction.Key, averages.Max());
             }
         }
+        else
+        {
+            Debug.Log("Cursor was used, no limit data colleccted.");
+        }
         
         return;
     }
 
     private void ColourMatchingGame()
     {
-        //need to do it this convoluted way because findobjectsoftype finds other text objects in the game
-        _colourText = FindObjectOfType<Canvas>().transform.Find("Colour Text").gameObject.GetComponent<Text>();
+        _colourText = FindObjectOfType<TextMeshProUGUI>();
         
         var averageDistance = 0f;
 
