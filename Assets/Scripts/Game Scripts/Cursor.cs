@@ -18,6 +18,10 @@ public class Cursor : MonoBehaviour
     private float _m; // kg
     private float _h; // m
     private float _i; // kgm^2
+    private float _limitFront;
+    private float _limitBack;
+    private float _limitLeft;
+    private float _limitRight;
     private Filter _filterX;
     private Filter _filterY;
     private CSVWriter _writer;
@@ -29,7 +33,11 @@ public class Cursor : MonoBehaviour
         _height = PlayerPrefs.GetFloat("Height");
         _m = PlayerPrefs.GetFloat("Ankle Mass Fraction")*_mass;
         _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
-        _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);   
+        _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);
+        _limitFront = PlayerPrefs.GetFloat("Limit of Stability Front");
+        _limitBack = PlayerPrefs.GetFloat("Limit of Stability Back");
+        _limitLeft = PlayerPrefs.GetFloat("Limit of Stability Left");
+        _limitRight = PlayerPrefs.GetFloat("Limit of Stability Right");
     }
 
     private void Start() 
@@ -93,8 +101,16 @@ public class Cursor : MonoBehaviour
             else
                 cop = new Vector2(data.copX, data.copY);
 
-            pos.x = Mathf.Clamp(cop.x * _maxX / 2 + Camera.main.transform.position.x, _minX, _maxX);
-            pos.y = Mathf.Clamp(cop.y * _maxY / 2 + Camera.main.transform.position.y, _minY, _maxY);
+            // scale the cursor on screen to the individual's max in each direction
+            if (cop.x > 0)
+                pos.x = Mathf.Clamp((cop.x / _limitRight) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
+            else
+                pos.x = Mathf.Clamp((cop.x / _limitLeft) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
+            
+            if (cop.y > 0)
+                pos.y = Mathf.Clamp((cop.y / _limitFront) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+            else
+                pos.y = Mathf.Clamp((cop.y / _limitBack) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
 
             transform.position = pos;
         }
@@ -130,7 +146,8 @@ public class Cursor : MonoBehaviour
         var comY = 0.0f;
         var sceneName = SceneManager.GetActiveScene().name;
 
-        if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && sceneName != "Assessment" && sceneName != "LOS") //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
+        //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
+        if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && sceneName != "Assessment" && sceneName != "LOS") 
         {
             comX = taredCOP.x - _i/(_m*_G*_h); //incomplete, need to figure out a way to get COM from wii balance board
             comY = taredCOP.y - _i/(_m*_G*_h);

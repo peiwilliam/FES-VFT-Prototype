@@ -302,6 +302,7 @@ public class GameSession : MonoBehaviour
                     case "Back":
                         for (var i = 0; i <= direction.Value.Count - windowLength; i++)
                         {
+                            // Makes each value absolute value because we only care about the magnitude
                             var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copY));
                             averages.Add(rangeOfValues.Average());
                         }
@@ -311,6 +312,7 @@ public class GameSession : MonoBehaviour
                     case "Right":
                         for (var i = 0; i <= direction.Value.Count - windowLength; i++)
                         {
+                            // Makes each value absolute value because we only care about the magnitude
                             var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copX));
                             averages.Add(rangeOfValues.Average());
                         }
@@ -320,6 +322,11 @@ public class GameSession : MonoBehaviour
 
                 _limits.Add(direction.Key, averages.Max());
             }
+
+            PlayerPrefs.SetFloat("Limit of Stability Front", _limits["Forward"] * 0.8f); //store values, want just 80% of max
+            PlayerPrefs.SetFloat("Limit of Stability Back", _limits["Back"] * 0.8f);
+            PlayerPrefs.SetFloat("Limit of Stability Left", _limits["Left"] * 0.8f);
+            PlayerPrefs.SetFloat("Limit of Stability Right", _limits["Right"] * 0.8f);
         }
         else
         {
