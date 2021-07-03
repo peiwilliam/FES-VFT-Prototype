@@ -18,7 +18,7 @@ public class GameSession : MonoBehaviour
 
     private Cursor _cursor;
 
-    private static Dictionary<string, List<WiiBoardData>> _qsAssessment;
+    private Dictionary<string, List<WiiBoardData>> _qsAssessment;
 
     [Header("Limits of Stability")]
     [SerializeField] private InputField _losInstructionsBox;
@@ -33,7 +33,7 @@ public class GameSession : MonoBehaviour
     private Dictionary<string, List<WiiBoardData>> _directionData;
 
     //dictionary to keep track of wiiboard data in each direction
-    private static Dictionary<string, float> _limits;
+    private Dictionary<string, float> _limits;
 
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
@@ -138,7 +138,8 @@ public class GameSession : MonoBehaviour
                 //first one is for the keys, the second is for the values
                 _directionData = _directionNames.ToDictionary(v => v, v => new List<WiiBoardData>());
                 _losInstructions = _directionNames.ToDictionary(v => v, v => "Please lean " + v.ToLower() + " as far as you can and hold for 3 seconds.");
-                
+                _losInstructionsBox.text = "Press Start to start the Limits of Stability Assessment. Be prepared to lean in one of the 8 directions.";
+
                 break;
             case "Colour Matching":
                 _colourCircles = FindObjectsOfType<ColourCircle>().ToList();
@@ -232,7 +233,18 @@ public class GameSession : MonoBehaviour
                             _totalGameTime = 100;
                         }
                         else if (_ecDone && _eoDone)
+                        {
                             _sceneLoader.LoadStartScene();
+                            var eoOrEc = true; //temporary eo = true, ec = false
+                            List<float> yValues;
+
+                            if (eoOrEc)
+                                yValues = new List<float>(from value in _qsAssessment["EO"] select value.copY); //linq syntax
+                            else
+                                yValues = new List<float>(from value in _qsAssessment["EC"] select value.copY);
+
+                            PlayerPrefs.SetFloat("Length Offset", yValues.Average());
+                        }
                     }
                 }
                 break;

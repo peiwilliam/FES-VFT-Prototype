@@ -15,7 +15,7 @@ namespace FilterManager
         {
             var output = 0.0f;
             
-            //we only need the four loop for fir because iir won't ever need to go above 3 terms
+            //we only need the for loop for fir because iir won't ever need to go above 3 terms
             for (var i = _x.Length - 1; i >= 0; i--) 
             {
                 if (i == 0)

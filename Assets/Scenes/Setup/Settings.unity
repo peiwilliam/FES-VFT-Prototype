@@ -476,6 +476,66 @@ PrefabInstance:
       propertyPath: m_Name
       value: Settings Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 2954733973443140206, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_ContentType
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2954733973443140206, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_KeyboardType
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2954733973443140206, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_CharacterValidation
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3405397093844330936, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_ContentType
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3405397093844330936, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_KeyboardType
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3405397093844330936, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_CharacterValidation
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4301148444343020424, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_ContentType
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4301148444343020424, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_KeyboardType
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4301148444343020424, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_CharacterValidation
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4890865249666722696, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_ContentType
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4890865249666722696, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_KeyboardType
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4890865249666722696, guid: 661f19b32875ba24b9ca09791b5ef495,
+        type: 3}
+      propertyPath: m_CharacterValidation
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
 --- !u!1001 &4014040991565268676

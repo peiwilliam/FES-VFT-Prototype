@@ -18,7 +18,6 @@ public class SettingsManager : MonoBehaviour
         ["Ankle Fraction"] = 2.0f,
         ["Number of Trials"] = 2,
         ["Filter Order"] = 2,
-        ["Cutoff Frequency"] = 0.4615f,
         ["Length Offset"] = 0.0f,
         ["Star Multiplier"] = 120,
         ["Config Root Path"] = Directory.GetCurrentDirectory(),
@@ -37,10 +36,10 @@ public class SettingsManager : MonoBehaviour
         ["K Coefficient"] = 0.75024f,
         ["Duration of Target"] = 10f,
         ["Duration to Get Points"] = 3f,
-        ["Limit of Stability Front"] = 0f,
-        ["Limit of Stability Back"] = 0f,
-        ["Limit of Stability Left"] = 0f,
-        ["Limit of Stability Right"] = 0f,
+        ["Limit of Stability Front"] = 1f, //default needs to be one, if zero then it's a divide by zero error
+        ["Limit of Stability Back"] = 1f,
+        ["Limit of Stability Left"] = 1f,
+        ["Limit of Stability Right"] = 1f,
     };
     private static Dictionary<string, InputField> _fields = new Dictionary<string, InputField>();
     private static Dictionary<string, string> _fieldNamesAndTypes = new Dictionary<string, string>() 
@@ -52,7 +51,6 @@ public class SettingsManager : MonoBehaviour
         ["Ankle Fraction"] = "float",
         ["Number of Trials"] = "int",
         ["Filter Order"] = "int",
-        ["Cutoff Frequency"] = "float",
         ["Length Offset"] = "float",
         ["Star Multiplier"] = "int",
         ["Config Root Path"] = "string",

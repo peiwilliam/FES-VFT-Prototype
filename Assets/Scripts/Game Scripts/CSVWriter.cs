@@ -28,13 +28,13 @@ public class CSVWriter
         File.AppendAllText(_path + @"\" + _fileName + _count + _extension, _csv.ToString());
     }
 
-    public async void WriteDataAsync(WiiBoardData data)
+    public void WriteData(WiiBoardData data)
     {
         using (var w = new StreamWriter(_path + @"\" + _fileName + _count + _extension, true)) // true to append and not overwrite
         {
             var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}";
-            await w.WriteLineAsync(line);
-            await w.FlushAsync();
+            w.WriteLine(line);
+            w.Flush();
         }
     }
 }

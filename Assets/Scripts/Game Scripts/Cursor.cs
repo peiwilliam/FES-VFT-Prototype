@@ -22,6 +22,7 @@ public class Cursor : MonoBehaviour
     private float _limitBack;
     private float _limitLeft;
     private float _limitRight;
+    private float _offset;
     private Filter _filterX;
     private Filter _filterY;
     private CSVWriter _writer;
@@ -38,14 +39,13 @@ public class Cursor : MonoBehaviour
         _limitBack = PlayerPrefs.GetFloat("Limit of Stability Back");
         _limitLeft = PlayerPrefs.GetFloat("Limit of Stability Left");
         _limitRight = PlayerPrefs.GetFloat("Limit of Stability Right");
+        _offset = PlayerPrefs.GetFloat("Length Offset");
     }
 
     private void Start() 
     {
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
-        {
             SetBoardConditions();
-        }
 
         _gameSession = FindObjectOfType<GameSession>();
     }
@@ -77,8 +77,11 @@ public class Cursor : MonoBehaviour
 
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set 0 as default in case it isn't set
         {
-            _filterX = new Filter(PlayerPrefs.GetInt("Filter Order"));
+            _filterX = new Filter(PlayerPrefs.GetInt("Filter Order")); //moving average, doesn't work with wii balance board right now
             _filterY = new Filter(PlayerPrefs.GetInt("Filter Order"));
+
+            _filterX = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order")); //bw temporary for now
+            _filterY = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order"));
         }
 
         _writer = new CSVWriter();
@@ -91,7 +94,7 @@ public class Cursor : MonoBehaviour
         {
             var data = GetBoardValues();
 
-            _writer.WriteDataAsync(data);
+            _writer.WriteData(data);
 
             var pos = new Vector2(transform.position.x, transform.position.y);
             var cop = new Vector2();
@@ -108,9 +111,9 @@ public class Cursor : MonoBehaviour
                 pos.x = Mathf.Clamp((cop.x / _limitLeft) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
             
             if (cop.y > 0)
-                pos.y = Mathf.Clamp((cop.y / _limitFront) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+                pos.y = Mathf.Clamp(((cop.y - _offset) / _limitFront) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
             else
-                pos.y = Mathf.Clamp((cop.y / _limitBack) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+                pos.y = Mathf.Clamp(((cop.y - _offset) / _limitBack) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
 
             transform.position = pos;
         }
@@ -149,11 +152,16 @@ public class Cursor : MonoBehaviour
         //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && sceneName != "Assessment" && sceneName != "LOS") 
         {
-            comX = taredCOP.x - _i/(_m*_G*_h); //incomplete, need to figure out a way to get COM from wii balance board
-            comY = taredCOP.y - _i/(_m*_G*_h);
+            // comX = taredCOP.x - _i/(_m*_G*_h); //incomplete, need to figure out a way to get COM from wii balance board
+            // comY = taredCOP.y - _i/(_m*_G*_h);
 
-            comX = _filterX.ComputeMA(taredCOP.x);
-            comY = _filterY.ComputeMA(taredCOP.y);
+            comX = _filterX.ComputeBW(taredCOP.x);
+            comY = _filterY.ComputeBW(taredCOP.y);
+        }
+        else
+        {
+            comX = taredCOP.x;
+            comY = taredCOP.y;
         }
         
         var data = new WiiBoardData(Time.fixedUnscaledTime, 
