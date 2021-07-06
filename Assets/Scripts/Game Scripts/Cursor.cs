@@ -1,4 +1,5 @@
-﻿using FilterManager;
+﻿using System.Linq;
+using FilterManager;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -23,6 +24,7 @@ public class Cursor : MonoBehaviour
     private float _limitLeft;
     private float _limitRight;
     private float _offset;
+    private bool _losStarted;
     private Filter _filterX;
     private Filter _filterY;
     private CSVWriter _writer;
@@ -42,12 +44,17 @@ public class Cursor : MonoBehaviour
         _offset = PlayerPrefs.GetFloat("Length Offset");
     }
 
+    private void OnEnable() 
+    {
+        GameSession.DirectionChangeEvent += ChangeFileLOS;
+    }
+
     private void Start() 
     {
+        _gameSession = FindObjectOfType<GameSession>();
+
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
             SetBoardConditions();
-
-        _gameSession = FindObjectOfType<GameSession>();
     }
 
     private void FixedUpdate()
@@ -83,9 +90,24 @@ public class Cursor : MonoBehaviour
             _filterX = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order")); //bw temporary for now
             _filterY = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order"));
         }
+        
+        var sceneName = SceneManager.GetActiveScene().name;
 
-        _writer = new CSVWriter();
-        _writer.WriteHeader();
+        
+        if (sceneName == "Assessment")
+        {
+            var conditions = GameSession._qsAssessment.Keys.ToArray(); //it's always ec first then eo
+            
+            if (!_gameSession.ECDone)
+                _writer = new CSVWriter(conditions[0]);
+            else if (!_gameSession.EODone)
+                _writer = new CSVWriter(conditions[1]);
+        }
+        else
+            _writer = new CSVWriter();
+
+        if (sceneName != "LOS") //LOS handled differently to assessment and other games
+            _writer.WriteHeader();
     }
 
     private void Move()
@@ -94,7 +116,10 @@ public class Cursor : MonoBehaviour
         {
             var data = GetBoardValues();
 
-            _writer.WriteData(data);
+            if (SceneManager.GetActiveScene().name != "LOS") //LOS handled differently from assessment and games
+                _writer.WriteDataAsync(data);
+            else if (_losStarted) //wait for user to click the button to start recording
+                _writer.WriteDataAsync(data);
 
             var pos = new Vector2(transform.position.x, transform.position.y);
             var cop = new Vector2();
@@ -145,8 +170,8 @@ public class Cursor : MonoBehaviour
                 taredCOP.y = 0f; // if it's not above 1 then it has to be below -1
         }
 
-        var comX = 0.0f;
-        var comY = 0.0f;
+        var fcopX = 0.0f;
+        var fcopY = 0.0f;
         var sceneName = SceneManager.GetActiveScene().name;
 
         //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
@@ -155,13 +180,13 @@ public class Cursor : MonoBehaviour
             // comX = taredCOP.x - _i/(_m*_G*_h); //incomplete, need to figure out a way to get COM from wii balance board
             // comY = taredCOP.y - _i/(_m*_G*_h);
 
-            comX = _filterX.ComputeBW(taredCOP.x);
-            comY = _filterY.ComputeBW(taredCOP.y);
+            fcopX = _filterX.ComputeBW(taredCOP.x);
+            fcopY = _filterY.ComputeBW(taredCOP.y);
         }
         else
         {
-            comX = taredCOP.x;
-            comY = taredCOP.y;
+            fcopX = taredCOP.x;
+            fcopY = taredCOP.y;
         }
         
         var data = new WiiBoardData(Time.fixedUnscaledTime, 
@@ -170,7 +195,19 @@ public class Cursor : MonoBehaviour
                                     boardSensorValues.x, 
                                     boardSensorValues.w, 
                                     boardSensorValues.z,
-                                    comX, comY);
+                                    fcopX, fcopY);
         return data;
+    }
+
+    private void ChangeFileLOS(string direction)
+    {
+        _writer = new CSVWriter(direction);
+        _writer.WriteHeader();
+        _losStarted = true;
+    }
+
+    private void OnDisable() 
+    {
+        GameSession.DirectionChangeEvent -= ChangeFileLOS;
     }
 }

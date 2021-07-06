@@ -16,31 +16,44 @@ public class GameSession : MonoBehaviour
     [SerializeField] private List<string> _assessInstructions;
     [SerializeField] private InputField _assessInstructionsBox;
 
-    private Cursor _cursor;
+    // for cursor to access
+    public bool ECDone
+    {
+        get => _ecDone;
+    }
+    public bool EODone
+    {
+        get => _eoDone;
+    }
 
-    private Dictionary<string, List<WiiBoardData>> _qsAssessment;
+    public static Dictionary<string, List<WiiBoardData>> _qsAssessment; //public static so it's accessible by cursor and not a field
+
+    private Cursor _cursor;
 
     [Header("Limits of Stability")]
     [SerializeField] private InputField _losInstructionsBox;
-    [SerializeField] private float _windowSize;
     [SerializeField] private int _counter;
+    [SerializeField] private float _windowSize;
     [SerializeField] private bool _shuffled;
     [SerializeField] private List<SpriteRenderer> _rectangles;
     [SerializeField] private string _direction;
     
-    private List<string> _directionNames = new List<string>(); //list of direction names
-    private Dictionary<string, string> _losInstructions; //dictionary of instructions text for each direction
-    private Dictionary<string, List<WiiBoardData>> _directionData;
+    //event for handling the changing of directions, can't use unity event because cursor is instan. at the beginning and doesnn't exist before start of game
+    public delegate void OnDirectionChange(string direction);
+    public static event OnDirectionChange DirectionChangeEvent;
 
-    //dictionary to keep track of wiiboard data in each direction
-    private Dictionary<string, float> _limits;
+    public static List<string> _directionNames = new List<string>(); //list of direction names, public static so cursor has access to it and not a field
+
+    private Dictionary<string, string> _losInstructions; //dictionary of instructions text for each direction
+    private Dictionary<string, List<WiiBoardData>> _directionData; //dictionary to store data from each direction
+    private Dictionary<string, float> _limits; //dictionary to store the limits
 
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
     [SerializeField] private float _totalGameTime = 100f;
     [SerializeField] private Text _timeText;
 
-    private float _totalGameDeltaTime = 1f;
+    private float _totalGameDeltaTime = 1f; //incrementing timer by 1 sec each time, doesn't need to be changed
     private Coroutine _timer;
     private SceneLoader _sceneLoader;
     
@@ -114,25 +127,25 @@ public class GameSession : MonoBehaviour
     }
 
     private void Start()
-    {
-        Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //need cursor for all games
-        
+    {   
         var sceneName = SceneManager.GetActiveScene().name;
         _sceneLoader = FindObjectOfType<SceneLoader>();
 
         switch (sceneName)
         {
             case "Assessment":
-                _cursor = FindObjectOfType<Cursor>();
                 _qsAssessment = new Dictionary<string, List<WiiBoardData>>() 
                 {
                     ["EC"] = new List<WiiBoardData>(),
                     ["EO"] = new List<WiiBoardData>()
                 };
-               
+
                 SetupAssessment();
+                
                 break;
             case "LOS":
+                Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+
                 _cursor = FindObjectOfType<Cursor>();
                 _directionNames = new List<string>(from rectangle in _rectangles select rectangle.name); //linq syntax
                 //first one is for the keys, the second is for the values
@@ -142,6 +155,8 @@ public class GameSession : MonoBehaviour
 
                 break;
             case "Colour Matching":
+                Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+
                 _colourCircles = FindObjectsOfType<ColourCircle>().ToList();
                 _colourTexts = new List<string>(from circle in _colourCircles select circle.name); //linq syntax
 
@@ -149,21 +164,27 @@ public class GameSession : MonoBehaviour
                     _colourChangeEvent = new UnityEvent(); 
 
                 ColourMatchingGame();
+
                 break;
             case "Ellipse":
+                Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 EllipseGame();
                 _movingCircle = FindObjectOfType<MovingCircle>();
 
                 break;
             case "Hunting":
+                Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 HuntingGame();
+
                 break;
             case "Target":
+                Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 _targetCircles = FindObjectsOfType<TargetCircle>().ToList();
+
                 break;
         }
 
-        if (sceneName != "Assessment" && sceneName != "LOS") //timer for assessment started manually
+        if (sceneName != "Assessment" && sceneName != "LOS") //timer for assessment and LOS started manually
             StartCoroutine(StartTimer());
     }
 
@@ -195,23 +216,6 @@ public class GameSession : MonoBehaviour
                 _sceneLoader.Experimentation();
             else   
                 _sceneLoader.LoadStartScene();
-        }
-    }
-
-    private void LOS()
-    {
-        foreach (var rectangle in _rectangles)
-        {
-            if (rectangle.tag == "Target" && rectangle.color != Color.green)
-            {
-                rectangle.color = Color.green;
-                rectangle.sortingOrder = 1;
-            }
-            else if (rectangle.tag == "Untagged" && rectangle.color != new Color(0, 0.2775006f, 1f))
-            {
-                rectangle.color = new Color(0f, 0.2775006f, 1f);
-                rectangle.sortingOrder = 0;
-            }
         }
     }
 
@@ -260,7 +264,7 @@ public class GameSession : MonoBehaviour
 
     private void SetupAssessment() => _assessInstructionsBox.text = _assessInstructions[0];
 
-    private void Assessment() //haven't actually checked if this works yet
+    private void Assessment() //I think this works? needs more testing
     {
         var data = _cursor.GetBoardValues();
 
@@ -270,10 +274,39 @@ public class GameSession : MonoBehaviour
             _qsAssessment["EO"].Add(data);
     }
 
-    public void StartAssessmentTimer() => _timer = StartCoroutine(StartTimer());
+    public void StartAssessmentTimer()
+    {
+        if (FindObjectOfType<Cursor>() == null) // make sure only one cursor is spawned
+            Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //instantiate at button click instead of at beginning
+
+        _cursor = FindObjectOfType<Cursor>();
+        _cursor.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0); //alpha is zero to make it invisible
+        
+        _timer = StartCoroutine(StartTimer());
+    }
+    
+    private void LOS()
+    {
+        foreach (var rectangle in _rectangles)
+        {
+            if (rectangle.tag == "Target" && rectangle.color != Color.green)
+            {
+                rectangle.color = Color.green;
+                rectangle.sortingOrder = 1;
+            }
+            else if (rectangle.tag == "Untagged" && rectangle.color != new Color(0, 0.2775006f, 1f))
+            {
+                rectangle.color = new Color(0f, 0.2775006f, 1f);
+                rectangle.sortingOrder = 0;
+            }
+        }
+    }
 
     public void StartLOS()
     {
+        if (FindObjectOfType<Cursor>() == null) // make sure only one cursor is spawned
+            Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //instantiate at button click instead of at beginning
+
         if (GameObject.FindGameObjectWithTag("Target") != null) //once we press the button, we want to switch to a new target
             GameObject.FindGameObjectWithTag("Target").tag = "Untagged";
 
@@ -296,6 +329,9 @@ public class GameSession : MonoBehaviour
             _losInstructionsBox.text = _losInstructions[_direction];
             var rectangle = _rectangles.Find(n => n.name == _direction);
             rectangle.tag = "Target";
+
+            if (DirectionChangeEvent != null) //invoke the direction change event
+                DirectionChangeEvent(_direction);
         }
     }
 
@@ -520,7 +556,10 @@ public class GameSession : MonoBehaviour
         if (SceneManager.GetActiveScene().name == "Assessment")
         {
             if (!_ecDone)
+            {
                 _ecDone = true;
+                Destroy(_cursor);
+            }
             else if (!_eoDone)
                 _eoDone = true;
         }
