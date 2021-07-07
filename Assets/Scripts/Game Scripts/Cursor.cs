@@ -25,6 +25,9 @@ public class Cursor : MonoBehaviour
     private float _limitRight;
     private float _offset;
     private bool _losStarted;
+    private bool _ecAssessmentStarted;
+    private bool _eoAssessmentStarted;
+    private string _sceneName;
     private Filter _filterX;
     private Filter _filterY;
     private CSVWriter _writer;
@@ -37,21 +40,36 @@ public class Cursor : MonoBehaviour
         _m = PlayerPrefs.GetFloat("Ankle Mass Fraction")*_mass;
         _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
         _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);
-        _limitFront = PlayerPrefs.GetFloat("Limit of Stability Front");
-        _limitBack = PlayerPrefs.GetFloat("Limit of Stability Back");
-        _limitLeft = PlayerPrefs.GetFloat("Limit of Stability Left");
-        _limitRight = PlayerPrefs.GetFloat("Limit of Stability Right");
-        _offset = PlayerPrefs.GetFloat("Length Offset");
+        var _sceneName = SceneManager.GetActiveScene().name;
+
+        if (_sceneName == "LOS" || _sceneName == "Assessment") //only shift and scale cop when it's the games
+        {
+            _limitFront = 1.0f;
+            _limitBack = 1.0f;
+            _limitLeft = 1.0f;
+            _limitRight = 1.0f;
+            _offset = 0.0f;
+        }
+        else
+        {
+            _limitFront = PlayerPrefs.GetFloat("Limit of Stability Front");
+            _limitBack = PlayerPrefs.GetFloat("Limit of Stability Back");
+            _limitLeft = PlayerPrefs.GetFloat("Limit of Stability Left");
+            _limitRight = PlayerPrefs.GetFloat("Limit of Stability Right");
+            _offset = PlayerPrefs.GetFloat("Length Offset");
+        }
     }
 
-    private void OnEnable() 
+    private void OnEnable() //subscribing to event handled here
     {
         GameSession.DirectionChangeEvent += ChangeFileLOS;
+        GameSession.ConditionChangeEvent += ChangeFileAssessment;
     }
 
     private void Start() 
     {
         _gameSession = FindObjectOfType<GameSession>();
+        _sceneName = SceneManager.GetActiveScene().name;
 
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
             SetBoardConditions();
@@ -90,24 +108,12 @@ public class Cursor : MonoBehaviour
             _filterX = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order")); //bw temporary for now
             _filterY = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order"));
         }
-        
-        var sceneName = SceneManager.GetActiveScene().name;
 
-        
-        if (sceneName == "Assessment")
+        if (_sceneName != "LOS" || _sceneName != "Assessment") //LOS and assessment handled differently from games
         {
-            var conditions = GameSession._qsAssessment.Keys.ToArray(); //it's always ec first then eo
-            
-            if (!_gameSession.ECDone)
-                _writer = new CSVWriter(conditions[0]);
-            else if (!_gameSession.EODone)
-                _writer = new CSVWriter(conditions[1]);
-        }
-        else
             _writer = new CSVWriter();
-
-        if (sceneName != "LOS") //LOS handled differently to assessment and other games
             _writer.WriteHeader();
+        }
     }
 
     private void Move()
@@ -116,10 +122,16 @@ public class Cursor : MonoBehaviour
         {
             var data = GetBoardValues();
 
-            if (SceneManager.GetActiveScene().name != "LOS") //LOS handled differently from assessment and games
+            if (_sceneName != "LOS" || _sceneName != "Assessment") //LOS and assessment handled differently from games
                 _writer.WriteDataAsync(data);
-            else if (_losStarted) //wait for user to click the button to start recording
-                _writer.WriteDataAsync(data);
+            else if (_losStarted || _ecAssessmentStarted) //wait for user to click the button to start recording for los and assessment
+            {
+                if (!GameSession._ecDone)
+                    _writer.WriteDataAsync(data);
+                else if (_eoAssessmentStarted && !GameSession._eoDone)
+                    _writer.WriteDataAsync(data);
+            } 
+                
 
             var pos = new Vector2(transform.position.x, transform.position.y);
             var cop = new Vector2();
@@ -129,7 +141,7 @@ public class Cursor : MonoBehaviour
             else
                 cop = new Vector2(data.copX, data.copY);
 
-            // scale the cursor on screen to the individual's max in each direction
+            // subtract the offset and scale the cursor on screen to the individual's max in each direction
             if (cop.x > 0)
                 pos.x = Mathf.Clamp((cop.x / _limitRight) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
             else
@@ -172,10 +184,9 @@ public class Cursor : MonoBehaviour
 
         var fcopX = 0.0f;
         var fcopY = 0.0f;
-        var sceneName = SceneManager.GetActiveScene().name;
 
         //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
-        if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && sceneName != "Assessment" && sceneName != "LOS") 
+        if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && _sceneName != "Assessment" && _sceneName != "LOS") 
         {
             // comX = taredCOP.x - _i/(_m*_G*_h); //incomplete, need to figure out a way to get COM from wii balance board
             // comY = taredCOP.y - _i/(_m*_G*_h);
@@ -199,15 +210,27 @@ public class Cursor : MonoBehaviour
         return data;
     }
 
-    private void ChangeFileLOS(string direction)
+    private void ChangeFileAssessment(string condition) //activates when starting or changing condition in assessment
+    {
+        _writer = new CSVWriter(condition);
+        _writer.WriteHeader();
+
+        if (!GameSession._ecDone && !GameSession._eoDone) //check which condition it is and ensure that the correct files are created
+            _eoAssessmentStarted = true;
+        else if (!GameSession._eoDone)
+            _eoAssessmentStarted = true;
+    }
+
+    private void ChangeFileLOS(string direction) //activates when direction changes in los
     {
         _writer = new CSVWriter(direction);
         _writer.WriteHeader();
         _losStarted = true;
     }
 
-    private void OnDisable() 
+    private void OnDisable() //unsubscribe when cursor is destroyed to avoid memory leaks
     {
         GameSession.DirectionChangeEvent -= ChangeFileLOS;
+        GameSession.ConditionChangeEvent -= ChangeFileAssessment;
     }
 }

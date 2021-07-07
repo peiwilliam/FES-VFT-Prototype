@@ -11,23 +11,16 @@ using TMPro;
 public class GameSession : MonoBehaviour
 {
     [Header("Assessment")]
-    [SerializeField] private bool _ecDone;
-    [SerializeField] private bool _eoDone;
     [SerializeField] private List<string> _assessInstructions;
     [SerializeField] private InputField _assessInstructionsBox;
 
-    // for cursor to access
-    public bool ECDone
-    {
-        get => _ecDone;
-    }
-    public bool EODone
-    {
-        get => _eoDone;
-    }
+    public static bool _ecDone; //public static so cursor is able to access these values
+    public static bool _eoDone;
 
-    public static Dictionary<string, List<WiiBoardData>> _qsAssessment; //public static so it's accessible by cursor and not a field
+    public delegate void OnConditionChange(string condition);
+    public static event OnConditionChange ConditionChangeEvent;
 
+    private Dictionary<string, List<WiiBoardData>> _qsAssessment;
     private Cursor _cursor;
 
     [Header("Limits of Stability")]
@@ -42,8 +35,7 @@ public class GameSession : MonoBehaviour
     public delegate void OnDirectionChange(string direction);
     public static event OnDirectionChange DirectionChangeEvent;
 
-    public static List<string> _directionNames = new List<string>(); //list of direction names, public static so cursor has access to it and not a field
-
+    private List<string> _directionNames = new List<string>(); //list of direction names, public static so cursor has access to it and not a field
     private Dictionary<string, string> _losInstructions; //dictionary of instructions text for each direction
     private Dictionary<string, List<WiiBoardData>> _directionData; //dictionary to store data from each direction
     private Dictionary<string, float> _limits; //dictionary to store the limits
@@ -127,7 +119,9 @@ public class GameSession : MonoBehaviour
     }
 
     private void Start()
-    {   
+    {
+        Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+
         var sceneName = SceneManager.GetActiveScene().name;
         _sceneLoader = FindObjectOfType<SceneLoader>();
 
@@ -144,8 +138,6 @@ public class GameSession : MonoBehaviour
                 
                 break;
             case "LOS":
-                Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
-
                 _cursor = FindObjectOfType<Cursor>();
                 _directionNames = new List<string>(from rectangle in _rectangles select rectangle.name); //linq syntax
                 //first one is for the keys, the second is for the values
@@ -155,8 +147,6 @@ public class GameSession : MonoBehaviour
 
                 break;
             case "Colour Matching":
-                Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
-
                 _colourCircles = FindObjectsOfType<ColourCircle>().ToList();
                 _colourTexts = new List<string>(from circle in _colourCircles select circle.name); //linq syntax
 
@@ -167,18 +157,15 @@ public class GameSession : MonoBehaviour
 
                 break;
             case "Ellipse":
-                Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 EllipseGame();
                 _movingCircle = FindObjectOfType<MovingCircle>();
 
                 break;
             case "Hunting":
-                Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 HuntingGame();
 
                 break;
             case "Target":
-                Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                 _targetCircles = FindObjectsOfType<TargetCircle>().ToList();
 
                 break;
@@ -276,13 +263,18 @@ public class GameSession : MonoBehaviour
 
     public void StartAssessmentTimer()
     {
-        if (FindObjectOfType<Cursor>() == null) // make sure only one cursor is spawned
-            Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //instantiate at button click instead of at beginning
-
         _cursor = FindObjectOfType<Cursor>();
         _cursor.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0); //alpha is zero to make it invisible
         
         _timer = StartCoroutine(StartTimer());
+
+        if (ConditionChangeEvent != null)
+        {
+            if (!_ecDone)
+                ConditionChangeEvent(_qsAssessment.Keys.ToList()[0]);
+            else if (!_eoDone)
+                ConditionChangeEvent(_qsAssessment.Keys.ToList()[1]);
+        }
     }
     
     private void LOS()
@@ -335,7 +327,7 @@ public class GameSession : MonoBehaviour
         }
     }
 
-    private void GetLimits(int windowLength)
+    private void GetLimits(int windowLength) //calculation of limits current hella incorrect
     {
         _limits = new Dictionary<string, float>();
         var averages = new List<float>();
@@ -344,6 +336,7 @@ public class GameSession : MonoBehaviour
         {
             foreach (var direction in _directionData)
             {
+                print(direction.Key);
                 switch (direction.Key)
                 {
                     case "Forward":
@@ -354,6 +347,7 @@ public class GameSession : MonoBehaviour
                             var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copY));
                             averages.Add(rangeOfValues.Average());
                         }
+                        print("here1");
 
                         break;
                     case "Left":
@@ -364,6 +358,7 @@ public class GameSession : MonoBehaviour
                             var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copX));
                             averages.Add(rangeOfValues.Average());
                         }
+                        print("here2");
 
                         break;
                 }
@@ -377,9 +372,7 @@ public class GameSession : MonoBehaviour
             PlayerPrefs.SetFloat("Limit of Stability Right", _limits["Right"] * 0.8f);
         }
         else
-        {
             Debug.Log("Cursor was used, no limit data colleccted.");
-        }
         
         return;
     }
@@ -579,5 +572,11 @@ public class GameSession : MonoBehaviour
             updatedScore += circle.GetScore();
 
         TargetScore = updatedScore;
-    } 
+    }
+
+    private void OnDisable() //mostly so that _ecDone and _eoDone are false again once assessment is done
+    {
+        _ecDone = false;
+        _eoDone = false;
+    }
 }
