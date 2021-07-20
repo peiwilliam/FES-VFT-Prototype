@@ -21,7 +21,7 @@ public class SettingsManager : MonoBehaviour
         ["Length Offset"] = 0.0f,
         ["Star Multiplier"] = 120,
         ["Config Root Path"] = Directory.GetCurrentDirectory(),
-        ["Rolling Average Window"] = 2,
+        ["Rolling Average Window"] = 1,
         ["RPF Max"] = 50,
         ["RDF Max"] = 50,
         ["LPF Max"] = 50,
@@ -132,7 +132,8 @@ public class SettingsManager : MonoBehaviour
         SetInputs();
     }
 
-    public void ZeroBoard()
+    //toggles are saved separately
+    public void ZeroBoard() 
     {
         var isChecked = GameObject.Find("Zero Board").GetComponent<Toggle>().isOn;
 
@@ -150,6 +151,16 @@ public class SettingsManager : MonoBehaviour
             PlayerPrefs.SetInt("Filter Data", 1);
         else
             PlayerPrefs.SetInt("Filter Data", 0);
+    }
+
+    public void ECOrEO()
+    {
+        var isChecked = GameObject.Find("Eyes Condition").GetComponent<Toggle>().isOn;
+
+        if (isChecked)
+            PlayerPrefs.SetInt("EC or EO", 1);
+        else
+            PlayerPrefs.SetInt("EC or EO", 0);
     }
 
     private void SetInputs()
@@ -182,6 +193,8 @@ public class SettingsManager : MonoBehaviour
                 toggle.GetComponent<Toggle>().isOn = Convert.ToBoolean(PlayerPrefs.GetInt("Zero Board"));
             else if (toggle.name == "Filter Data")
                 toggle.GetComponent<Toggle>().isOn = Convert.ToBoolean(PlayerPrefs.GetInt("Filter Data"));
+            else if (toggle.name == "Eyes Condition")
+                toggle.GetComponent<Toggle>().isOn = Convert.ToBoolean(PlayerPrefs.GetInt("EC or EO"));
         }
     }
 }

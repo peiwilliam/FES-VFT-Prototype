@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -171,7 +172,7 @@ public class GameSession : MonoBehaviour
                 break;
         }
 
-        if (sceneName != "Assessment" && sceneName != "LOS") //timer for assessment and LOS started manually
+        if (sceneName != "Assessment" && sceneName != "LOS") //timer for assessment started manually and los doesn't have timer
             StartCoroutine(StartTimer());
     }
 
@@ -195,7 +196,7 @@ public class GameSession : MonoBehaviour
             _timeText.text = _totalGameTime.ToString();
 
         //how to handle transitions for all scenes other than assessment
-        if ((_totalGameTime <= 0 && SceneManager.GetActiveScene().name != "Assessment") || _eoDone)
+        if ((_totalGameTime <= 0 && SceneManager.GetActiveScene().name != "Assessment"))
         {
             if (SceneLoader.GetFamiliarization() && SceneLoader.GetGameIndex() < 4)
                 _sceneLoader.Familiarization();
@@ -217,27 +218,28 @@ public class GameSession : MonoBehaviour
 
                     if (_totalGameTime <= 0) //reset for eyes open condition
                     {
-                        if (_ecDone && !_eoDone)
+                        if (_ecDone && !_eoDone) //change the instructions and reset timer for next condition
                         {
                             _timer = null;
                             _assessInstructionsBox.text = _assessInstructions[1];
                             _totalGameTime = 100;
                         }
-                        else if (_ecDone && _eoDone)
+                        else if (_ecDone && _eoDone) //set length offset when assessment is done
                         {
-                            _sceneLoader.LoadStartScene();
-                            var eoOrEc = true; //temporary eo = true, ec = false
-                            List<float> yValues;
+                            var yValues = new List<float>();
 
-                            if (eoOrEc)
+                            if (Convert.ToBoolean(PlayerPrefs.GetInt("EC or EO", 1))) //default to eyes open if for some reason this key doesn't exist
                                 yValues = new List<float>(from value in _qsAssessment["EO"] select value.copY); //linq syntax
                             else
-                                yValues = new List<float>(from value in _qsAssessment["EC"] select value.copY);
+                                yValues = new List<float>(from value in _qsAssessment["EC"] select value.copY); //linq syntax
 
                             PlayerPrefs.SetFloat("Length Offset", yValues.Average());
+
+                            _sceneLoader.LoadStartScene();
                         }
                     }
                 }
+
                 break;
             case "LOS":
                 var data = _cursor.GetBoardValues();
@@ -249,9 +251,14 @@ public class GameSession : MonoBehaviour
         }
     }
 
-    private void SetupAssessment() => _assessInstructionsBox.text = _assessInstructions[0];
+    private void SetupAssessment()
+    {
+        _cursor = FindObjectOfType<Cursor>();
+        _cursor.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0); //alpha is zero to make it invisible
+        _assessInstructionsBox.text = _assessInstructions[0];
+    }
 
-    private void Assessment() //I think this works? needs more testing
+    private void Assessment()
     {
         var data = _cursor.GetBoardValues();
 
@@ -262,10 +269,7 @@ public class GameSession : MonoBehaviour
     }
 
     public void StartAssessmentTimer()
-    {
-        _cursor = FindObjectOfType<Cursor>();
-        _cursor.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0); //alpha is zero to make it invisible
-        
+    {        
         _timer = StartCoroutine(StartTimer());
 
         if (ConditionChangeEvent != null)
@@ -305,7 +309,7 @@ public class GameSession : MonoBehaviour
         if (_counter == _directionNames.Count) //do this check at the beginning so that the last direction isn't just ended
         {
             _sceneLoader.LoadStartScene();
-            var windowLength = PlayerPrefs.GetInt("Rolling Average Window");
+            var windowLength = Mathf.FloorToInt(PlayerPrefs.GetInt("Rolling Average Window")*1/Time.fixedDeltaTime);
             
             GetLimits(windowLength);
         }
@@ -336,7 +340,6 @@ public class GameSession : MonoBehaviour
         {
             foreach (var direction in _directionData)
             {
-                print(direction.Key);
                 switch (direction.Key)
                 {
                     case "Forward":
@@ -347,7 +350,6 @@ public class GameSession : MonoBehaviour
                             var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copY));
                             averages.Add(rangeOfValues.Average());
                         }
-                        print("here1");
 
                         break;
                     case "Left":
@@ -358,12 +360,14 @@ public class GameSession : MonoBehaviour
                             var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copX));
                             averages.Add(rangeOfValues.Average());
                         }
-                        print("here2");
 
                         break;
                 }
 
-                _limits.Add(direction.Key, averages.Max());
+                if (averages.Count != 0)
+                    _limits.Add(direction.Key, averages.Max());
+
+                averages.Clear(); //clear the list so that it's a new one next loop
             }
 
             PlayerPrefs.SetFloat("Limit of Stability Front", _limits["Forward"] * 0.8f); //store values, want just 80% of max
@@ -398,7 +402,7 @@ public class GameSession : MonoBehaviour
         LineRenderer = Ellipse.GetComponent<LineRenderer>();
         Positions = new Vector3[LineRenderer.positionCount];
         LineRenderer.GetPositions(Positions); //pos has an out on it
-        EllipseIndex = Random.Range(0, Positions.Length);
+        EllipseIndex = UnityEngine.Random.Range(0, Positions.Length); //any instances of UnityEngine.Ranodm is because Random exists in both System and UnityEngine, so need to clarify
         Instantiate(_movingCirclePrefab, new Vector3(Positions[EllipseIndex].x, Positions[EllipseIndex].y, 0), Quaternion.identity);
     }
 
@@ -469,8 +473,8 @@ public class GameSession : MonoBehaviour
 
     private float[] GetPositions(float minX, float maxX, float minY, float maxY, float[] oldPos)
     {
-        var xPos = Random.Range(minX, maxX);
-        var yPos = Random.Range(minY, maxY);
+        var xPos = UnityEngine.Random.Range(minX, maxX);
+        var yPos = UnityEngine.Random.Range(minY, maxY);
 
         if (oldPos == new float[] {0f, 0f})
             return new float[] {xPos, yPos};
@@ -478,8 +482,8 @@ public class GameSession : MonoBehaviour
         {
             while (Mathf.Sqrt(Mathf.Pow(xPos - oldPos[0], 2) + Mathf.Pow(yPos - oldPos[1], 2)) <= 2f*5f*16f/9f*0.25f)
             {
-                xPos = Random.Range(minX, maxX);
-                yPos = Random.Range(minY, maxY);
+                xPos = UnityEngine.Random.Range(minX, maxX);
+                yPos = UnityEngine.Random.Range(minY, maxY);
             }
 
             return new float[] {xPos, yPos};
@@ -513,8 +517,8 @@ public class GameSession : MonoBehaviour
 
     private void PickColour(float averageDistance, ColourCircle oldCircle)
     {
-        var randText = _colourTexts[Random.Range(0, _colourTexts.Count)];
-        TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
+        var randText = _colourTexts[UnityEngine.Random.Range(0, _colourTexts.Count)];
+        TargetColourCircle = _colourCircles[UnityEngine.Random.Range(0, _colourCircles.Count)];
         var randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
 
         if (oldCircle != null) //only start checking distances after the first circle is spawned
@@ -524,7 +528,7 @@ public class GameSession : MonoBehaviour
 
             while (dist < averageDistance)
             {
-                TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
+                TargetColourCircle = _colourCircles[UnityEngine.Random.Range(0, _colourCircles.Count)];
                 randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
 
                 dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
@@ -549,10 +553,7 @@ public class GameSession : MonoBehaviour
         if (SceneManager.GetActiveScene().name == "Assessment")
         {
             if (!_ecDone)
-            {
                 _ecDone = true;
-                Destroy(_cursor);
-            }
             else if (!_eoDone)
                 _eoDone = true;
         }

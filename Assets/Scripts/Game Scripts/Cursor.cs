@@ -48,7 +48,11 @@ public class Cursor : MonoBehaviour
             _limitBack = 1.0f;
             _limitLeft = 1.0f;
             _limitRight = 1.0f;
-            _offset = 0.0f;
+
+            if (_sceneName == "Assessment")
+                _offset = 0.0f;
+            else
+                _offset = PlayerPrefs.GetFloat("Length Offset");
         }
         else
         {
@@ -109,7 +113,7 @@ public class Cursor : MonoBehaviour
             _filterY = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order"));
         }
 
-        if (_sceneName != "LOS" || _sceneName != "Assessment") //LOS and assessment handled differently from games
+        if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
         {
             _writer = new CSVWriter();
             _writer.WriteHeader();
@@ -122,7 +126,7 @@ public class Cursor : MonoBehaviour
         {
             var data = GetBoardValues();
 
-            if (_sceneName != "LOS" || _sceneName != "Assessment") //LOS and assessment handled differently from games
+            if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
                 _writer.WriteDataAsync(data);
             else if (_losStarted || _ecAssessmentStarted) //wait for user to click the button to start recording for los and assessment
             {
@@ -216,7 +220,7 @@ public class Cursor : MonoBehaviour
         _writer.WriteHeader();
 
         if (!GameSession._ecDone && !GameSession._eoDone) //check which condition it is and ensure that the correct files are created
-            _eoAssessmentStarted = true;
+            _ecAssessmentStarted = true;
         else if (!GameSession._eoDone)
             _eoAssessmentStarted = true;
     }
