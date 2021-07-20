@@ -118,4 +118,6 @@ public class ColourCircle : MonoBehaviour
     }
 
     public int GetScore() => _score;
+
+    public Vector2 GetPosition() => gameObject.transform.position;
 }

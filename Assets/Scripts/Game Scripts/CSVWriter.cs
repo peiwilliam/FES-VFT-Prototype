@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class CSVWriter
@@ -23,7 +24,7 @@ public class CSVWriter
 
     public void WriteHeader() //writes the header but also creates the csv file
     {
-        _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy");
+        _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY");
 
         _count = 1;
         var di = new DirectoryInfo(_path);
@@ -37,11 +38,11 @@ public class CSVWriter
         File.AppendAllText(_path + @"\" + _fileName + _condition + _count + _extension, _header.ToString());
     }
 
-    public async void WriteDataAsync(WiiBoardData data) //make this async so it doesn't potentially slow down the game
+    public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords) //make this async so it doesn't potentially slow down the game
     {
         using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _count + _extension, true)) // true to append and not overwrite
         {
-            var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}";
+            var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}";
             await w.WriteLineAsync(line);
         }
     }

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using FilterManager;
+﻿using FilterManager;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,7 +8,6 @@ public class Cursor : MonoBehaviour
     [SerializeField] private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
     [SerializeField] private float _minY = 0f;
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
-    [SerializeField] private Vector2 _initialCOP;
 
     private const float _Length = 433; // mm
     private const float _Width = 228; // mm
@@ -28,6 +26,7 @@ public class Cursor : MonoBehaviour
     private bool _ecAssessmentStarted;
     private bool _eoAssessmentStarted;
     private string _sceneName;
+    private GameObject _targetCircle;
     private Filter _filterX;
     private Filter _filterY;
     private CSVWriter _writer;
@@ -68,6 +67,8 @@ public class Cursor : MonoBehaviour
     {
         GameSession.DirectionChangeEvent += ChangeFileLOS;
         GameSession.ConditionChangeEvent += ChangeFileAssessment;
+        GameSession.ColourChangeEvent += ChangeTarget;
+        GameSession.TargetChangeEvent += ChangeTarget;
     }
 
     private void Start() 
@@ -77,6 +78,9 @@ public class Cursor : MonoBehaviour
 
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
             SetBoardConditions();
+
+        if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
+            _targetCircle = FindObjectOfType<MovingCircle>().gameObject;
     }
 
     private void FixedUpdate()
@@ -86,24 +90,6 @@ public class Cursor : MonoBehaviour
 
     private void SetBoardConditions()
     {
-        if (PlayerPrefs.GetInt("Zero Board", 0) == 1) //set 0 as default in case it's not set
-        {
-            // var initSenVals = new float[] //don't really need this atm, the idle values are really weird, so not worth doing this
-            // {
-            //         PlayerPrefs.GetFloat("Top Left Sensor"),
-            //         PlayerPrefs.GetFloat("Top Right Sensor"),
-            //         PlayerPrefs.GetFloat("Bottom Left Sensor"),
-            //         PlayerPrefs.GetFloat("Bottom Right Sensor")
-            // };
-
-            // var copX = (initSenVals[1] + initSenVals[3] - initSenVals[0] - initSenVals[2]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
-            // var copY = (initSenVals[0] + initSenVals[1] - initSenVals[2] - initSenVals[3]) / (initSenVals[0] + initSenVals[1] + initSenVals[2] + initSenVals[3]);
-
-            // _initialCOP = new Vector2(copX, copY);
-        }
-        else
-            _initialCOP = new Vector2(0, 0);
-
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set 0 as default in case it isn't set
         {
             _filterX = new Filter(PlayerPrefs.GetInt("Filter Order")); //moving average, doesn't work with wii balance board right now
@@ -125,17 +111,17 @@ public class Cursor : MonoBehaviour
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
         {
             var data = GetBoardValues();
+            var targetCoords = GetTargetCoords();
 
             if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
-                _writer.WriteDataAsync(data);
+                _writer.WriteDataAsync(data, targetCoords);
             else if (_losStarted || _ecAssessmentStarted) //wait for user to click the button to start recording for los and assessment
             {
                 if (!GameSession._ecDone)
-                    _writer.WriteDataAsync(data);
+                    _writer.WriteDataAsync(data, targetCoords);
                 else if (_eoAssessmentStarted && !GameSession._eoDone)
-                    _writer.WriteDataAsync(data);
-            } 
-                
+                    _writer.WriteDataAsync(data, targetCoords);
+            }
 
             var pos = new Vector2(transform.position.x, transform.position.y);
             var cop = new Vector2();
@@ -150,7 +136,7 @@ public class Cursor : MonoBehaviour
                 pos.x = Mathf.Clamp((cop.x / _limitRight) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
             else
                 pos.x = Mathf.Clamp((cop.x / _limitLeft) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
-            
+
             if (cop.y > 0)
                 pos.y = Mathf.Clamp(((cop.y - _offset) / _limitFront) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
             else
@@ -171,7 +157,7 @@ public class Cursor : MonoBehaviour
     public WiiBoardData GetBoardValues()
     {
         var boardSensorValues = Wii.GetBalanceBoard(0);
-        var taredCOP = Wii.GetCenterOfBalance(0) - _initialCOP;
+        var taredCOP = Wii.GetCenterOfBalance(0);
 
         if (Mathf.Abs(taredCOP.x) > 1f || Mathf.Abs(taredCOP.y) > 1f) //cop should not extend outside the range of the board
         {
@@ -214,6 +200,34 @@ public class Cursor : MonoBehaviour
         return data;
     }
 
+    private Vector2 GetTargetCoords()
+    {
+        Vector2 targetCoords;
+        //finding circle for colour and hunting handled here since it changes constantly in game
+        switch (_sceneName)
+        {
+            case "Colour Matching":
+                if (_targetCircle == null)
+                    //using findgameobjectwithtag is faster since it's more like searching through dict
+                    _targetCircle = GameObject.FindGameObjectWithTag("Target");
+
+                break;
+            case "Hunting":
+                if (_targetCircle == null)
+                    //using findgameobjectwithtag is faster since it's more like searching through dict
+                    _targetCircle = GameObject.FindGameObjectWithTag("Target");
+
+                break;
+        }
+
+        if (_sceneName != "Target")
+            targetCoords = _targetCircle.transform.position;
+        else //target game circle never leaves the centre
+            targetCoords = new Vector2(0.0f, 0.0f);
+
+        return targetCoords;
+    }
+
     private void ChangeFileAssessment(string condition) //activates when starting or changing condition in assessment
     {
         _writer = new CSVWriter(condition);
@@ -232,9 +246,13 @@ public class Cursor : MonoBehaviour
         _losStarted = true;
     }
 
+    private void ChangeTarget() => _targetCircle = null; //set _targetCircle to null so that the new target circle can be selected
+
     private void OnDisable() //unsubscribe when cursor is destroyed to avoid memory leaks
     {
         GameSession.DirectionChangeEvent -= ChangeFileLOS;
         GameSession.ConditionChangeEvent -= ChangeFileAssessment;
+        GameSession.ColourChangeEvent -= ChangeTarget;
+        GameSession.TargetChangeEvent -= ChangeTarget;
     }
 }

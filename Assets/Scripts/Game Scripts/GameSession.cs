@@ -74,6 +74,9 @@ public class GameSession : MonoBehaviour
     [SerializeField] private List<string> _colourTexts;
     [SerializeField] private UnityEvent _colourChangeEvent;
 
+    public delegate void OnColourChange();
+    public static event OnColourChange ColourChangeEvent; //not the same as the UnityEvent
+
     private TextMeshProUGUI _colourText;
     private Coroutine _changeColour;
 
@@ -94,6 +97,9 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
     [SerializeField] private float _huntingDuration = 10f;
     [SerializeField] private bool _conditionHuntingMet;
+
+    public delegate void OnTargetChange();
+    public static event OnTargetChange TargetChangeEvent;
     
     private HuntingCircle _huntingCircle;
 
@@ -141,7 +147,7 @@ public class GameSession : MonoBehaviour
             case "LOS":
                 _cursor = FindObjectOfType<Cursor>();
                 _directionNames = new List<string>(from rectangle in _rectangles select rectangle.name); //linq syntax
-                //first one is for the keys, the second is for the values
+                //first lambda is for the keys, the second lambda is for the values
                 _directionData = _directionNames.ToDictionary(v => v, v => new List<WiiBoardData>());
                 _losInstructions = _directionNames.ToDictionary(v => v, v => "Please lean " + v.ToLower() + " as far as you can and hold for 3 seconds.");
                 _losInstructionsBox.text = "Press Start to start the Limits of Stability Assessment. Be prepared to lean in one of the 8 directions.";
@@ -397,6 +403,59 @@ public class GameSession : MonoBehaviour
         _changeColour = StartCoroutine(ColourSelection(averageDistance));
     }
 
+    private IEnumerator ColourSelection(float averageDistance)
+    {
+        ColourCircle oldCircle = null;
+
+        while (true)
+        {
+            PickColour(averageDistance, oldCircle);
+            _colourChangeEvent.Invoke();
+            ColourChangeEvent();
+
+            while (_colourDuration > 0 && !_conditionColourMet)
+            {
+                _colourDuration -= Time.unscaledDeltaTime;
+
+                yield return null;
+            }
+
+            TargetColourCircle.gameObject.tag = "Untagged";
+            oldCircle = TargetColourCircle;
+            ColourGameScore();
+
+            _colourDuration = 10f; //reset values to loop again, += to account for when the time is negative and to subtract form 10f
+            _conditionColourMet = false;
+        }
+    }
+
+    private void PickColour(float averageDistance, ColourCircle oldCircle)
+    {
+        var randText = _colourTexts[UnityEngine.Random.Range(0, _colourTexts.Count)];
+        TargetColourCircle = _colourCircles[UnityEngine.Random.Range(0, _colourCircles.Count)];
+        var randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+
+        if (oldCircle != null) //only start checking distances after the first circle is spawned
+        {
+            var dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
+                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+
+            while (dist < averageDistance)
+            {
+                TargetColourCircle = _colourCircles[UnityEngine.Random.Range(0, _colourCircles.Count)];
+                randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+
+                dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
+                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+            }
+        }
+
+        // once a colour is picked, set text, colour and add taget to target circle
+        _colourText.text = randText;
+        _colourText.color = randColour;
+        TargetColourCircle.gameObject.tag = "Target";
+    }
+
     private void EllipseGame()
     {
         LineRenderer = Ellipse.GetComponent<LineRenderer>();
@@ -410,6 +469,7 @@ public class GameSession : MonoBehaviour
 
     private IEnumerator SpawnCircles()
     {
+        //we always want to spawn circle in a different quadrant than the current one and sufficiently far away
         var rand = new System.Random(); //use system.random because I have more control over what I randomize
         var quads = new List<int>() {1, 2, 3, 4}; //quadrants
         var pos = new float[2]; //always will be size 2
@@ -441,6 +501,7 @@ public class GameSession : MonoBehaviour
             }
 
             Instantiate(_huntingCirclePrefab, new Vector3(pos[0], pos[1], 0), Quaternion.identity);
+            TargetChangeEvent();
             
             _huntingCircle = FindObjectOfType<HuntingCircle>();
 
@@ -488,58 +549,6 @@ public class GameSession : MonoBehaviour
 
             return new float[] {xPos, yPos};
         }   
-    }
-
-    private IEnumerator ColourSelection(float averageDistance)
-    {
-        ColourCircle oldCircle = null;
-
-        while (true)
-        {
-            PickColour(averageDistance, oldCircle);
-            _colourChangeEvent.Invoke();
-
-            while (_colourDuration > 0 && !_conditionColourMet)
-            {
-                _colourDuration -= Time.unscaledDeltaTime;
-
-                yield return null;
-            }
-
-            TargetColourCircle.gameObject.tag = "Untagged";
-            oldCircle = TargetColourCircle;
-            ColourGameScore();
-
-            _colourDuration = 10f; //reset values to loop again, += to account for when the time is negative and to subtract form 10f
-            _conditionColourMet = false;
-        }
-    }
-
-    private void PickColour(float averageDistance, ColourCircle oldCircle)
-    {
-        var randText = _colourTexts[UnityEngine.Random.Range(0, _colourTexts.Count)];
-        TargetColourCircle = _colourCircles[UnityEngine.Random.Range(0, _colourCircles.Count)];
-        var randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
-
-        if (oldCircle != null) //only start checking distances after the first circle is spawned
-        {
-            var dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
-                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
-
-            while (dist < averageDistance)
-            {
-                TargetColourCircle = _colourCircles[UnityEngine.Random.Range(0, _colourCircles.Count)];
-                randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
-
-                dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
-                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
-            }
-        }
-
-        // once a colour is picked, set text, colour and add taget to target circle
-        _colourText.text = randText;
-        _colourText.color = randColour;
-        TargetColourCircle.gameObject.tag = "Target";
     }
 
     private IEnumerator StartTimer()
