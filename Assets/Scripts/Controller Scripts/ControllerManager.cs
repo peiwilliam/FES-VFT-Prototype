@@ -15,6 +15,8 @@ namespace ControllerManager
         private float _comFraction;
         private float _inertiaCoeff;
         private float _ankleLength;
+        private float _lengthOffset;
+        private float _ankleQS;
         private float _limitFront;
         private float _limitBack;
         private float _limitLeft;
@@ -34,7 +36,7 @@ namespace ControllerManager
 
         public Controller()
         {
-            //various bio constants
+            //define various constants
             _kdc = PlayerPrefs.GetFloat("Kd Coefficient");
             _kpc = PlayerPrefs.GetFloat("Kp Coefficient");
             _kc = PlayerPrefs.GetFloat("K Coefficient");
@@ -47,6 +49,8 @@ namespace ControllerManager
             _h = _height*_comFraction; //height of COM
             _i = _inertiaCoeff*_mass*Mathf.Pow(_height, 2); //inertia
             _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")/100f*_height;
+            _lengthOffset = PlayerPrefs.GetFloat("Length Offset");
+            _ankleQS = _lengthOffset - _ankleLength;
             _limitFront = PlayerPrefs.GetFloat("Limit of Stability Front");
             _limitBack = PlayerPrefs.GetFloat("Limit of Stability Back");
             _limitLeft = PlayerPrefs.GetFloat("Limit of Stability Left");
@@ -62,7 +66,7 @@ namespace ControllerManager
             _k = _kc*_m*_G*_height; //mechanical/passive controller
         }
 
-        public void Stimulate()
+        public void Stimulate(WiiBoardData data, Vector2 targetCoords)
         {
             
         }

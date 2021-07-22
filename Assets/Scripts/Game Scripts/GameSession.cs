@@ -231,24 +231,13 @@ public class GameSession : MonoBehaviour
                             _totalGameTime = 100;
                         }
                         else if (_ecDone && _eoDone) //set length offset when assessment is done
-                        {
-                            var yValues = new List<float>();
-
-                            if (Convert.ToBoolean(PlayerPrefs.GetInt("EC or EO", 1))) //default to eyes open if for some reason this key doesn't exist
-                                yValues = new List<float>(from value in _qsAssessment["EO"] select value.copY); //linq syntax
-                            else
-                                yValues = new List<float>(from value in _qsAssessment["EC"] select value.copY); //linq syntax
-
-                            PlayerPrefs.SetFloat("Length Offset", yValues.Average());
-
-                            _sceneLoader.LoadStartScene();
-                        }
+                            ComputeLengthOffset();
                     }
                 }
 
                 break;
             case "LOS":
-                var data = _cursor.GetBoardValues();
+                var data = _cursor.Data;
 
                 if (!string.IsNullOrEmpty(_direction))
                     _directionData[_direction].Add(data);
@@ -266,7 +255,7 @@ public class GameSession : MonoBehaviour
 
     private void Assessment()
     {
-        var data = _cursor.GetBoardValues();
+        var data = _cursor.Data;
 
         if (!_ecDone)
             _qsAssessment["EC"].Add(data);
@@ -285,6 +274,20 @@ public class GameSession : MonoBehaviour
             else if (!_eoDone)
                 ConditionChangeEvent(_qsAssessment.Keys.ToList()[1]);
         }
+    }
+
+    private void ComputeLengthOffset()
+    {
+        var yValues = new List<float>();
+
+        if (Convert.ToBoolean(PlayerPrefs.GetInt("EC or EO", 1))) //default to eyes open if for some reason this key doesn't exist
+            yValues = new List<float>(from value in _qsAssessment["EO"] select value.copY); //linq syntax
+        else
+            yValues = new List<float>(from value in _qsAssessment["EC"] select value.copY); //linq syntax
+
+        PlayerPrefs.SetFloat("Length Offset", yValues.Average());
+
+        _sceneLoader.LoadStartScene();
     }
     
     private void LOS()

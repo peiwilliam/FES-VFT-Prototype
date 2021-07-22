@@ -1,19 +1,22 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using ControllerManager;
 
 public class Stimulation : MonoBehaviour
 {
-    private Controller _stimController;
+    private Controller _controller;
+    private Cursor _cursor;
+    private GameSession _gameSession;
 
-    private void Awake() 
+    private void Start()
     {
-        _stimController = new Controller(); //instantiate instance of controller
+        _controller = new Controller();
+        _cursor = FindObjectOfType<Cursor>();
+        _gameSession = FindObjectOfType<GameSession>();
     }
 
     private void FixedUpdate()
     {
-        _stimController.Stimulate();
+        _controller.Stimulate(_cursor.Data, _cursor.TargetCoords);
     }
 }

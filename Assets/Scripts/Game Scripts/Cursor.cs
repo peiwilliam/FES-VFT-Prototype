@@ -1,4 +1,5 @@
 ﻿using FilterManager;
+using ControllerManager;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -31,6 +32,10 @@ public class Cursor : MonoBehaviour
     private Filter _filterY;
     private CSVWriter _writer;
     private GameSession _gameSession;
+    private Controller _controller;
+
+    public WiiBoardData Data { get; private set; }
+    public Vector2 TargetCoords {get; private set; }
 
     private void Awake() //want to compute these values before anything starts
     {
@@ -39,7 +44,7 @@ public class Cursor : MonoBehaviour
         _m = PlayerPrefs.GetFloat("Ankle Mass Fraction")*_mass;
         _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
         _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);
-        var _sceneName = SceneManager.GetActiveScene().name;
+        _sceneName = SceneManager.GetActiveScene().name;
 
         if (_sceneName == "LOS" || _sceneName == "Assessment") //only shift and scale cop when it's the games
         {
@@ -77,8 +82,11 @@ public class Cursor : MonoBehaviour
         _sceneName = SceneManager.GetActiveScene().name;
 
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
+        {
             SetBoardConditions();
-
+            _controller = new Controller();
+        }
+        
         if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
             _targetCircle = FindObjectOfType<MovingCircle>().gameObject;
     }
@@ -110,37 +118,37 @@ public class Cursor : MonoBehaviour
     {
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
         {
-            var data = GetBoardValues();
-            var targetCoords = GetTargetCoords();
+            Data = GetBoardValues();
+            GetTargetCoords();
 
             if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
-                _writer.WriteDataAsync(data, targetCoords);
+                _writer.WriteDataAsync(Data, TargetCoords);
             else if (_losStarted || _ecAssessmentStarted) //wait for user to click the button to start recording for los and assessment
             {
                 if (!GameSession._ecDone)
-                    _writer.WriteDataAsync(data, targetCoords);
+                    _writer.WriteDataAsync(Data, TargetCoords);
                 else if (_eoAssessmentStarted && !GameSession._eoDone)
-                    _writer.WriteDataAsync(data, targetCoords);
+                    _writer.WriteDataAsync(Data, TargetCoords);
             }
 
             var pos = new Vector2(transform.position.x, transform.position.y);
-            var cop = new Vector2();
+            var com = new Vector2();
 
             if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set default to zero in case it isn't set
-                cop = new Vector2(data.fCopX, data.fCopY);
+                com = new Vector2(Data.fCopX, Data.fCopY);
             else
-                cop = new Vector2(data.copX, data.copY);
+                com = new Vector2(Data.copX, Data.copY); //com == cop if no filtering
 
             // subtract the offset and scale the cursor on screen to the individual's max in each direction
-            if (cop.x > 0)
-                pos.x = Mathf.Clamp((cop.x / _limitRight) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
+            if (com.x > 0)
+                pos.x = Mathf.Clamp((com.x / _limitRight) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
             else
-                pos.x = Mathf.Clamp((cop.x / _limitLeft) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
+                pos.x = Mathf.Clamp((com.x / _limitLeft) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
 
-            if (cop.y > 0)
-                pos.y = Mathf.Clamp(((cop.y - _offset) / _limitFront) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+            if (com.y > 0)
+                pos.y = Mathf.Clamp(((com.y) / _limitFront) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
             else
-                pos.y = Mathf.Clamp(((cop.y - _offset) / _limitBack) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+                pos.y = Mathf.Clamp(((com.y) / _limitBack) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
 
             transform.position = pos;
         }
@@ -154,22 +162,23 @@ public class Cursor : MonoBehaviour
         }
     }
 
-    public WiiBoardData GetBoardValues()
+    private WiiBoardData GetBoardValues()
     {
         var boardSensorValues = Wii.GetBalanceBoard(0);
-        var taredCOP = Wii.GetCenterOfBalance(0);
+        var cop = Wii.GetCenterOfBalance(0);
+        cop.y -= _offset; //apply offset to cop
 
-        if (Mathf.Abs(taredCOP.x) > 1f || Mathf.Abs(taredCOP.y) > 1f) //cop should not extend outside the range of the board
+        if (Mathf.Abs(cop.x) > 1f || Mathf.Abs(cop.y) > 1f) //com should not extend outside the range of the board
         {
-            if (taredCOP.x > 1f)
-                taredCOP.x = 1f;
+            if (cop.x > 1f)
+                cop.x = 1f;
             else
-                taredCOP.x = 0f; // if it's not above 1 then it has to be below -1
+                cop.x = 0f; // if it's not above 1 then it has to be below -1
 
-            if (taredCOP.y > 1f)
-                taredCOP.y = 1f;
+            if (cop.y > 1f)
+                cop.y = 1f;
             else
-                taredCOP.y = 0f; // if it's not above 1 then it has to be below -1
+                cop.y = 0f; // if it's not above 1 then it has to be below -1
         }
 
         var fcopX = 0.0f;
@@ -181,17 +190,17 @@ public class Cursor : MonoBehaviour
             // comX = taredCOP.x - _i/(_m*_G*_h); //incomplete, need to figure out a way to get COM from wii balance board
             // comY = taredCOP.y - _i/(_m*_G*_h);
 
-            fcopX = _filterX.ComputeBW(taredCOP.x);
-            fcopY = _filterY.ComputeBW(taredCOP.y);
+            fcopX = _filterX.ComputeBW(cop.x);
+            fcopY = _filterY.ComputeBW(cop.y);
         }
         else
         {
-            fcopX = taredCOP.x;
-            fcopY = taredCOP.y;
+            fcopX = cop.x;
+            fcopY = cop.y;
         }
         
         var data = new WiiBoardData(Time.fixedUnscaledTime, 
-                                    taredCOP.x, taredCOP.y, 
+                                    cop.x, cop.y, 
                                     boardSensorValues.y, 
                                     boardSensorValues.x, 
                                     boardSensorValues.w, 
@@ -200,9 +209,9 @@ public class Cursor : MonoBehaviour
         return data;
     }
 
-    private Vector2 GetTargetCoords()
+    private void GetTargetCoords()
     {
-        Vector2 targetCoords;
+        TargetCoords = new Vector2();
         //finding circle for colour and hunting handled here since it changes constantly in game
         switch (_sceneName)
         {
@@ -221,11 +230,9 @@ public class Cursor : MonoBehaviour
         }
 
         if (_sceneName != "Target")
-            targetCoords = _targetCircle.transform.position;
+            TargetCoords = _targetCircle.transform.position;
         else //target game circle never leaves the centre
-            targetCoords = new Vector2(0.0f, 0.0f);
-
-        return targetCoords;
+            TargetCoords = new Vector2(0.0f, 0.0f);
     }
 
     private void ChangeFileAssessment(string condition) //activates when starting or changing condition in assessment
