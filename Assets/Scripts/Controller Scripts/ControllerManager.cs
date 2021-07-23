@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace ControllerManager
@@ -17,22 +16,18 @@ namespace ControllerManager
         private float _ankleLength;
         private float _lengthOffset;
         private float _ankleQS;
-        private float _limitFront;
-        private float _limitBack;
-        private float _limitLeft;
-        private float _limitRight;
         private float _m;
         private float _h;
         private float _i;
         private float _kp;
         private float _kd;
         private float _k;
-        private float _rpfMax;
-        private float _rdfMax;
-        private float _lpfMax;
-        private float _ldfMax;
+        private List<float> _limits;
+        private List<float> _stimMax;
         
         private const float _G = 9.81f; //m/s^2
+        private const float _XWidth = 433; // mm
+        private const float _YLength = 228; // mm
 
         public Controller()
         {
@@ -48,17 +43,25 @@ namespace ControllerManager
             _m = _mass*_ankleMassFraction; //mass without foot
             _h = _height*_comFraction; //height of COM
             _i = _inertiaCoeff*_mass*Mathf.Pow(_height, 2); //inertia
-            _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")/100f*_height;
-            _lengthOffset = PlayerPrefs.GetFloat("Length Offset");
+            _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")/100f*_height; //convert to m
+            _lengthOffset = PlayerPrefs.GetFloat("Length Offset")*_YLength/1000f; //convert from percentage to length and mm to m
             _ankleQS = _lengthOffset - _ankleLength;
-            _limitFront = PlayerPrefs.GetFloat("Limit of Stability Front");
-            _limitBack = PlayerPrefs.GetFloat("Limit of Stability Back");
-            _limitLeft = PlayerPrefs.GetFloat("Limit of Stability Left");
-            _limitRight = PlayerPrefs.GetFloat("Limit of Stability Right");
-            _rpfMax = PlayerPrefs.GetFloat("RPF Max");
-            _rdfMax = PlayerPrefs.GetFloat("RDF Max");
-            _lpfMax = PlayerPrefs.GetFloat("LPF Max");
-            _ldfMax = PlayerPrefs.GetFloat("LDF Max");
+
+            _limits = new List<float>() //front, back, left, right
+            {
+                PlayerPrefs.GetFloat("Limit of Stability Front"),
+                PlayerPrefs.GetFloat("Limit of Stability Back"),
+                PlayerPrefs.GetFloat("Limit of Stability Left"),
+                PlayerPrefs.GetFloat("Limit of Stability Right")
+            };
+
+            _stimMax = new List<float>() //RPF, RDF, LPF, LDF
+            {
+                PlayerPrefs.GetFloat("RPF Max"),
+                PlayerPrefs.GetFloat("RDF Max"),
+                PlayerPrefs.GetFloat("LPF Max"),
+                PlayerPrefs.GetFloat("LDF Max")
+            };
 
             //controller constants
             _kp = _kpc*_m*_G*_height; //active/neural controller kp and kd
@@ -68,7 +71,11 @@ namespace ControllerManager
 
         public void Stimulate(WiiBoardData data, Vector2 targetCoords)
         {
-            
+            var com = data.fCopY + _ankleQS;
+            var targetY = targetCoords.y + _ankleQS;
+            _limits[0] += _ankleQS;
+            _limits[1] += _ankleQS;
+            var qsTorque = _m*_G*_ankleQS;
         }
     }
 }

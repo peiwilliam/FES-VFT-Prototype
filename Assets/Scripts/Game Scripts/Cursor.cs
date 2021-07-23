@@ -1,7 +1,8 @@
-﻿using FilterManager;
-using ControllerManager;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using CSV;
+using FilterManager;
 
 public class Cursor : MonoBehaviour
 {
@@ -10,37 +11,32 @@ public class Cursor : MonoBehaviour
     [SerializeField] private float _minY = 0f;
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
 
-    private const float _Length = 433; // mm
-    private const float _Width = 228; // mm
+    private const float _XWidth = 433; // mm
+    private const float _YLength = 228; // mm
     private const float _G = 9.81f; // m/s^2
     private float _mass;
     private float _height;
     private float _m; // kg
     private float _h; // m
     private float _i; // kgm^2
-    private float _limitFront;
-    private float _limitBack;
-    private float _limitLeft;
-    private float _limitRight;
-    private float _offset;
-    private bool _losStarted;
-    private bool _ecAssessmentStarted;
-    private bool _eoAssessmentStarted;
+    private List<float> _limits;
+    private float _lengthOffset;
     private string _sceneName;
     private GameObject _targetCircle;
     private Filter _filterX;
     private Filter _filterY;
     private CSVWriter _writer;
-    private GameSession _gameSession;
-    private Controller _controller;
 
     public WiiBoardData Data { get; private set; }
     public Vector2 TargetCoords {get; private set; }
+    public bool LOSStarted { get; private set; }
+    public bool ECAssessmentStarted { get; private set; }
+    public bool EOAssessmentStarted { get; private set; }
 
     private void Awake() //want to compute these values before anything starts
     {
         _mass = PlayerPrefs.GetFloat("Mass");
-        _height = PlayerPrefs.GetFloat("Height");
+        _height = PlayerPrefs.GetFloat("Height")/100f; //convert to m
         _m = PlayerPrefs.GetFloat("Ankle Mass Fraction")*_mass;
         _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
         _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);
@@ -48,47 +44,35 @@ public class Cursor : MonoBehaviour
 
         if (_sceneName == "LOS" || _sceneName == "Assessment") //only shift and scale cop when it's the games
         {
-            _limitFront = 1.0f;
-            _limitBack = 1.0f;
-            _limitLeft = 1.0f;
-            _limitRight = 1.0f;
+            _limits = new List<float>() {1.0f, 1.0f, 1.0f, 1.0f}; //front, back, left, right
 
-            if (_sceneName == "Assessment")
-                _offset = 0.0f;
-            else
-                _offset = PlayerPrefs.GetFloat("Length Offset");
+            if (_sceneName == "LOS")
+                _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f);
         }
         else
         {
-            _limitFront = PlayerPrefs.GetFloat("Limit of Stability Front");
-            _limitBack = PlayerPrefs.GetFloat("Limit of Stability Back");
-            _limitLeft = PlayerPrefs.GetFloat("Limit of Stability Left");
-            _limitRight = PlayerPrefs.GetFloat("Limit of Stability Right");
-            _offset = PlayerPrefs.GetFloat("Length Offset");
+            _limits = new List<float>() 
+            {
+                PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f),
+                PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f),
+                PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f),
+                PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f)
+            };
+
+            _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f);
         }
     }
 
-    private void OnEnable() //subscribing to event handled here
-    {
-        GameSession.DirectionChangeEvent += ChangeFileLOS;
-        GameSession.ConditionChangeEvent += ChangeFileAssessment;
-        GameSession.ColourChangeEvent += ChangeTarget;
-        GameSession.TargetChangeEvent += ChangeTarget;
-    }
+    // private void OnEnable() //subscribing to event handled here
+    // {
+    //     GameSession.DirectionChangeEvent += ChangeFileLOS;
+    //     GameSession.ConditionChangeEvent += ChangeFileAssessment;
+    // }
 
     private void Start() 
     {
-        _gameSession = FindObjectOfType<GameSession>();
-        _sceneName = SceneManager.GetActiveScene().name;
-
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
-        {
-            SetBoardConditions();
-            _controller = new Controller();
-        }
-        
-        if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
-            _targetCircle = FindObjectOfType<MovingCircle>().gameObject;
+            SetInitialConditions();
     }
 
     private void FixedUpdate()
@@ -96,7 +80,7 @@ public class Cursor : MonoBehaviour
         Move();
     }
 
-    private void SetBoardConditions()
+    private void SetInitialConditions()
     {
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set 0 as default in case it isn't set
         {
@@ -106,12 +90,6 @@ public class Cursor : MonoBehaviour
             _filterX = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order")); //bw temporary for now
             _filterY = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order"));
         }
-
-        if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
-        {
-            _writer = new CSVWriter();
-            _writer.WriteHeader();
-        }
     }
 
     private void Move()
@@ -119,17 +97,6 @@ public class Cursor : MonoBehaviour
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
         {
             Data = GetBoardValues();
-            GetTargetCoords();
-
-            if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
-                _writer.WriteDataAsync(Data, TargetCoords);
-            else if (_losStarted || _ecAssessmentStarted) //wait for user to click the button to start recording for los and assessment
-            {
-                if (!GameSession._ecDone)
-                    _writer.WriteDataAsync(Data, TargetCoords);
-                else if (_eoAssessmentStarted && !GameSession._eoDone)
-                    _writer.WriteDataAsync(Data, TargetCoords);
-            }
 
             var pos = new Vector2(transform.position.x, transform.position.y);
             var com = new Vector2();
@@ -141,14 +108,14 @@ public class Cursor : MonoBehaviour
 
             // subtract the offset and scale the cursor on screen to the individual's max in each direction
             if (com.x > 0)
-                pos.x = Mathf.Clamp((com.x / _limitRight) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
+                pos.x = Mathf.Clamp((com.x / _limits[3]) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
             else
-                pos.x = Mathf.Clamp((com.x / _limitLeft) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
+                pos.x = Mathf.Clamp((com.x / _limits[2]) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
 
             if (com.y > 0)
-                pos.y = Mathf.Clamp(((com.y) / _limitFront) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+                pos.y = Mathf.Clamp(((com.y) / _limits[0]) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
             else
-                pos.y = Mathf.Clamp(((com.y) / _limitBack) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+                pos.y = Mathf.Clamp(((com.y) / _limits[1]) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
 
             transform.position = pos;
         }
@@ -166,7 +133,7 @@ public class Cursor : MonoBehaviour
     {
         var boardSensorValues = Wii.GetBalanceBoard(0);
         var cop = Wii.GetCenterOfBalance(0);
-        cop.y -= _offset; //apply offset to cop
+        cop.y -= _lengthOffset; //subtract offset from AP direction
 
         if (Mathf.Abs(cop.x) > 1f || Mathf.Abs(cop.y) > 1f) //com should not extend outside the range of the board
         {
@@ -182,7 +149,7 @@ public class Cursor : MonoBehaviour
         }
 
         var fcopX = 0.0f;
-        var fcopY = 0.0f;
+        var fcopY = 0.0f; //apply offset to cop
 
         //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && _sceneName != "Assessment" && _sceneName != "LOS") 
@@ -209,57 +176,27 @@ public class Cursor : MonoBehaviour
         return data;
     }
 
-    private void GetTargetCoords()
-    {
-        TargetCoords = new Vector2();
-        //finding circle for colour and hunting handled here since it changes constantly in game
-        switch (_sceneName)
-        {
-            case "Colour Matching":
-                if (_targetCircle == null)
-                    //using findgameobjectwithtag is faster since it's more like searching through dict
-                    _targetCircle = GameObject.FindGameObjectWithTag("Target");
+    // private void ChangeFileAssessment(string condition) //activates when starting or changing condition in assessment
+    // {
+    //     _writer = new CSVWriter(condition);
+    //     _writer.WriteHeader();
 
-                break;
-            case "Hunting":
-                if (_targetCircle == null)
-                    //using findgameobjectwithtag is faster since it's more like searching through dict
-                    _targetCircle = GameObject.FindGameObjectWithTag("Target");
+    //     if (!GameSession._ecDone && !GameSession._eoDone) //check which condition it is and ensure that the correct files are created
+    //         ECAssessmentStarted = true;
+    //     else if (!GameSession._eoDone)
+    //         EOAssessmentStarted = true;
+    // }
 
-                break;
-        }
+    // private void ChangeFileLOS(string direction) //activates when direction changes in los
+    // {
+    //     _writer = new CSVWriter(direction);
+    //     _writer.WriteHeader();
+    //     LOSStarted = true;
+    // }
 
-        if (_sceneName != "Target")
-            TargetCoords = _targetCircle.transform.position;
-        else //target game circle never leaves the centre
-            TargetCoords = new Vector2(0.0f, 0.0f);
-    }
-
-    private void ChangeFileAssessment(string condition) //activates when starting or changing condition in assessment
-    {
-        _writer = new CSVWriter(condition);
-        _writer.WriteHeader();
-
-        if (!GameSession._ecDone && !GameSession._eoDone) //check which condition it is and ensure that the correct files are created
-            _ecAssessmentStarted = true;
-        else if (!GameSession._eoDone)
-            _eoAssessmentStarted = true;
-    }
-
-    private void ChangeFileLOS(string direction) //activates when direction changes in los
-    {
-        _writer = new CSVWriter(direction);
-        _writer.WriteHeader();
-        _losStarted = true;
-    }
-
-    private void ChangeTarget() => _targetCircle = null; //set _targetCircle to null so that the new target circle can be selected
-
-    private void OnDisable() //unsubscribe when cursor is destroyed to avoid memory leaks
-    {
-        GameSession.DirectionChangeEvent -= ChangeFileLOS;
-        GameSession.ConditionChangeEvent -= ChangeFileAssessment;
-        GameSession.ColourChangeEvent -= ChangeTarget;
-        GameSession.TargetChangeEvent -= ChangeTarget;
-    }
+    // private void OnDisable() //unsubscribe when cursor is destroyed to avoid memory leaks
+    // {
+    //     GameSession.DirectionChangeEvent -= ChangeFileLOS;
+    //     GameSession.ConditionChangeEvent -= ChangeFileAssessment;
+    // }
 }

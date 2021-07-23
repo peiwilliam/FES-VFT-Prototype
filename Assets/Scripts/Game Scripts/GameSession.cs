@@ -74,9 +74,6 @@ public class GameSession : MonoBehaviour
     [SerializeField] private List<string> _colourTexts;
     [SerializeField] private UnityEvent _colourChangeEvent;
 
-    public delegate void OnColourChange();
-    public static event OnColourChange ColourChangeEvent; //not the same as the UnityEvent
-
     private TextMeshProUGUI _colourText;
     private Coroutine _changeColour;
 
@@ -97,9 +94,6 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
     [SerializeField] private float _huntingDuration = 10f;
     [SerializeField] private bool _conditionHuntingMet;
-
-    public delegate void OnTargetChange();
-    public static event OnTargetChange TargetChangeEvent;
     
     private HuntingCircle _huntingCircle;
 
@@ -414,7 +408,6 @@ public class GameSession : MonoBehaviour
         {
             PickColour(averageDistance, oldCircle);
             _colourChangeEvent.Invoke();
-            ColourChangeEvent();
 
             while (_colourDuration > 0 && !_conditionColourMet)
             {
@@ -504,7 +497,6 @@ public class GameSession : MonoBehaviour
             }
 
             Instantiate(_huntingCirclePrefab, new Vector3(pos[0], pos[1], 0), Quaternion.identity);
-            TargetChangeEvent();
             
             _huntingCircle = FindObjectOfType<HuntingCircle>();
 
