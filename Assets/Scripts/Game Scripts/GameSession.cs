@@ -15,8 +15,8 @@ public class GameSession : MonoBehaviour
     [SerializeField] private List<string> _assessInstructions;
     [SerializeField] private InputField _assessInstructionsBox;
 
-    public static bool _ecDone; //public static so cursor is able to access these values
-    public static bool _eoDone;
+    public static bool ecDone; //public static so cursor is able to access these values
+    public static bool eoDone;
 
     public delegate void OnConditionChange(string condition);
     public static event OnConditionChange ConditionChangeEvent;
@@ -218,13 +218,13 @@ public class GameSession : MonoBehaviour
 
                     if (_totalGameTime <= 0) //reset for eyes open condition
                     {
-                        if (_ecDone && !_eoDone) //change the instructions and reset timer for next condition
+                        if (ecDone && !eoDone) //change the instructions and reset timer for next condition
                         {
                             _timer = null;
                             _assessInstructionsBox.text = _assessInstructions[1];
                             _totalGameTime = 100;
                         }
-                        else if (_ecDone && _eoDone) //set length offset when assessment is done
+                        else if (ecDone && eoDone) //set length offset when assessment is done
                             ComputeLengthOffset();
                     }
                 }
@@ -251,7 +251,7 @@ public class GameSession : MonoBehaviour
     {
         var data = _cursor.Data;
 
-        if (!_ecDone)
+        if (!ecDone)
             _qsAssessment["EC"].Add(data);
         else
             _qsAssessment["EO"].Add(data);
@@ -263,9 +263,9 @@ public class GameSession : MonoBehaviour
 
         if (ConditionChangeEvent != null)
         {
-            if (!_ecDone)
+            if (!ecDone)
                 ConditionChangeEvent(_qsAssessment.Keys.ToList()[0]);
-            else if (!_eoDone)
+            else if (!eoDone)
                 ConditionChangeEvent(_qsAssessment.Keys.ToList()[1]);
         }
     }
@@ -556,10 +556,10 @@ public class GameSession : MonoBehaviour
 
         if (SceneManager.GetActiveScene().name == "Assessment")
         {
-            if (!_ecDone)
-                _ecDone = true;
-            else if (!_eoDone)
-                _eoDone = true;
+            if (!ecDone)
+                ecDone = true;
+            else if (!eoDone)
+                eoDone = true;
         }
     }
 
@@ -581,7 +581,7 @@ public class GameSession : MonoBehaviour
 
     private void OnDisable() //mostly so that _ecDone and _eoDone are false again once assessment is done
     {
-        _ecDone = false;
-        _eoDone = false;
+        ecDone = false;
+        eoDone = false;
     }
 }

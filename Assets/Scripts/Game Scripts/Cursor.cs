@@ -175,28 +175,4 @@ public class Cursor : MonoBehaviour
                                     fcopX, fcopY);
         return data;
     }
-
-    // private void ChangeFileAssessment(string condition) //activates when starting or changing condition in assessment
-    // {
-    //     _writer = new CSVWriter(condition);
-    //     _writer.WriteHeader();
-
-    //     if (!GameSession._ecDone && !GameSession._eoDone) //check which condition it is and ensure that the correct files are created
-    //         ECAssessmentStarted = true;
-    //     else if (!GameSession._eoDone)
-    //         EOAssessmentStarted = true;
-    // }
-
-    // private void ChangeFileLOS(string direction) //activates when direction changes in los
-    // {
-    //     _writer = new CSVWriter(direction);
-    //     _writer.WriteHeader();
-    //     LOSStarted = true;
-    // }
-
-    // private void OnDisable() //unsubscribe when cursor is destroyed to avoid memory leaks
-    // {
-    //     GameSession.DirectionChangeEvent -= ChangeFileLOS;
-    //     GameSession.ConditionChangeEvent -= ChangeFileAssessment;
-    // }
 }

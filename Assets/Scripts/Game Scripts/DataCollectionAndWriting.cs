@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using CSV;
 
-public class DataCollectionAndWriting : MonoBehaviour //separate object for writing data, set in unity to execute later than other classes
+public class DataCollectionAndWriting : MonoBehaviour //separate class for writing all game data, set in unity to execute later than other classes
 {
     private string _sceneName;
     private bool _ecAssessmentStarted;
@@ -58,9 +58,9 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
             _writer.WriteDataAsync(data, targetCoords);
         else if (_losStarted || _ecAssessmentStarted) //wait for user to click the button to start recording for los and assessment
         {
-            if (!GameSession._ecDone)
+            if (!GameSession.ecDone)
                 _writer.WriteDataAsync(data, targetCoords);
-            else if (_eoAssessmentStarted && !GameSession._eoDone)
+            else if (_eoAssessmentStarted && !GameSession.eoDone)
                 _writer.WriteDataAsync(data, targetCoords);
         }
     }
@@ -99,9 +99,9 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
         _writer = new CSVWriter(condition);
         _writer.WriteHeader();
 
-        if (!GameSession._ecDone && !GameSession._eoDone) //check which condition it is and ensure that the correct files are created
+        if (!GameSession.ecDone && !GameSession.eoDone) //check which condition it is and ensure that the correct files are created
             _ecAssessmentStarted = true;
-        else if (!GameSession._eoDone)
+        else if (!GameSession.eoDone)
             _eoAssessmentStarted = true;
     }
 
