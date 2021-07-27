@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO.Ports;
 using UnityEngine;
 
@@ -31,5 +32,39 @@ public class ConnectionManager : MonoBehaviour
             Debug.Log(exception.Message);
             return null;
         }
+    }
+
+    public IEnumerator ReadFromArduinoAsync(Action<string> callback, Action fail = null, float timeout = float.PositiveInfinity) 
+    {
+        var initialTime = DateTime.Now;
+        DateTime nowTime;
+        TimeSpan diff = default(TimeSpan);
+        string dataString = null;
+
+        do 
+        {
+            try
+            {
+                dataString = _stream.ReadLine();
+            }
+            catch (TimeoutException) 
+            {
+                dataString = null;
+            }
+            if (dataString != null)
+            {
+                callback(dataString);
+                yield break; // Terminates the Coroutine
+            } 
+            else
+                yield return null; // Wait for next frame
+            nowTime = DateTime.Now;
+            diff = nowTime - initialTime;
+        } while (diff.Milliseconds < timeout);
+
+        if (fail != null)
+            fail();
+
+        yield return null;
     }
 }
