@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ControllerManager
 {
@@ -17,7 +19,7 @@ namespace ControllerManager
         private float _lengthOffset;
         private float _ankleQS;
         private float _m;
-        private float _h;
+        private float _hCOM;
         private float _i;
         private float _kp;
         private float _kd;
@@ -44,7 +46,7 @@ namespace ControllerManager
             _comFraction = PlayerPrefs.GetFloat("CoM Height");
             _inertiaCoeff = PlayerPrefs.GetFloat("Inertia Coefficient"); //can make as a parameter in settings
             _m = _mass*_ankleMassFraction; //mass without foot
-            _h = _height*_comFraction; //height of COM
+            _hCOM = _height*_comFraction; //height of COM
             _i = _inertiaCoeff*_mass*Mathf.Pow(_height, 2); //inertia
             _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height;
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset")*_YLength/1000f; //convert from percentage to length and mm to m
@@ -101,8 +103,8 @@ namespace ControllerManager
             _kd = _kdc*_m*_G*_height; 
             _k = _kc*_m*_G*_height; //mechanical/passive controller
 
-            _coms = new List<float>(3);
-            _angles = new List<float>(3);
+            _coms = new List<float>(5); //mechanical controller requires 0-2 and neural controller requires 2-4 for derivative
+            _angles = new List<float>(5);
         }
 
         public void Stimulate(WiiBoardData data, Vector2 targetCoords)
@@ -110,48 +112,146 @@ namespace ControllerManager
             //shift everything to the perspective of the ankles
             var shiftedCOMy = data.fCopY + _ankleQS;
             var targetY = targetCoords.y + _ankleQS;
-            _limits[0] += _ankleQS;
-            _limits[1] += _ankleQS;
+            var losF = _limits[0] + _ankleQS;
+            var losB = _limits[1] - _ankleQS;
 
             // calculating mechanical torques
             var qsTorque = _m*_G*_ankleQS;
-            var losfTorque = _m*_G*_limits[0];
-            var losbTorque = _m*_G*_limits[1];
+            var losFTorque = _m*_G*_limits[0];
+            var losBTorque = _m*_G*_limits[1];
 
             //angle calculations
-            var targetVertAng = Mathf.Atan2(targetY, _h);
-            var comvertAng = Mathf.Atan2(shiftedCOMy, _h);
-            var qsVertAng = Mathf.Atan2(_ankleQS, _h);
-            var angErr = qsVertAng - comvertAng;
+            var targetVertAng = Mathf.Atan2(targetY, _hCOM);
+            var comVertAng = Mathf.Atan2(shiftedCOMy, _hCOM);
+            var qsVertAng = Mathf.Atan2(_ankleQS, _hCOM);
+            var angErr = targetVertAng - comVertAng;
+
+            //first need to adjust the stored COM values as new values are added from cursor
+            for (var i = _coms.Count - 1; i >= 0; i--)
+            {
+                if (i == 0)
+                    _coms[i] = shiftedCOMy;
+                else
+                    _coms[i] = _coms[i - 1];
+            }
+
+            //controller calculations
+            var neuralTorque = NeuralController(angErr); //calculate neural torque from controller output
+            var mechanicalTorque = MechanicalController(comVertAng); //calculate passive torque from controller output
+            var slopes = Slopes(qsTorque, losFTorque, losBTorque); //calculate controller slopes
+            var stimulationOutput = UnbiasedStimulationOutput(slopes, neuralTorque, mechanicalTorque, qsTorque, comVertAng, qsVertAng); //calculate unbiased output
+            var neuralBiases = CalculateNeuralBiases(data, targetCoords); //calculate neural biases
+            var mechBiases = CalculateMechBiases(data, shiftedCOMy); //calculate mech biases
+
             
         }
 
-        public void NeuralController()
+        private float NeuralController(float error)
         {
+            float derivativeError;
 
-        }
-
-        public void MechanicalController()
-        {
-
-        }
-
-        public float CalculateDerivative(float input)
-        {
-            _coms[2] = _coms[1];
-            _coms[1] = _coms[0];
-            _coms[0] = input;
+            if (_coms.GetRange(2, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero)
+                derivativeError = 0.0f;
+            else
+                derivativeError = CalculateDerivative(_coms.GetRange(2, 3)); //two point delay on the neural controller
             
-            var derivative = (3.0f*_coms[0] - 4.0f*_coms[1] + _coms[2])/2*Time.fixedDeltaTime;
-
-            return derivative;
+            return _kp*error + _kd*derivativeError;
         }
 
-        public Dictionary<string, float> CalculateBiases(WiiBoardData data, float shiftedCOMy)
+        private float MechanicalController(float verticalCOMAng)
+        {
+            float velocity;
+
+            if (_coms.GetRange(0, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero)
+                velocity = 0.0f;
+            else
+                velocity = CalculateDerivative(_coms.GetRange(0, 3));
+
+            return _kc*verticalCOMAng + 5.0f*velocity;
+        }
+
+        private Dictionary<string, List<float>> Slopes(float qsTorque, float losBTorque, float losFTorque) //calculate slopes for neural and mech controllers
+        {
+            var slopes = new Dictionary<string, List<float>>()
+            {
+                ["Mech"] = new List<float>(4), //follows order of RPF, RDF, LPF, LDF
+                ["Neural"] = new List<float>(4)
+            };
+
+            //mech PF
+            slopes["Mech"][0] = _stimMax[0] / (losFTorque / 2); //RPF
+            slopes["Mech"][2] = _stimMax[2] / (losFTorque / 2); //LPF
+            //mech DF
+            slopes["Mech"][1] = _stimMax[1] / ((losBTorque - qsTorque) / 2); //RDF
+            slopes["Mech"][3] = _stimMax[3] / ((losBTorque - qsTorque) / 2); //LDF
+            //neural PF
+            slopes["Neural"][0] = _stimMax[0] / ((losFTorque - losBTorque)/ 2); //RPF
+            slopes["Neural"][2] = _stimMax[2] / ((losFTorque - losBTorque) / 2); //LPF
+            //neural DF
+            slopes["Neural"][1] = _stimMax[1] / ((losBTorque - losFTorque) / 2); //RDF
+            slopes["Neural"][3] = _stimMax[3] / ((losBTorque - losFTorque) / 2); //LDF
+
+            return slopes;
+        }
+
+        public float CalculateDerivative(List<float> comsVector) => (3.0f*comsVector[0] - 4.0f*comsVector[1] + comsVector[2])/2*Time.fixedDeltaTime;
+
+        private Dictionary<string, List<float>> UnbiasedStimulationOutput(Dictionary<string, List<float>> slopes, float neuralTorque, float mechanicalTorque, float qsTorque, float comVertAng, float qsVertAng)
+        {
+            var stimulation = new Dictionary<string, List<float>>
+            {
+                ["Mech"] = new List<float>(4), //default zero, order is RPF, RDF, LPF, LDF
+                ["Neural"] = new List<float>(4)
+            };
+
+            if (0.5f*mechanicalTorque > 0) //only calculate stim if 0.5*mechanicalTorque > 0
+            {
+                stimulation["Mech"][0] = slopes["Mech"][0]*0.5f*mechanicalTorque;
+                stimulation["Mech"][2] = slopes["Mech"][2]*0.5f*mechanicalTorque;
+            }
+            if (0.5f*qsTorque > 0.5f*mechanicalTorque) //only calculate stim if 0.5f*qsTorque > 0.5f*mechanicalTorque > 0
+            {
+                stimulation["Mech"][1] = slopes["Mech"][1]*0.5f*mechanicalTorque;
+                stimulation["Mech"][3] = slopes["Mech"][3]*0.5f*mechanicalTorque;
+            }
+            if (comVertAng > 0) //only calculate stim if comVertAng > 0
+            {
+                stimulation["Neural"][0] = slopes["Neural"][0]*0.5f*neuralTorque;
+                stimulation["Neural"][2] = slopes["Neural"][2]*0.5f*neuralTorque;
+            }
+            if (comVertAng < qsVertAng) //only calculate stim if comVertAng < qsVertAng
+            {
+                stimulation["Neural"][1] = slopes["Neural"][1]*0.5f*neuralTorque;
+                stimulation["Neural"][3] = slopes["Neural"][3]*0.5f*neuralTorque;
+            }
+
+            return stimulation;
+        }
+
+        private Dictionary<string, float> CalculateNeuralBiases(WiiBoardData data, Vector2 targetCoords)
         {
             var biases = new Dictionary<string, float>();
-            var biasAng = -Mathf.Atan2(data.fCopX, shiftedCOMy);
+            var x = data.fCopX - targetCoords.x;
+            var y = data.fCopY - targetCoords.y;
+            var biasAng = -Mathf.Atan2(y, x);
 
+            BiasFunction(biases, biasAng);
+
+            return biases;
+        }
+
+        private Dictionary<string, float> CalculateMechBiases(WiiBoardData data, float shiftedCOMy)
+        {
+            var biases = new Dictionary<string, float>();
+            var biasAng = -Mathf.Atan2(shiftedCOMy, data.fCopX);
+
+            BiasFunction(biases, biasAng);
+
+            return biases;
+        }
+
+        private void BiasFunction(Dictionary<string, float> biases, float biasAng)
+        {
             foreach (var item in _biasCoeffs)
             {
                 var bias = 0f;
@@ -159,18 +259,16 @@ namespace ControllerManager
                 if (item.Key == "LPF" || item.Key == "RPF")
                 {
                     for (var i = 7; i >= 0; i--)
-                        bias += item.Value[i]*Mathf.Pow(biasAng, i);
+                        bias += item.Value[i] * Mathf.Pow(biasAng, i);
                 }
                 else
                 {
                     for (var i = 5; i >= 0; i--)
-                        bias += item.Value[i]*Mathf.Pow(biasAng, i);
+                        bias += item.Value[i] * Mathf.Pow(biasAng, i);
                 }
-                   
+
                 biases.Add(item.Key, bias);
             }
-
-            return biases;
         }
     }
 }

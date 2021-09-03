@@ -8,6 +8,7 @@ public class Stimulation : MonoBehaviour // todo, make this script run later, li
 
     private Controller _controller;
     private Cursor _cursor;
+    private GameObject _targetCircle;
 
     private void Start()
     {
@@ -17,6 +18,6 @@ public class Stimulation : MonoBehaviour // todo, make this script run later, li
 
     private void FixedUpdate()
     {
-        _controller.Stimulate(_cursor.Data, _cursor.TargetCoords);
+        _controller.Stimulate(_cursor.Data, _targetCircle.transform.position);
     }
 }

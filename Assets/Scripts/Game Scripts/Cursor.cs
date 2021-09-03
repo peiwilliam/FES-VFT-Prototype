@@ -23,12 +23,12 @@ public class Cursor : MonoBehaviour
     private float _lengthOffset;
     private string _sceneName;
     private GameObject _targetCircle;
+    private GameObject _rectangles;
     private Filter _filterX;
     private Filter _filterY;
     private CSVWriter _writer;
 
     public WiiBoardData Data { get; private set; }
-    public Vector2 TargetCoords {get; private set; }
     public bool LOSStarted { get; private set; }
     public bool ECAssessmentStarted { get; private set; }
     public bool EOAssessmentStarted { get; private set; }
@@ -61,13 +61,10 @@ public class Cursor : MonoBehaviour
 
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f);
         }
-    }
 
-    // private void OnEnable() //subscribing to event handled here
-    // {
-    //     GameSession.DirectionChangeEvent += ChangeFileLOS;
-    //     GameSession.ConditionChangeEvent += ChangeFileAssessment;
-    // }
+        if (_sceneName == "LOS")
+            _rectangles = GameObject.Find("Rectangles"); //find the rectangles for los to get shifted y coord
+    }
 
     private void Start() 
     {
@@ -133,9 +130,13 @@ public class Cursor : MonoBehaviour
     {
         var boardSensorValues = Wii.GetBalanceBoard(0);
         var cop = Wii.GetCenterOfBalance(0);
-        cop.y -= _lengthOffset; //subtract offset from AP direction
 
-        if (Mathf.Abs(cop.x) > 1f || Mathf.Abs(cop.y) > 1f) //com should not extend outside the range of the board
+        if (_sceneName != "LOS")
+            cop.y -= _lengthOffset; //subtract offset from AP direction
+        else 
+            cop.y -= _lengthOffset + (Camera.main.transform.position.y - _rectangles.transform.position.y); //additional shift due to the fact that the LOS centre is slightly shifted down
+
+        if (Mathf.Abs(cop.x) > 1f || Mathf.Abs(cop.y) > 1f) //cop should not extend outside the range of the board
         {
             if (cop.x > 1f)
                 cop.x = 1f;
@@ -175,28 +176,4 @@ public class Cursor : MonoBehaviour
                                     fcopX, fcopY);
         return data;
     }
-
-    // private void ChangeFileAssessment(string condition) //activates when starting or changing condition in assessment
-    // {
-    //     _writer = new CSVWriter(condition);
-    //     _writer.WriteHeader();
-
-    //     if (!GameSession._ecDone && !GameSession._eoDone) //check which condition it is and ensure that the correct files are created
-    //         ECAssessmentStarted = true;
-    //     else if (!GameSession._eoDone)
-    //         EOAssessmentStarted = true;
-    // }
-
-    // private void ChangeFileLOS(string direction) //activates when direction changes in los
-    // {
-    //     _writer = new CSVWriter(direction);
-    //     _writer.WriteHeader();
-    //     LOSStarted = true;
-    // }
-
-    // private void OnDisable() //unsubscribe when cursor is destroyed to avoid memory leaks
-    // {
-    //     GameSession.DirectionChangeEvent -= ChangeFileLOS;
-    //     GameSession.ConditionChangeEvent -= ChangeFileAssessment;
-    // }
 }
