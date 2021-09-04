@@ -155,7 +155,7 @@ namespace ControllerManager
             return actualStimOutput;
         }
 
-        private float NeuralController(float error)
+        private float NeuralController(float error) //calculate torque based on neural command
         {
             var derivativeError = 0.0f;
 
@@ -165,7 +165,7 @@ namespace ControllerManager
             return _kp*error + _kd*derivativeError;
         }
 
-        private float MechanicalController(float verticalCOMAng)
+        private float MechanicalController(float verticalCOMAng) //calculate torque based on mechanical properties
         {
             var velocity = 0.0f;
 
@@ -223,7 +223,9 @@ namespace ControllerManager
 
         public float CalculateDerivative(List<float> comsVector) => (3.0f*comsVector[0] - 4.0f*comsVector[1] + comsVector[2])/2*Time.fixedDeltaTime;
 
-        private Dictionary<string, Dictionary<string, float>> UnbiasedStimulationOutput(Dictionary<string, Dictionary<string, float>> slopes, float neuralTorque, float mechanicalTorque, float qsTorque, float comVertAng, float qsVertAng)
+        private Dictionary<string, Dictionary<string, float>> UnbiasedStimulationOutput(Dictionary<string, Dictionary<string, float>> slopes, 
+                                                                                        float neuralTorque, float mechanicalTorque, 
+                                                                                        float qsTorque, float comVertAng, float qsVertAng) //calculate stimulation output based on calculated torques from the controller
         {
             var stimulation = new Dictionary<string, Dictionary<string, float>>
             {
@@ -256,7 +258,7 @@ namespace ControllerManager
             return stimulation;
         }
 
-        private Dictionary<string, float> CalculateNeuralBiases(WiiBoardData data, Vector2 targetCoords)
+        private Dictionary<string, float> CalculateNeuralBiases(WiiBoardData data, Vector2 targetCoords) //calculate ML bias for neural torque
         {
             var biases = new Dictionary<string, float>();
             var x = data.fCopX - targetCoords.x;
@@ -268,7 +270,7 @@ namespace ControllerManager
             return biases;
         }
 
-        private Dictionary<string, float> CalculateMechBiases(WiiBoardData data, float shiftedCOMy)
+        private Dictionary<string, float> CalculateMechBiases(WiiBoardData data, float shiftedCOMy) //calculate ML bias for mechanical torque
         {
             var biases = new Dictionary<string, float>();
             var biasAng = -Mathf.Atan2(shiftedCOMy, data.fCopX);
@@ -278,9 +280,9 @@ namespace ControllerManager
             return biases;
         }
 
-        private void BiasFunction(Dictionary<string, float> biases, float biasAng)
+        private void BiasFunction(Dictionary<string, float> biases, float biasAng) //calculate bias using a polynomial fit
         {
-            foreach (var item in _biasCoeffs) //calculate bias using a polynomial fit
+            foreach (var item in _biasCoeffs) 
             {
                 var bias = 0f;
 
@@ -299,7 +301,8 @@ namespace ControllerManager
             }
         }
 
-        private Dictionary<string, float> AdjustedCombinedStimulation(Dictionary<string, float> neuralBiases, Dictionary<string, float> mechBiases, Dictionary <string, Dictionary<string, float>> rawStimOutput)
+        private Dictionary<string, float> AdjustedCombinedStimulation(Dictionary<string, float> neuralBiases, Dictionary<string, float> mechBiases, 
+                                                                      Dictionary <string, Dictionary<string, float>> rawStimOutput) //applies ML biases and ramping to raw stimulation
         {
             var adjustedStimOutput = new Dictionary<string, float>(4);
             var biasesCombined = new Dictionary<string, Dictionary<string, float>>()
@@ -328,7 +331,7 @@ namespace ControllerManager
             return adjustedStimOutput;
         }
 
-        private Dictionary<string, float> CheckLimits(Dictionary<string, float> adjustedStimOutput)
+        private Dictionary<string, float> CheckLimits(Dictionary<string, float> adjustedStimOutput) //makes sure stim doesn't go above max and below 0
         {
             foreach (var stim in adjustedStimOutput)
             {
