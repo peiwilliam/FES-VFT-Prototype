@@ -18,7 +18,7 @@ namespace CSV
         public CSVWriter(string condition = "")
         {
             _header = new StringBuilder();
-            _fileName = SceneManager.GetActiveScene().name;
+            _fileName = SceneManager.GetActiveScene().name; //file name is name of scene
             _extension = ".csv";
             _path = Directory.GetCurrentDirectory();
             _condition = condition;
@@ -26,7 +26,10 @@ namespace CSV
 
         public void WriteHeader() //writes the header but also creates the csv file
         {
-            _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY");
+            if (_fileName != "LOS" && _fileName != "Assessment")
+                _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY");
+            else
+                _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY, RPFStim, RDFStim, LPFStim, LDFStim");
 
             _count = 1;
             var di = new DirectoryInfo(_path);
@@ -40,11 +43,20 @@ namespace CSV
             File.AppendAllText(_path + @"\" + _fileName + _condition + _count + _extension, _header.ToString());
         }
 
-        public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords) //make this async so it doesn't potentially slow down the game
+        public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords) //make this async so it doesn't potentially slow down the game, for LOS and assessment
         {
             using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _count + _extension, true)) // true to append and not overwrite
             {
                 var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}";
+                await w.WriteLineAsync(line);
+            }
+        }
+
+        public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords, ControllerData controllerData) //make this async so it doesn't potentially slow down the game, for games
+        {
+            using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _count + _extension, true)) // true to append and not overwrite
+            {
+                var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}, {controllerData.rpfStim}, {controllerData.rdfStim}, {controllerData.lpfStim}, {controllerData.ldfStim}, {controllerData.ramp}";
                 await w.WriteLineAsync(line);
             }
         }

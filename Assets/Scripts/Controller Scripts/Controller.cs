@@ -40,6 +40,8 @@ namespace ControllerManager
         private const float _MaxPFStim = 1.117055995961f; // not sure what these units are
         private const float _MaxDFStim = 1.170727515177f; //not sure what these units are either
 
+        public float RampPercentage { get; private set; }
+
         public Controller()
         {
             //define various constants
@@ -315,7 +317,9 @@ namespace ControllerManager
             {
                 foreach (var stim in control.Value)
                 {
-                    control.Value[stim.Key] = _ramping.RampStimulation(stim.Value); //keep modified values inside the original dictionaries so I don't have to instantiate another variable
+                    RampPercentage = _ramping.CalculateRamp();
+                    //keep modified values inside the original dictionaries so I don't have to instantiate another variable
+                    control.Value[stim.Key] = RampPercentage*stim.Value/100f; //divide by 100 to conver to decimal
                     control.Value[stim.Key] *= biasesCombined[control.Key][stim.Key];
 
                     if (stim.Key.Contains("PF")) //divide the maximum possible stim for pf and df stim

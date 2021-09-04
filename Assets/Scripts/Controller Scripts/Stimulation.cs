@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using ControllerManager;
 
@@ -9,6 +10,8 @@ public class Stimulation : MonoBehaviour
     private Cursor _cursor;
     private GameObject _targetCircle;
 
+    public ControllerData ControllerData { get; private set; }
+
     private void Start()
     {
         _controller = new Controller();
@@ -18,5 +21,6 @@ public class Stimulation : MonoBehaviour
     private void FixedUpdate()
     {
         var stimOutput = _controller.Stimulate(_cursor.Data, _targetCircle.transform.position);
+        ControllerData = new ControllerData(stimOutput, _controller.RampPercentage);
     }
 }

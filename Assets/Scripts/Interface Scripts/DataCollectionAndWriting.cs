@@ -11,6 +11,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
     private GameObject _targetCircle;
     private CSVWriter _writer;
     private Cursor _cursor;
+    private Stimulation _stimulation;
 
     private void Awake() 
     {
@@ -32,6 +33,9 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
 
         if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
             _targetCircle = FindObjectOfType<MovingCircle>().gameObject;
+
+        if (_sceneName != "LOS" && _sceneName != "Assessment")
+            _stimulation = FindObjectOfType<Stimulation>();
     }
 
     private void FixedUpdate()
@@ -55,7 +59,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
         var targetCoords = GetTargetCoords();
 
         if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
-            _writer.WriteDataAsync(data, targetCoords);
+            _writer.WriteDataAsync(data, targetCoords, _stimulation.ControllerData);
         else if (_losStarted || _ecAssessmentStarted) //wait for user to click the button to start recording for los and assessment
         {
             if (!GameSession._ecDone)
@@ -88,7 +92,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
 
         if (_sceneName != "Target" && _sceneName != "Assessment" && _sceneName != "LOS")
             targetCoords = _targetCircle.transform.position;
-        else //target game circle never leaves the centre
+        else //target game circle never leaves the centre, also not applicable for LOS and assessment
             targetCoords = new Vector2(0.0f, 0.0f);
 
         return targetCoords;

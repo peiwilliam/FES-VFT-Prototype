@@ -7,7 +7,7 @@ namespace ControllerManager
         private float _rampDuration;
         private float _frequency;
         private float _rampIterations;
-        private float _percentStim; //default zero
+        private float _rampPercentage; //default zero
         private bool _reset;
         
         public Ramping()
@@ -19,18 +19,18 @@ namespace ControllerManager
             GameSession.TargetChangeEvent += TargetChanged; //subscribe to targetchangeevent
         }
 
-        public float RampStimulation(float stimulation)
+        public float CalculateRamp()
         {
-            if (_percentStim != 100f)
-                _percentStim += _rampIterations;
+            if (_rampPercentage != 100f)
+                _rampPercentage += _rampIterations;
 
             if (_reset)
             {
-                _percentStim = 0f;
+                _rampPercentage = 0f;
                 _reset = false;
             }
 
-            return stimulation*_percentStim/100; //divide by 100 to convert from percent to decimal
+            return _rampPercentage; //divide by 100 to convert from percent to decimal
         }
 
         public void TargetChanged() => _reset = true;
