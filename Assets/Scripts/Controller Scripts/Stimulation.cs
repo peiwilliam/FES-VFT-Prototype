@@ -1,8 +1,7 @@
-using System.Collections.Generic;
 using UnityEngine;
 using ControllerManager;
 
-public class Stimulation : MonoBehaviour // todo, make this script run later, like DataCollectionAndWriting
+public class Stimulation : MonoBehaviour
 {
     [SerializeField] private GameSession _gameSession;
 
@@ -18,6 +17,6 @@ public class Stimulation : MonoBehaviour // todo, make this script run later, li
 
     private void FixedUpdate()
     {
-        _controller.Stimulate(_cursor.Data, _targetCircle.transform.position);
+        var stimOutput = _controller.Stimulate(_cursor.Data, _targetCircle.transform.position);
     }
 }

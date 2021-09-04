@@ -17,7 +17,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
         _sceneName = SceneManager.GetActiveScene().name;
     }
 
-     private void OnEnable() //subscribing to event handled here
+    private void OnEnable() //subscribing to event handled here
     {
         GameSession.DirectionChangeEvent += ChangeFileLOS;
         GameSession.ConditionChangeEvent += ChangeFileAssessment;

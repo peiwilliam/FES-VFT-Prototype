@@ -1,15 +1,17 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace ControllerManager
 {
     public class Controller
     {
+        //neural controller
         private float _kdc;
         private float _kpc;
+        //mechanical controller
         private float _kc;
+        //phyiological constants
         private float _height;
         private float _mass;
         private float _ankleMassFraction;
@@ -25,14 +27,18 @@ namespace ControllerManager
         private float _kd;
         private float _k;
         private List<float> _limits;
-        private List<float> _stimMax;
         private List<float> _coms;
         private List<float> _angles;
+        private Dictionary<string, float> _stimMax;
         private Dictionary<string, List<float>> _biasCoeffs;
+        //ramping function
+        private Ramping _ramping;
         
         private const float _G = 9.81f; //m/s^2
-        private const float _XWidth = 433; // mm
-        private const float _YLength = 228; // mm
+        private const float _XWidth = 433f; // mm
+        private const float _YLength = 228f; // mm
+        private const float _MaxPFStim = 1.117055995961f; // not sure what these units are
+        private const float _MaxDFStim = 1.170727515177f; //not sure what these units are either
 
         public Controller()
         {
@@ -60,29 +66,16 @@ namespace ControllerManager
                 PlayerPrefs.GetFloat("Limit of Stability Right")*_XWidth/1000f
             };
 
-            _stimMax = new List<float>() //RPF, RDF, LPF, LDF
+            _stimMax = new Dictionary<string, float>() //RPF, RDF, LPF, LDF
             {
-                PlayerPrefs.GetFloat("RPF Max"),
-                PlayerPrefs.GetFloat("RDF Max"),
-                PlayerPrefs.GetFloat("LPF Max"),
-                PlayerPrefs.GetFloat("LDF Max")
+                ["RPF"] = PlayerPrefs.GetFloat("RPF Max"),
+                ["RDF"] = PlayerPrefs.GetFloat("RDF Max"),
+                ["LPF"] = PlayerPrefs.GetFloat("LPF Max"),
+                ["LDF"] = PlayerPrefs.GetFloat("LDF Max")
             };
 
             _biasCoeffs = new Dictionary<string, List<float>>() //obtained from fitting
             {
-                ["LPF"] = new List<float>() 
-                {
-                    0.99526806515243f, -0.408976667987885f,
-                    -0.281770983806191f, 0.134197918133647f,
-                    0.0401008570179150f, -0.014741825821627f,
-                    -0.001834382543371510f, 0.000541387568634961f
-                },
-                ["LDF"] = new List<float>() 
-                {
-                    0.1724382284725f, -0.004599540776172f,
-                    0.170648963603272f, -0.039721561143300f,
-                    -0.008618639088500f, 0.004059400329855f
-                },
                 ["RPF"] = new List<float>() 
                 {
                     0.99526806515243f, -0.408976667987885f,
@@ -91,6 +84,19 @@ namespace ControllerManager
                     -0.001834382543371510f, 0.000541387568634961f
                 },
                 ["RDF"] = new List<float>()
+                {
+                    0.1724382284725f, -0.004599540776172f,
+                    0.170648963603272f, -0.039721561143300f,
+                    -0.008618639088500f, 0.004059400329855f
+                },
+                ["LPF"] = new List<float>() 
+                {
+                    0.99526806515243f, -0.408976667987885f,
+                    -0.281770983806191f, 0.134197918133647f,
+                    0.0401008570179150f, -0.014741825821627f,
+                    -0.001834382543371510f, 0.000541387568634961f
+                },
+                ["LDF"] = new List<float>() 
                 {
                     0.1724382284725f, -0.004599540776172f,
                     0.170648963603272f, -0.039721561143300f,
@@ -105,9 +111,11 @@ namespace ControllerManager
 
             _coms = new List<float>(5); //mechanical controller requires 0-2 and neural controller requires 2-4 for derivative
             _angles = new List<float>(5);
+
+            _ramping = new Ramping();
         }
 
-        public void Stimulate(WiiBoardData data, Vector2 targetCoords)
+        public Dictionary<string, float> Stimulate(WiiBoardData data, Vector2 targetCoords)
         {
             //shift everything to the perspective of the ankles
             var shiftedCOMy = data.fCopY + _ankleQS;
@@ -139,20 +147,19 @@ namespace ControllerManager
             var neuralTorque = NeuralController(angErr); //calculate neural torque from controller output
             var mechanicalTorque = MechanicalController(comVertAng); //calculate passive torque from controller output
             var slopes = Slopes(qsTorque, losFTorque, losBTorque); //calculate controller slopes
-            var stimulationOutput = UnbiasedStimulationOutput(slopes, neuralTorque, mechanicalTorque, qsTorque, comVertAng, qsVertAng); //calculate unbiased output
+            var rawStimOutput = UnbiasedStimulationOutput(slopes, neuralTorque, mechanicalTorque, qsTorque, comVertAng, qsVertAng); //calculate unbiased output
             var neuralBiases = CalculateNeuralBiases(data, targetCoords); //calculate neural biases
             var mechBiases = CalculateMechBiases(data, shiftedCOMy); //calculate mech biases
-
+            var actualStimOutput = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
             
+            return actualStimOutput;
         }
 
         private float NeuralController(float error)
         {
-            float derivativeError;
+            var derivativeError = 0.0f;
 
-            if (_coms.GetRange(2, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero)
-                derivativeError = 0.0f;
-            else
+            if (!_coms.GetRange(2, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero)
                 derivativeError = CalculateDerivative(_coms.GetRange(2, 3)); //two point delay on the neural controller
             
             return _kp*error + _kd*derivativeError;
@@ -160,69 +167,90 @@ namespace ControllerManager
 
         private float MechanicalController(float verticalCOMAng)
         {
-            float velocity;
+            var velocity = 0.0f;
 
-            if (_coms.GetRange(0, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero)
-                velocity = 0.0f;
-            else
+            if (!_coms.GetRange(0, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero)
                 velocity = CalculateDerivative(_coms.GetRange(0, 3));
 
             return _kc*verticalCOMAng + 5.0f*velocity;
         }
 
-        private Dictionary<string, List<float>> Slopes(float qsTorque, float losBTorque, float losFTorque) //calculate slopes for neural and mech controllers
+        private Dictionary<string, Dictionary<string, float>> Slopes(float qsTorque, float losBTorque, float losFTorque) //calculate slopes for neural and mech controllers
         {
-            var slopes = new Dictionary<string, List<float>>()
+            var slopes = new Dictionary<string, Dictionary<string, float>>()
             {
-                ["Mech"] = new List<float>(4), //follows order of RPF, RDF, LPF, LDF
-                ["Neural"] = new List<float>(4)
+                ["Mech"] = new Dictionary<string, float>(),
+                ["Neural"] = new Dictionary<string, float>()
             };
 
-            //mech PF
-            slopes["Mech"][0] = _stimMax[0] / (losFTorque / 2); //RPF
-            slopes["Mech"][2] = _stimMax[2] / (losFTorque / 2); //LPF
-            //mech DF
-            slopes["Mech"][1] = _stimMax[1] / ((losBTorque - qsTorque) / 2); //RDF
-            slopes["Mech"][3] = _stimMax[3] / ((losBTorque - qsTorque) / 2); //LDF
-            //neural PF
-            slopes["Neural"][0] = _stimMax[0] / ((losFTorque - losBTorque)/ 2); //RPF
-            slopes["Neural"][2] = _stimMax[2] / ((losFTorque - losBTorque) / 2); //LPF
-            //neural DF
-            slopes["Neural"][1] = _stimMax[1] / ((losBTorque - losFTorque) / 2); //RDF
-            slopes["Neural"][3] = _stimMax[3] / ((losBTorque - losFTorque) / 2); //LDF
+            foreach (var control in slopes)
+            {
+                foreach (var stim in control.Value)
+                {
+                    if (control.Key == "Mech")
+                    {
+                        switch (stim.Key)
+                        {
+                            case "RPF":
+                            case "LPF":
+                                slopes[control.Key].Add(stim.Key, _stimMax[stim.Key] / (losFTorque / 2));
+                                break;
+                            case "RDF":
+                            case "LDF":
+                                slopes[control.Key].Add(stim.Key, _stimMax[stim.Key] / ((losBTorque - qsTorque) / 2));
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        switch (stim.Key)
+                        {
+                            case "RPF":
+                            case "LPF":
+                                slopes[control.Key].Add(stim.Key, _stimMax[stim.Key] / ((losFTorque - losBTorque)/ 2));
+                                break;
+                            case "RDF":
+                            case "LDF":
+                                slopes[control.Key].Add(stim.Key, _stimMax[stim.Key] / ((losBTorque - losFTorque) / 2));
+                                break;
+                        }
+                    }
+                }
+            }
 
             return slopes;
         }
 
         public float CalculateDerivative(List<float> comsVector) => (3.0f*comsVector[0] - 4.0f*comsVector[1] + comsVector[2])/2*Time.fixedDeltaTime;
 
-        private Dictionary<string, List<float>> UnbiasedStimulationOutput(Dictionary<string, List<float>> slopes, float neuralTorque, float mechanicalTorque, float qsTorque, float comVertAng, float qsVertAng)
+        private Dictionary<string, Dictionary<string, float>> UnbiasedStimulationOutput(Dictionary<string, Dictionary<string, float>> slopes, float neuralTorque, float mechanicalTorque, float qsTorque, float comVertAng, float qsVertAng)
         {
-            var stimulation = new Dictionary<string, List<float>>
+            var stimulation = new Dictionary<string, Dictionary<string, float>>
             {
-                ["Mech"] = new List<float>(4), //default zero, order is RPF, RDF, LPF, LDF
-                ["Neural"] = new List<float>(4)
+                ["Mech"] = new Dictionary<string, float>() {["RPF"] = 0f, ["RDF"] = 0f, ["LPF"] = 0f, ["LDF"] = 0f}, 
+                ["Neural"] = new Dictionary<string, float>() {["RPF"] = 0f, ["RDF"] = 0f, ["LPF"] = 0f, ["LDF"] = 0f}
             };
 
-            if (0.5f*mechanicalTorque > 0) //only calculate stim if 0.5*mechanicalTorque > 0
+            foreach (var control in slopes)
             {
-                stimulation["Mech"][0] = slopes["Mech"][0]*0.5f*mechanicalTorque;
-                stimulation["Mech"][2] = slopes["Mech"][2]*0.5f*mechanicalTorque;
-            }
-            if (0.5f*qsTorque > 0.5f*mechanicalTorque) //only calculate stim if 0.5f*qsTorque > 0.5f*mechanicalTorque > 0
-            {
-                stimulation["Mech"][1] = slopes["Mech"][1]*0.5f*mechanicalTorque;
-                stimulation["Mech"][3] = slopes["Mech"][3]*0.5f*mechanicalTorque;
-            }
-            if (comVertAng > 0) //only calculate stim if comVertAng > 0
-            {
-                stimulation["Neural"][0] = slopes["Neural"][0]*0.5f*neuralTorque;
-                stimulation["Neural"][2] = slopes["Neural"][2]*0.5f*neuralTorque;
-            }
-            if (comVertAng < qsVertAng) //only calculate stim if comVertAng < qsVertAng
-            {
-                stimulation["Neural"][1] = slopes["Neural"][1]*0.5f*neuralTorque;
-                stimulation["Neural"][3] = slopes["Neural"][3]*0.5f*neuralTorque;
+                foreach (var stim in control.Value) 
+                {
+                    if (control.Key == "Mech")
+                    {
+                        if (0.5f*mechanicalTorque > 0 && stim.Key.Contains("PF")) //only calculate stim if 0.5*mechanicalTorque > 0
+                            stimulation[control.Key][stim.Key] = slopes[control.Key][stim.Key]*0.5f*mechanicalTorque;
+                        if (0.5f*qsTorque > 0.5f*mechanicalTorque && stim.Key.Contains("DF")) //only calculate stim if 0.5f*qsTorque > 0.5f*mechanicalTorque > 0
+                            stimulation[control.Key][stim.Key] = slopes[control.Key][stim.Key]*0.5f*mechanicalTorque;
+                    }
+                    else
+                    {
+                        if (comVertAng > 0 && stim.Key.Contains("PF")) //only calculate stim if comVertAng > 0
+                            stimulation[control.Key][stim.Key] = slopes[control.Key][stim.Key]*0.5f*neuralTorque;
+                        if (comVertAng < qsVertAng) //only calculate stim if comVertAng < qsVertAng
+                            stimulation[control.Key][stim.Key] = slopes[control.Key][stim.Key]*0.5f*neuralTorque;
+                    }
+                    
+                }
             }
 
             return stimulation;
@@ -252,7 +280,7 @@ namespace ControllerManager
 
         private void BiasFunction(Dictionary<string, float> biases, float biasAng)
         {
-            foreach (var item in _biasCoeffs)
+            foreach (var item in _biasCoeffs) //calculate bias using a polynomial fit
             {
                 var bias = 0f;
 
@@ -269,6 +297,48 @@ namespace ControllerManager
 
                 biases.Add(item.Key, bias);
             }
+        }
+
+        private Dictionary<string, float> AdjustedCombinedStimulation(Dictionary<string, float> neuralBiases, Dictionary<string, float> mechBiases, Dictionary <string, Dictionary<string, float>> rawStimOutput)
+        {
+            var adjustedStimOutput = new Dictionary<string, float>(4);
+            var biasesCombined = new Dictionary<string, Dictionary<string, float>>()
+            {
+                ["Neural"] = neuralBiases,
+                ["Mech"] = mechBiases
+            };
+
+            foreach (var control in rawStimOutput)
+            {
+                foreach (var stim in control.Value)
+                {
+                    control.Value[stim.Key] = _ramping.RampStimulation(stim.Value); //keep modified values inside the original dictionaries so I don't have to instantiate another variable
+                    control.Value[stim.Key] *= biasesCombined[control.Key][stim.Key];
+
+                    if (stim.Key.Contains("PF")) //divide the maximum possible stim for pf and df stim
+                        control.Value[stim.Key] /= _MaxPFStim;
+                    else
+                        control.Value[stim.Key] /= _MaxDFStim;
+                }
+            }
+
+            foreach (var stim in adjustedStimOutput) //combined neural and mech
+                adjustedStimOutput[stim.Key] = rawStimOutput["Mech"][stim.Key] + rawStimOutput["Neural"][stim.Key]; 
+
+            return adjustedStimOutput;
+        }
+
+        private Dictionary<string, float> CheckLimits(Dictionary<string, float> adjustedStimOutput)
+        {
+            foreach (var stim in adjustedStimOutput)
+            {
+                if (stim.Value > _stimMax[stim.Key]) //make sure stimulation never goes above max
+                    adjustedStimOutput[stim.Key] = _stimMax[stim.Key];
+                else if (stim.Value < 0) //if stim is for some reason negative, always set it back to zero
+                    adjustedStimOutput[stim.Key] = 0f;
+            }
+
+            return adjustedStimOutput;
         }
     }
 }
