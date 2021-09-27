@@ -29,7 +29,7 @@ namespace CSV
             if (_fileName == "LOS" || _fileName == "Assessment")
                 _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY");
             else
-                _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY, RPFStim, RDFStim, LPFStim, LDFStim, Ramping");
+                _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY, TargetXFiltered, TargetYFiltered, RPFStim, RDFStim, LPFStim, LDFStim, Ramping");
 
             _count = 1;
             var di = new DirectoryInfo(_path);
@@ -52,11 +52,11 @@ namespace CSV
             }
         }
 
-        public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords, ControllerData controllerData) //make this async so it doesn't potentially slow down the game, for games
+        public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords, Vector2 targetCoordsFiltered, ControllerData controllerData) //make this async so it doesn't potentially slow down the game, for games
         {
             using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _count + _extension, true)) // true to append and not overwrite
             {
-                var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}, {controllerData.rpfStim}, {controllerData.rdfStim}, {controllerData.lpfStim}, {controllerData.ldfStim}, {controllerData.ramp}";
+                var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}, {targetCoordsFiltered.x}, {targetCoordsFiltered.y}, {controllerData.rpfStim}, {controllerData.rdfStim}, {controllerData.lpfStim}, {controllerData.ldfStim}, {controllerData.ramp}";
                 await w.WriteLineAsync(line);
             }
         }

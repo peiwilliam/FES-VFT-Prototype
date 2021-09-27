@@ -59,7 +59,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
         var targetCoords = GetTargetCoords();
 
         if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
-            _writer.WriteDataAsync(data, targetCoords, _stimulation.ControllerData);
+            _writer.WriteDataAsync(data, targetCoords, _stimulation.TargetPositionFiltered, _stimulation.ControllerData);
         else if (_losStarted || _ecAssessmentStarted) //wait for user to click the button to start recording for los and assessment
         {
             if (!GameSession._ecDone)
@@ -74,14 +74,12 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
         var targetCoords = new Vector2();
 
         //finding circle for colour and hunting handled here since it changes constantly in game
+        //need the second condition since the targets don't despawn, only the circle with the "Target" tag changes
         if (_targetCircle == null || _targetCircle.tag != "Target")
         {
             switch (_sceneName)
             {
                 case "Colour Matching":
-                    //using findgameobjectwithtag is faster since it's more like searching through dict
-                    _targetCircle = GameObject.FindGameObjectWithTag("Target");
-                    break;
                 case "Hunting":
                     //using findgameobjectwithtag is faster since it's more like searching through dict
                     _targetCircle = GameObject.FindGameObjectWithTag("Target");

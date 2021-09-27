@@ -114,6 +114,7 @@ namespace ControllerManager
             _coms = new List<float> {0f, 0f, 0f, 0f, 0f}; //mechanical controller requires 0-2 and neural controller requires 2-4 for derivative
             _angles = new List<float> {0f, 0f, 0f, 0f, 0f};
 
+            //initialize ramping function
             _ramping = new Ramping();
         }
 
