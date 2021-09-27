@@ -26,10 +26,10 @@ namespace CSV
 
         public void WriteHeader() //writes the header but also creates the csv file
         {
-            if (_fileName != "LOS" && _fileName != "Assessment")
+            if (_fileName == "LOS" || _fileName == "Assessment")
                 _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY");
             else
-                _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY, RPFStim, RDFStim, LPFStim, LDFStim");
+                _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY, RPFStim, RDFStim, LPFStim, LDFStim, Ramping");
 
             _count = 1;
             var di = new DirectoryInfo(_path);

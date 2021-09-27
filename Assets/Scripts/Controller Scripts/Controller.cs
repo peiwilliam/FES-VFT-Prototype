@@ -48,7 +48,7 @@ namespace ControllerManager
             _kdc = PlayerPrefs.GetFloat("Kd Coefficient");
             _kpc = PlayerPrefs.GetFloat("Kp Coefficient");
             _kc = PlayerPrefs.GetFloat("K Coefficient");
-            _height = PlayerPrefs.GetFloat("Height")/100f; //convert from cm to m
+            _height = PlayerPrefs.GetInt("Height")/100f; //convert from cm to m
             _mass = PlayerPrefs.GetFloat("Mass");
             _ankleMassFraction = PlayerPrefs.GetFloat("Ankle Mass Fraction");
             _comFraction = PlayerPrefs.GetFloat("CoM Height");
@@ -70,10 +70,10 @@ namespace ControllerManager
 
             _stimMax = new Dictionary<string, float>() //RPF, RDF, LPF, LDF
             {
-                ["RPF"] = PlayerPrefs.GetFloat("RPF Max"),
-                ["RDF"] = PlayerPrefs.GetFloat("RDF Max"),
-                ["LPF"] = PlayerPrefs.GetFloat("LPF Max"),
-                ["LDF"] = PlayerPrefs.GetFloat("LDF Max")
+                ["RPF"] = PlayerPrefs.GetInt("RPF Max"),
+                ["RDF"] = PlayerPrefs.GetInt("RDF Max"),
+                ["LPF"] = PlayerPrefs.GetInt("LPF Max"),
+                ["LDF"] = PlayerPrefs.GetInt("LDF Max")
             };
 
             _biasCoeffs = new Dictionary<string, List<float>>() //obtained from fitting
@@ -111,8 +111,8 @@ namespace ControllerManager
             _kd = _kdc*_m*_G*_height; 
             _k = _kc*_m*_G*_height; //mechanical/passive controller
 
-            _coms = new List<float>(5); //mechanical controller requires 0-2 and neural controller requires 2-4 for derivative
-            _angles = new List<float>(5);
+            _coms = new List<float> {0f, 0f, 0f, 0f, 0f}; //mechanical controller requires 0-2 and neural controller requires 2-4 for derivative
+            _angles = new List<float> {0f, 0f, 0f, 0f, 0f};
 
             _ramping = new Ramping();
         }
@@ -161,10 +161,13 @@ namespace ControllerManager
         {
             var derivativeError = 0.0f;
 
-            if (!_coms.GetRange(2, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero)
+            if (!_coms.GetRange(2, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero), 2 point delay on neural controller
+            {
                 derivativeError = CalculateDerivative(_coms.GetRange(2, 3)); //two point delay on the neural controller
-            
-            return _kp*error + _kd*derivativeError;
+                return _kp*error + _kd*derivativeError;
+            }
+
+            return 0f;
         }
 
         private float MechanicalController(float verticalCOMAng) //calculate torque based on mechanical properties
@@ -187,33 +190,34 @@ namespace ControllerManager
 
             foreach (var control in slopes)
             {
-                foreach (var stim in control.Value)
+                foreach (var muscles in _stimMax) //we just wanna iterate through this to get the names of the muscle groups
                 {
                     if (control.Key == "Mech")
                     {
-                        switch (stim.Key)
+                        switch (muscles.Key)
                         {
                             case "RPF":
                             case "LPF":
-                                slopes[control.Key].Add(stim.Key, _stimMax[stim.Key] / (losFTorque / 2));
+                                slopes[control.Key].Add(muscles.Key, _stimMax[muscles.Key] / (losFTorque / 2));
                                 break;
                             case "RDF":
                             case "LDF":
-                                slopes[control.Key].Add(stim.Key, _stimMax[stim.Key] / ((losBTorque - qsTorque) / 2));
+                                slopes[control.Key].Add(muscles.Key, _stimMax[muscles.Key] / ((losBTorque - qsTorque) / 2));
                                 break;
                         }
                     }
                     else
                     {
-                        switch (stim.Key)
+                        switch (muscles.Key)
                         {
                             case "RPF":
                             case "LPF":
-                                slopes[control.Key].Add(stim.Key, _stimMax[stim.Key] / ((losFTorque - losBTorque)/ 2));
+                                slopes[control.Key].Add(muscles.Key, _stimMax[muscles.Key] / ((losFTorque - losBTorque)/ 2));
+
                                 break;
                             case "RDF":
                             case "LDF":
-                                slopes[control.Key].Add(stim.Key, _stimMax[stim.Key] / ((losBTorque - losFTorque) / 2));
+                                slopes[control.Key].Add(muscles.Key, _stimMax[muscles.Key] / ((losBTorque - losFTorque) / 2));
                                 break;
                         }
                     }
@@ -306,46 +310,54 @@ namespace ControllerManager
         private Dictionary<string, float> AdjustedCombinedStimulation(Dictionary<string, float> neuralBiases, Dictionary<string, float> mechBiases, 
                                                                       Dictionary <string, Dictionary<string, float>> rawStimOutput) //applies ML biases and ramping to raw stimulation
         {
-            var adjustedStimOutput = new Dictionary<string, float>(4);
+            var adjustedStimOutput = new Dictionary<string, Dictionary<string, float>>()
+            {
+                ["Neural"] = new Dictionary<string, float>(),
+                ["Mech"] = new Dictionary<string, float>()
+            };
+            var adjustedCombinedStimOutput = new Dictionary<string, float>(4);
             var biasesCombined = new Dictionary<string, Dictionary<string, float>>()
             {
                 ["Neural"] = neuralBiases,
                 ["Mech"] = mechBiases
             };
 
+            RampPercentage = _ramping.CalculateRamp();
+
             foreach (var control in rawStimOutput)
             {
                 foreach (var stim in control.Value)
                 {
-                    RampPercentage = _ramping.CalculateRamp();
-                    //keep modified values inside the original dictionaries so I don't have to instantiate another variable
-                    control.Value[stim.Key] = RampPercentage*stim.Value/100f; //divide by 100 to conver to decimal
-                    control.Value[stim.Key] *= biasesCombined[control.Key][stim.Key];
+                    adjustedStimOutput[control.Key].Add(stim.Key, RampPercentage*stim.Value/100f*biasesCombined[control.Key][stim.Key]); //divide by 100 to conver to decimal
 
                     if (stim.Key.Contains("PF")) //divide the maximum possible stim for pf and df stim
-                        control.Value[stim.Key] /= _MaxPFStim;
+                        adjustedStimOutput[control.Key][stim.Key] /= _MaxPFStim;
                     else
-                        control.Value[stim.Key] /= _MaxDFStim;
+                        adjustedStimOutput[control.Key][stim.Key] /= _MaxDFStim;
                 }
             }
 
-            foreach (var stim in adjustedStimOutput) //combined neural and mech
-                adjustedStimOutput[stim.Key] = rawStimOutput["Mech"][stim.Key] + rawStimOutput["Neural"][stim.Key]; 
+            foreach(var muscle in _stimMax) //this is just to iterate through the muscle group names, don't actually care about _stimMax
+                adjustedCombinedStimOutput.Add(muscle.Key, adjustedStimOutput["Mech"][muscle.Key] + adjustedStimOutput["Neural"][muscle.Key]);
 
-            return adjustedStimOutput;
+            return adjustedCombinedStimOutput;
         }
 
         private Dictionary<string, float> CheckLimits(Dictionary<string, float> adjustedStimOutput) //makes sure stim doesn't go above max and below 0
         {
+            var trueStimOutput = new Dictionary<string, float>(4);
+
             foreach (var stim in adjustedStimOutput)
             {
                 if (stim.Value > _stimMax[stim.Key]) //make sure stimulation never goes above max
-                    adjustedStimOutput[stim.Key] = _stimMax[stim.Key];
+                    trueStimOutput.Add(stim.Key, _stimMax[stim.Key]);
                 else if (stim.Value < 0) //if stim is for some reason negative, always set it back to zero
-                    adjustedStimOutput[stim.Key] = 0f;
+                    trueStimOutput.Add(stim.Key, 0f);
+                else
+                    trueStimOutput.Add(stim.Key, stim.Value);
             }
 
-            return adjustedStimOutput;
+            return trueStimOutput;
         }
     }
 }

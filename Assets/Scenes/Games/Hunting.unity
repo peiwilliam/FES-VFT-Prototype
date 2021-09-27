@@ -515,6 +515,10 @@ PrefabInstance:
       propertyPath: _timeText
       value: 
       objectReference: {fileID: 709439971}
+    - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
+      propertyPath: _totalGameTime
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 6779056450887742546, guid: 80eff38156b517d47a986db4dfd768f1,
         type: 3}
       propertyPath: m_RootOrder

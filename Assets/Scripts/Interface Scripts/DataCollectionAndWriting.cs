@@ -74,20 +74,19 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
         var targetCoords = new Vector2();
 
         //finding circle for colour and hunting handled here since it changes constantly in game
-        switch (_sceneName)
+        if (_targetCircle == null || _targetCircle.tag != "Target")
         {
-            case "Colour Matching":
-                if (_targetCircle == null || _targetCircle.tag != "Target")
+            switch (_sceneName)
+            {
+                case "Colour Matching":
                     //using findgameobjectwithtag is faster since it's more like searching through dict
                     _targetCircle = GameObject.FindGameObjectWithTag("Target");
-
-                break;
-            case "Hunting":
-                if (_targetCircle == null || _targetCircle.tag != "Target")
+                    break;
+                case "Hunting":
                     //using findgameobjectwithtag is faster since it's more like searching through dict
                     _targetCircle = GameObject.FindGameObjectWithTag("Target");
-
-                break;
+                    break;
+            }
         }
 
         if (_sceneName != "Target" && _sceneName != "Assessment" && _sceneName != "LOS")

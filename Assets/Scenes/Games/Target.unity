@@ -136,6 +136,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 388917782}
     - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
+      propertyPath: _totalGameTime
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
       propertyPath: _targetCircles.Array.size
       value: 5
       objectReference: {fileID: 0}

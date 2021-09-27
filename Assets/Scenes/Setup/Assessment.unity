@@ -205,6 +205,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 550384916088061745}
     - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
+      propertyPath: _totalGameTime
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
       propertyPath: _instructionsBox
       value: 
       objectReference: {fileID: 6350752961590934863}
