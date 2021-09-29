@@ -39,7 +39,7 @@ namespace FilterManager
             _fir = new FIRComponent(order + 1);
 
             for (var i = 0; i <= _order; i++)
-                _coeffs[i] = 1f/(float)order;
+                _coeffs[i] = 1f/(float)(order + 1);
         }
 
         private void GetStages(int order, float sampleHz, bool high)

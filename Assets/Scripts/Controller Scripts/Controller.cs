@@ -36,7 +36,7 @@ namespace ControllerManager
         
         private const float _G = 9.81f; //m/s^2
         private const float _XWidth = 433f; // mm
-        private const float _YLength = 228f; // mm
+        private const float _YLength = 238f; // mm
         private const float _MaxPFStim = 1.117055995961f; // not sure what these units are
         private const float _MaxDFStim = 1.170727515177f; //not sure what these units are either
 
@@ -56,16 +56,16 @@ namespace ControllerManager
             _m = _mass*_ankleMassFraction; //mass without foot
             _hCOM = _height*_comFraction; //height of COM
             _i = _inertiaCoeff*_mass*Mathf.Pow(_height, 2); //inertia
-            _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height;
-            _lengthOffset = PlayerPrefs.GetFloat("Length Offset")*_YLength/1000f; //convert from percentage to length and mm to m
+            _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height/100f; //convert percent to fraction
+            _lengthOffset = PlayerPrefs.GetFloat("Length Offset")*_YLength/1000f/100f; //convert from percentage to length and mm to m and convert from percent to fraction
             _ankleQS = _lengthOffset - _ankleLength;
 
-            _limits = new List<float>() //front, back, left, right, converted to m
+            _limits = new List<float>() //front, back, left, right, converted to m, convert from percentage to fraction
             {
-                PlayerPrefs.GetFloat("Limit of Stability Front")*_YLength/1000f,
-                PlayerPrefs.GetFloat("Limit of Stability Back")*_YLength/1000f,
-                PlayerPrefs.GetFloat("Limit of Stability Left")*_XWidth/1000f,
-                PlayerPrefs.GetFloat("Limit of Stability Right")*_XWidth/1000f
+                PlayerPrefs.GetFloat("Limit of Stability Front")*_YLength/1000f/100f,
+                PlayerPrefs.GetFloat("Limit of Stability Back")*_YLength/1000f/100f,
+                PlayerPrefs.GetFloat("Limit of Stability Left")*_XWidth/1000f/100f,
+                PlayerPrefs.GetFloat("Limit of Stability Right")*_XWidth/1000f/100f
             };
 
             _stimMax = new Dictionary<string, float>() //RPF, RDF, LPF, LDF

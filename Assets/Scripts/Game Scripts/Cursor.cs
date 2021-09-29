@@ -47,19 +47,19 @@ public class Cursor : MonoBehaviour
             _limits = new List<float>() {1.0f, 1.0f, 1.0f, 1.0f}; //front, back, left, right
 
             if (_sceneName == "LOS")
-                _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f);
+                _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f)/100f; //convert from percent to fraction
         }
         else
         {
             _limits = new List<float>() 
             {
-                PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f),
-                PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f),
-                PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f),
-                PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f)
+                PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f)/100f, //convert from percent to fraction
+                PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f)/100f,
+                PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f)/100f,
+                PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f)/100f
             };
 
-            _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f);
+            _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f)/100f; //convert from percent to fraction
         }
 
         if (_sceneName == "LOS")
@@ -103,7 +103,7 @@ public class Cursor : MonoBehaviour
             else
                 com = new Vector2(Data.copX, Data.copY); //com == cop if no filtering
 
-            // subtract the offset and scale the cursor on screen to the individual's max in each direction
+            // scale the cursor on screen to the individual's max in each direction
             if (com.x > 0)
                 pos.x = Mathf.Clamp((com.x / _limits[3]) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
             else
@@ -134,23 +134,23 @@ public class Cursor : MonoBehaviour
         if (_sceneName != "LOS")
             cop.y -= _lengthOffset; //subtract offset from AP direction
         else 
-            cop.y -= _lengthOffset + (Camera.main.transform.position.y - _rectangles.transform.position.y); //additional shift due to the fact that the LOS centre is slightly shifted down
+            cop.y -= _lengthOffset - (Camera.main.transform.position.y - _rectangles.transform.position.y); //additional shift due to the fact that the LOS centre is slightly shifted down
 
-        if (Mathf.Abs(cop.x) > 1f || Mathf.Abs(cop.y) > 1f) //cop should not extend outside the range of the board
-        {
-            if (cop.x > 1f)
-                cop.x = 1f;
-            else
-                cop.x = 0f; // if it's not above 1 then it has to be below -1
+        // if (Mathf.Abs(cop.x) > 1f || Mathf.Abs(cop.y) > 1f) //cop should not extend outside the range of the board
+        // {
+        //     if (cop.x > 1f)
+        //         cop.x = 1f;
+        //     else
+        //         cop.x = -1f; // if it's not above 1 then it has to be below -1
 
-            if (cop.y > 1f)
-                cop.y = 1f;
-            else
-                cop.y = 0f; // if it's not above 1 then it has to be below -1
-        }
+        //     if (cop.y > 1f)
+        //         cop.y = 1f;
+        //     else
+        //         cop.y = -1f; // if it's not above 1 then it has to be below -1
+        // }
 
         var fcopX = 0.0f;
-        var fcopY = 0.0f; //apply offset to cop
+        var fcopY = 0.0f; 
 
         //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && _sceneName != "Assessment" && _sceneName != "LOS") 

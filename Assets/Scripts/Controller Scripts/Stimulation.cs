@@ -42,11 +42,10 @@ public class Stimulation : MonoBehaviour
                     break;
             }
         }
-        
-        TargetPositionFiltered = _targetCircle.transform.position;
 
         if (_sceneName != "Target")
         {
+            TargetPositionFiltered =  new Vector2(_filterTargetX.ComputeMA(_targetCircle.transform.position.x), _filterTargetY.ComputeMA(_targetCircle.transform.position.y));
             var stimOutput = _controller.Stimulate(_cursor.Data, TargetPositionFiltered);
             ControllerData = new ControllerData(stimOutput, _controller.RampPercentage);
         }

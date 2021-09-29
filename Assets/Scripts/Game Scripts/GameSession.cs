@@ -23,6 +23,7 @@ public class GameSession : MonoBehaviour
 
     private Dictionary<string, List<WiiBoardData>> _qsAssessment;
     private Cursor _cursor;
+    private float _assessmentTime;
 
     [Header("Limits of Stability")]
     [SerializeField] private InputField _losInstructionsBox;
@@ -139,6 +140,8 @@ public class GameSession : MonoBehaviour
                     ["EO"] = new List<WiiBoardData>()
                 };
 
+                _assessmentTime = _totalGameTime; //set this so that when time is reset, it can be set back to set value
+
                 SetupAssessment();
                 
                 break;
@@ -216,6 +219,7 @@ public class GameSession : MonoBehaviour
         switch (SceneManager.GetActiveScene().name)
         {
             case "Assessment":
+                
                 if (_timer != null) //timer for the assessment has started
                 {
                     Assessment();
@@ -226,7 +230,7 @@ public class GameSession : MonoBehaviour
                         {
                             _timer = null;
                             _assessInstructionsBox.text = _assessInstructions[1];
-                            _totalGameTime = 100;
+                            _totalGameTime = _assessmentTime;
                         }
                         else if (_ecDone && _eoDone) //set length offset when assessment is done
                             ComputeLengthOffset();
@@ -283,7 +287,7 @@ public class GameSession : MonoBehaviour
         else
             yValues = new List<float>(from value in _qsAssessment["EC"] select value.copY); //linq syntax
 
-        PlayerPrefs.SetFloat("Length Offset", yValues.Average());
+        PlayerPrefs.SetFloat("Length Offset", yValues.Average()*100f);
 
         _sceneLoader.LoadStartScene();
     }
@@ -338,7 +342,7 @@ public class GameSession : MonoBehaviour
         }
     }
 
-    private void GetLimits(int windowLength) //calculation of limits current hella incorrect
+    private void GetLimits(int windowLength) 
     {
         _limits = new Dictionary<string, float>();
         var averages = new List<float>();
@@ -372,15 +376,15 @@ public class GameSession : MonoBehaviour
                 }
 
                 if (averages.Count != 0)
-                    _limits.Add(direction.Key, averages.Max());
+                    _limits.Add(direction.Key, averages.Max()*100f);
 
                 averages.Clear(); //clear the list so that it's a new one next loop
             }
 
-            PlayerPrefs.SetFloat("Limit of Stability Front", _limits["Forward"] * 0.8f); //store values, want just 80% of max
-            PlayerPrefs.SetFloat("Limit of Stability Back", _limits["Back"] * 0.8f);
-            PlayerPrefs.SetFloat("Limit of Stability Left", _limits["Left"] * 0.8f);
-            PlayerPrefs.SetFloat("Limit of Stability Right", _limits["Right"] * 0.8f);
+            PlayerPrefs.SetFloat("Limit of Stability Front", _limits["Forward"] * 0.9f); //store values, want just 90% of max
+            PlayerPrefs.SetFloat("Limit of Stability Back", _limits["Back"] * 0.9f);
+            PlayerPrefs.SetFloat("Limit of Stability Left", _limits["Left"] * 0.9f);
+            PlayerPrefs.SetFloat("Limit of Stability Right", _limits["Right"] * 0.9f);
         }
         else
             Debug.Log("Cursor was used, no limit data colleccted.");
