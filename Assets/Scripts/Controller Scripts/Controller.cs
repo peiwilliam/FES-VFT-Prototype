@@ -26,6 +26,9 @@ namespace ControllerManager
         private float _kp;
         private float _kd;
         private float _k;
+        //game screen params
+        private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
+        private float _maxY = 5f*2f; //2*camera size
         private List<float> _limits;
         private List<float> _coms;
         private List<float> _angles;
@@ -57,15 +60,15 @@ namespace ControllerManager
             _hCOM = _height*_comFraction; //height of COM
             _i = _inertiaCoeff*_mass*Mathf.Pow(_height, 2); //inertia
             _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height/100f; //convert percent to fraction
-            _lengthOffset = PlayerPrefs.GetFloat("Length Offset")*_YLength/1000f/100f; //convert from percentage to length and mm to m and convert from percent to fraction
-            _ankleQS = _lengthOffset - _ankleLength;
+            _lengthOffset = PlayerPrefs.GetFloat("Length Offset")*_YLength/1000f/100f/2f; //convert from percentage to length and mm to m and convert from percent to fraction, also uses half the length
+            _ankleQS = _lengthOffset - _ankleLength; 
 
             _limits = new List<float>() //front, back, left, right, converted to m, convert from percentage to fraction
             {
-                PlayerPrefs.GetFloat("Limit of Stability Front")*_YLength/1000f/100f,
-                PlayerPrefs.GetFloat("Limit of Stability Back")*_YLength/1000f/100f,
-                PlayerPrefs.GetFloat("Limit of Stability Left")*_XWidth/1000f/100f,
-                PlayerPrefs.GetFloat("Limit of Stability Right")*_XWidth/1000f/100f
+                PlayerPrefs.GetFloat("Limit of Stability Front")*_YLength/1000f/100f/2f, //percentage corresponds to length/2
+                PlayerPrefs.GetFloat("Limit of Stability Back")*_YLength/1000f/100f/2f,
+                PlayerPrefs.GetFloat("Limit of Stability Left")*_XWidth/1000f/100f/2f,
+                PlayerPrefs.GetFloat("Limit of Stability Right")*_XWidth/1000f/100f/2f
             };
 
             _stimMax = new Dictionary<string, float>() //RPF, RDF, LPF, LDF
@@ -121,8 +124,20 @@ namespace ControllerManager
         public Dictionary<string, float> Stimulate(WiiBoardData data, Vector2 targetCoords)
         {
             //shift everything to the perspective of the ankles
-            var shiftedCOMy = data.fCopY + _ankleQS;
-            var targetY = targetCoords.y + _ankleQS;
+            var shiftedCOMy = data.fCopY*_YLength/1000f/2f + _ankleQS; //convert percent to actual length
+            //conversion of target game coords to board coords
+            var targetCoordsShifted = new Vector2(); //shifted target coords from game coords to board coords
+            
+            if (targetCoords.y >= _maxY / 2) //for when the target is over the half way point in ap direction
+                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[0]/_maxY + _ankleQS;
+            else //if it's not greater, it has to be smaller
+                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[1]/_maxY + _ankleQS;
+
+            if (targetCoords.x > _maxX / 2)
+                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[4]/_maxX;
+            else
+                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[3]/_maxX;
+            
             var losF = _limits[0] + _ankleQS;
             var losB = _limits[1] - _ankleQS;
 
@@ -132,7 +147,7 @@ namespace ControllerManager
             var losBTorque = _m*_G*_limits[1];
 
             //angle calculations
-            var targetVertAng = Mathf.Atan2(targetY, _hCOM);
+            var targetVertAng = Mathf.Atan2(targetCoordsShifted.y, _hCOM);
             var comVertAng = Mathf.Atan2(shiftedCOMy, _hCOM);
             var qsVertAng = Mathf.Atan2(_ankleQS, _hCOM);
             var angErr = targetVertAng - comVertAng;
@@ -151,7 +166,7 @@ namespace ControllerManager
             var mechanicalTorque = MechanicalController(comVertAng); //calculate passive torque from controller output
             var slopes = Slopes(qsTorque, losFTorque, losBTorque); //calculate controller slopes
             var rawStimOutput = UnbiasedStimulationOutput(slopes, neuralTorque, mechanicalTorque, qsTorque, comVertAng, qsVertAng); //calculate unbiased output
-            var neuralBiases = CalculateNeuralBiases(data, targetCoords); //calculate neural biases
+            var neuralBiases = CalculateNeuralBiases(data, targetCoordsShifted); //calculate neural biases
             var mechBiases = CalculateMechBiases(data, shiftedCOMy); //calculate mech biases
             var actualStimOutput = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
             
