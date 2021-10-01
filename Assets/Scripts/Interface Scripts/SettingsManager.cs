@@ -29,7 +29,7 @@ public class SettingsManager : MonoBehaviour
         ["Height"] = 170,
         ["Mass"] = 65f,
         ["Ankle Mass Fraction"] = 0.971f,
-        ["CoM Height"] = 54.7f,
+        ["CoM Height"] = 0.547f,
         ["Inertia Coefficient"] = 0.319f,
         ["Kp Coefficient"] = 0.24432f,
         ["Kd Coefficient"] = 0.22418f,

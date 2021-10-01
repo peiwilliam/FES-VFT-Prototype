@@ -45,14 +45,15 @@ public class Stimulation : MonoBehaviour
 
         if (_sceneName != "Target")
         {
-            TargetPositionFiltered =  new Vector2(_filterTargetX.ComputeMA(_targetCircle.transform.position.x), _filterTargetY.ComputeMA(_targetCircle.transform.position.y));
-            var stimOutput = _controller.Stimulate(_cursor.Data, TargetPositionFiltered);
-            ControllerData = new ControllerData(stimOutput, _controller.RampPercentage);
+            if (_sceneName != "Ellipse")
+                TargetPositionFiltered =  new Vector2(_filterTargetX.ComputeMA(_targetCircle.transform.position.x), _filterTargetY.ComputeMA(_targetCircle.transform.position.y));
+            else
+                TargetPositionFiltered = _targetCircle.transform.position; //no filtering done for ellipse
         }
         else
-        {
-            var stimOutput = _controller.Stimulate(_cursor.Data, new Vector2(0f, 0f));
+            TargetPositionFiltered = new Vector2(0f, 0f); //no filtering for target either
+
+            var stimOutput = _controller.Stimulate(_cursor.Data, TargetPositionFiltered);
             ControllerData = new ControllerData(stimOutput, _controller.RampPercentage);
-        }
     }
 }

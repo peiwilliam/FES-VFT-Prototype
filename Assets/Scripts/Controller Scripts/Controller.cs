@@ -29,6 +29,8 @@ namespace ControllerManager
         //game screen params
         private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
         private float _maxY = 5f*2f; //2*camera size
+        private Vector2 _previousTarget;
+        private int _neuralCounter;
         private List<float> _limits;
         private List<float> _coms;
         private List<float> _angles;
@@ -61,7 +63,7 @@ namespace ControllerManager
             _i = _inertiaCoeff*_mass*Mathf.Pow(_height, 2); //inertia
             _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height/100f; //convert percent to fraction
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset")*_YLength/1000f/100f/2f; //convert from percentage to length and mm to m and convert from percent to fraction, also uses half the length
-            _ankleQS = _lengthOffset - _ankleLength; 
+            _ankleQS = _lengthOffset + _ankleLength; //needs to be plus since the length offset is for the heel and the heel is negative on WBB
 
             _limits = new List<float>() //front, back, left, right, converted to m, convert from percentage to fraction
             {
@@ -128,23 +130,23 @@ namespace ControllerManager
             //conversion of target game coords to board coords
             var targetCoordsShifted = new Vector2(); //shifted target coords from game coords to board coords
             
-            if (targetCoords.y >= _maxY / 2) //for when the target is over the half way point in ap direction
-                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[0]/_maxY + _ankleQS;
+            if (targetCoords.y >= _maxY / 2) //when the target is beyond half way forward in ap direction
+                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[0]*2f/_maxY + _ankleQS;
             else //if it's not greater, it has to be smaller
-                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[1]/_maxY + _ankleQS;
+                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[1]*2f/_maxY + _ankleQS;
 
-            if (targetCoords.x > _maxX / 2)
-                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[4]/_maxX;
-            else
-                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[3]/_maxX;
+            if (targetCoords.x >= _maxX / 2) //when the target is beyond half way right in ml direction
+                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[3]*2f/_maxX;
+            else //if it's not greater, it has to be smaller
+                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[2]*2f/_maxX;
             
             var losF = _limits[0] + _ankleQS;
-            var losB = _limits[1] - _ankleQS;
+            var losB = _ankleQS - _limits[1];
 
             // calculating mechanical torques
             var qsTorque = _m*_G*_ankleQS;
-            var losFTorque = _m*_G*_limits[0];
-            var losBTorque = _m*_G*_limits[1];
+            var losFTorque = _m*_G*losF;
+            var losBTorque = _m*_G*losB;
 
             //angle calculations
             var targetVertAng = Mathf.Atan2(targetCoordsShifted.y, _hCOM);
@@ -161,8 +163,20 @@ namespace ControllerManager
                     _coms[i] = _coms[i - 1];
             }
 
+            if (targetCoords == _previousTarget)
+                _neuralCounter++;
+            else
+            {
+                _neuralCounter = 0;
+                _previousTarget = targetCoords;
+            }
+
             //controller calculations
             var neuralTorque = NeuralController(angErr); //calculate neural torque from controller output
+
+            if (_neuralCounter <= 3) //only calculate neural torque after 3 iterations have passed
+                neuralTorque = 0f; 
+                
             var mechanicalTorque = MechanicalController(comVertAng); //calculate passive torque from controller output
             var slopes = Slopes(qsTorque, losFTorque, losBTorque); //calculate controller slopes
             var rawStimOutput = UnbiasedStimulationOutput(slopes, neuralTorque, mechanicalTorque, qsTorque, comVertAng, qsVertAng); //calculate unbiased output
@@ -183,7 +197,7 @@ namespace ControllerManager
                 return _kp*error + _kd*derivativeError;
             }
 
-            return 0f;
+            return 0f; //return zero when the condition above isn't fulfilled
         }
 
         private float MechanicalController(float verticalCOMAng) //calculate torque based on mechanical properties
@@ -193,7 +207,7 @@ namespace ControllerManager
             if (!_coms.GetRange(0, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero)
                 velocity = CalculateDerivative(_coms.GetRange(0, 3));
 
-            return _kc*verticalCOMAng + 5.0f*velocity;
+            return _k*verticalCOMAng + 5.0f*velocity;
         }
 
         private Dictionary<string, Dictionary<string, float>> Slopes(float qsTorque, float losBTorque, float losFTorque) //calculate slopes for neural and mech controllers
@@ -208,7 +222,7 @@ namespace ControllerManager
             {
                 foreach (var muscles in _stimMax) //we just wanna iterate through this to get the names of the muscle groups
                 {
-                    if (control.Key == "Mech")
+                    if (control.Key == "Mech") //mechanical controller slopes
                     {
                         switch (muscles.Key)
                         {
@@ -222,7 +236,7 @@ namespace ControllerManager
                                 break;
                         }
                     }
-                    else
+                    else //neural controller slopes
                     {
                         switch (muscles.Key)
                         {
@@ -324,7 +338,7 @@ namespace ControllerManager
         }
 
         private Dictionary<string, float> AdjustedCombinedStimulation(Dictionary<string, float> neuralBiases, Dictionary<string, float> mechBiases, 
-                                                                      Dictionary <string, Dictionary<string, float>> rawStimOutput) //applies ML biases and ramping to raw stimulation
+                                                                      Dictionary<string, Dictionary<string, float>> rawStimOutput) //applies ML biases and ramping to raw stimulation
         {
             var adjustedStimOutput = new Dictionary<string, Dictionary<string, float>>()
             {
@@ -353,7 +367,7 @@ namespace ControllerManager
                 }
             }
 
-            foreach(var muscle in _stimMax) //this is just to iterate through the muscle group names, don't actually care about _stimMax
+            foreach(var muscle in _stimMax) //this is just to add the total stimulation output, don't actually care about _stimMax at this point
                 adjustedCombinedStimOutput.Add(muscle.Key, adjustedStimOutput["Mech"][muscle.Key] + adjustedStimOutput["Neural"][muscle.Key]);
 
             return adjustedCombinedStimOutput;

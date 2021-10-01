@@ -110,9 +110,9 @@ public class Cursor : MonoBehaviour
                 pos.x = Mathf.Clamp((com.x / _limits[2]) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
 
             if (com.y > 0)
-                pos.y = Mathf.Clamp(((com.y) / _limits[0]) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+                pos.y = Mathf.Clamp((com.y / _limits[0]) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
             else
-                pos.y = Mathf.Clamp(((com.y) / _limits[1]) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+                pos.y = Mathf.Clamp((com.y / _limits[1]) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
 
             transform.position = pos;
         }
@@ -132,22 +132,9 @@ public class Cursor : MonoBehaviour
         var cop = Wii.GetCenterOfBalance(0);
 
         if (_sceneName != "LOS")
-            cop.y -= _lengthOffset; //subtract offset from AP direction
+            cop.y -= _lengthOffset; //subtract offset from AP direction to centre it to approx 0,0
         else 
             cop.y -= _lengthOffset - (Camera.main.transform.position.y - _rectangles.transform.position.y); //additional shift due to the fact that the LOS centre is slightly shifted down
-
-        // if (Mathf.Abs(cop.x) > 1f || Mathf.Abs(cop.y) > 1f) //cop should not extend outside the range of the board
-        // {
-        //     if (cop.x > 1f)
-        //         cop.x = 1f;
-        //     else
-        //         cop.x = -1f; // if it's not above 1 then it has to be below -1
-
-        //     if (cop.y > 1f)
-        //         cop.y = 1f;
-        //     else
-        //         cop.y = -1f; // if it's not above 1 then it has to be below -1
-        // }
 
         var fcopX = 0.0f;
         var fcopY = 0.0f; 
