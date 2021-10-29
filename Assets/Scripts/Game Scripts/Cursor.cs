@@ -46,7 +46,7 @@ public class Cursor : MonoBehaviour
         {
             _limits = new List<float>() {1.0f, 1.0f, 1.0f, 1.0f}; //front, back, left, right
 
-            if (_sceneName == "LOS")
+            if (_sceneName == "LOS") //offset applied for LOS only, for qs assessment, offset is default zero
                 _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f)/100f; //convert from percent to fraction
         }
         else
@@ -99,9 +99,9 @@ public class Cursor : MonoBehaviour
             var com = new Vector2();
 
             if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set default to zero in case it isn't set
-                com = new Vector2(Data.fCopX, Data.fCopY);
+                com = new Vector2(Data.fGameCopX, Data.fGameCopY);
             else
-                com = new Vector2(Data.copX, Data.copY); //com == cop if no filtering
+                com = new Vector2(Data.gameCopX, Data.gameCopY); //com == cop if no filtering
 
             // scale the cursor on screen to the individual's max in each direction
             if (com.x > 0)
@@ -130,14 +130,22 @@ public class Cursor : MonoBehaviour
     {
         var boardSensorValues = Wii.GetBalanceBoard(0);
         var cop = Wii.GetCenterOfBalance(0);
+        var gameCop = cop; //create a cop value just for game usage and not for controller usage
 
         if (_sceneName != "LOS")
-            cop.y -= _lengthOffset; //subtract offset from AP direction to centre it to approx 0,0
+            gameCop.y -= _lengthOffset; //subtract offset from AP direction to centre it to approx 0,0
         else 
-            cop.y -= _lengthOffset - (Camera.main.transform.position.y - _rectangles.transform.position.y); //additional shift due to the fact that the LOS centre is slightly shifted down
+        {
+            //additional shift due to the fact that the LOS centre is slightly shifted down
+            //also need to convert game coordinates to percentage of length of board
+            gameCop.y -= _lengthOffset - (Camera.main.transform.position.y - _rectangles.transform.position.y)*2f/_maxY;
+        }
+            
 
-        var fcopX = 0.0f;
-        var fcopY = 0.0f; 
+        var fCopX = 0.0f;
+        var fCopY = 0.0f;
+        var fGameCopX = 0.0f;
+        var fGameCopY = 0.0f;
 
         //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && _sceneName != "Assessment" && _sceneName != "LOS") 
@@ -145,22 +153,24 @@ public class Cursor : MonoBehaviour
             // comX = taredCOP.x - _i/(_m*_G*_h); //incomplete, need to figure out a way to get COM from wii balance board
             // comY = taredCOP.y - _i/(_m*_G*_h);
 
-            fcopX = _filterX.ComputeBW(cop.x);
-            fcopY = _filterY.ComputeBW(cop.y);
+            fCopX = _filterX.ComputeBW(cop.x);
+            fCopY = _filterY.ComputeBW(cop.y);
+            fGameCopX = _filterX.ComputeBW(gameCop.x);
+            fGameCopY = _filterY.ComputeBW(gameCop.y);
         }
         else
         {
-            fcopX = cop.x;
-            fcopY = cop.y;
+            fCopX = cop.x;
+            fCopY = cop.y;
+            fGameCopX = gameCop.x;
+            fGameCopY = gameCop.y;
         }
         
         var data = new WiiBoardData(Time.fixedUnscaledTime, 
-                                    cop.x, cop.y, 
-                                    boardSensorValues.y, 
-                                    boardSensorValues.x, 
-                                    boardSensorValues.w, 
-                                    boardSensorValues.z,
-                                    fcopX, fcopY);
+                                    cop.x, cop.y, gameCop.x, gameCop.y,
+                                    boardSensorValues.y, boardSensorValues.x, 
+                                    boardSensorValues.w, boardSensorValues.z,
+                                    fCopX, fCopY, fGameCopX, fGameCopY);
         return data;
     }
 }

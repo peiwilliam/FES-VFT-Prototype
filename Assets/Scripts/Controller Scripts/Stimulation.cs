@@ -17,7 +17,10 @@ public class Stimulation : MonoBehaviour
 
     private void Start()
     {
-        _controller = new Controller();
+        // only create instance of controller when board is connected
+        if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
+            _controller = new Controller();
+        
         _filterTargetX = new Filter(2);
         _filterTargetY = new Filter(2);
         _cursor = FindObjectOfType<Cursor>();
@@ -53,7 +56,7 @@ public class Stimulation : MonoBehaviour
         else
             TargetPositionFiltered = new Vector2(0f, 0f); //no filtering for target either
 
-            var stimOutput = _controller.Stimulate(_cursor.Data, TargetPositionFiltered);
-            ControllerData = new ControllerData(stimOutput, _controller.RampPercentage);
+        var stimOutput = _controller.Stimulate(_cursor.Data, TargetPositionFiltered);
+        ControllerData = new ControllerData(stimOutput, _controller.RampPercentage, _controller.Angles, _controller.ShiftedPos);
     }
 }

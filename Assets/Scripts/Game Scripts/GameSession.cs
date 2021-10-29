@@ -265,7 +265,7 @@ public class GameSession : MonoBehaviour
             _qsAssessment["EO"].Add(data);
     }
 
-    public void StartAssessmentTimer()
+    public void StartAssessmentTimer() // started on button click
     {        
         _timer = StartCoroutine(StartTimer());
 
@@ -309,7 +309,7 @@ public class GameSession : MonoBehaviour
         }
     }
 
-    public void StartLOS()
+    public void StartLOS() //initiated from button click
     {
         if (FindObjectOfType<Cursor>() == null) // make sure only one cursor is spawned
             Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //instantiate at button click instead of at beginning

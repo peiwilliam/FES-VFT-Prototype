@@ -46,6 +46,8 @@ namespace ControllerManager
         private const float _MaxDFStim = 1.170727515177f; //not sure what these units are either
 
         public float RampPercentage { get; private set; }
+        public List<float> Angles { get; private set; }
+        public List<float> ShiftedPos { get; private set; } //get com and target positions in real coordinates and shifted to ankle perspective
 
         public Controller()
         {
@@ -62,8 +64,11 @@ namespace ControllerManager
             _hCOM = _height*_comFraction; //height of COM
             _i = _inertiaCoeff*_mass*Mathf.Pow(_height, 2); //inertia
             _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height/100f; //convert percent to fraction
-            _lengthOffset = PlayerPrefs.GetFloat("Length Offset")*_YLength/1000f/100f/2f; //convert from percentage to length and mm to m and convert from percent to fraction, also uses half the length
+            _lengthOffset = PlayerPrefs.GetFloat("Length Offset")*_YLength/2f/1000f/100f; //convert from percentage to length and mm to m and convert from percent to fraction, also uses half the length
             _ankleQS = _lengthOffset + _ankleLength; //needs to be plus since the length offset is for the heel and the heel is negative on WBB
+            _ankleQS = -_lengthOffset + _ankleLength; //do this for now
+
+            Debug.Log(_ankleQS);
 
             _limits = new List<float>() //front, back, left, right, converted to m, convert from percentage to fraction
             {
@@ -112,9 +117,12 @@ namespace ControllerManager
             };
 
             //controller constants
-            _kp = _kpc*_m*_G*_height; //active/neural controller kp and kd
-            _kd = _kdc*_m*_G*_height; 
-            _k = _kc*_m*_G*_height; //mechanical/passive controller
+            _kp = _kpc*_m*_G*_hCOM; //active/neural controller kp and kd
+            _kd = _kdc*_m*_G*_hCOM; 
+            _k = _kc*_m*_G*_hCOM; //mechanical/passive controller
+            Debug.Log(_kp);
+            Debug.Log(_kd);
+            Debug.Log(_k);
 
             _coms = new List<float> {0f, 0f, 0f, 0f, 0f}; //mechanical controller requires 0-2 and neural controller requires 2-4 for derivative
             _angles = new List<float> {0f, 0f, 0f, 0f, 0f};
@@ -127,6 +135,7 @@ namespace ControllerManager
         {
             //shift everything to the perspective of the ankles
             var shiftedCOMy = data.fCopY*_YLength/1000f/2f + _ankleQS; //convert percent to actual length
+            //Debug.Log(shiftedCOMy);
             //conversion of target game coords to board coords
             var targetCoordsShifted = new Vector2(); //shifted target coords from game coords to board coords
             
@@ -139,6 +148,8 @@ namespace ControllerManager
                 targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[3]*2f/_maxX;
             else //if it's not greater, it has to be smaller
                 targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[2]*2f/_maxX;
+
+            ShiftedPos = new List<float>() {shiftedCOMy, targetCoordsShifted.x, targetCoordsShifted.y};
             
             var losF = _limits[0] + _ankleQS;
             var losB = _ankleQS - _limits[1];
@@ -153,6 +164,7 @@ namespace ControllerManager
             var comVertAng = Mathf.Atan2(shiftedCOMy, _hCOM);
             var qsVertAng = Mathf.Atan2(_ankleQS, _hCOM);
             var angErr = targetVertAng - comVertAng;
+            Angles = new List<float>() {targetVertAng, comVertAng, angErr}; //store in prop
 
             //first need to adjust the stored COM values as new values are added from cursor
             for (var i = _coms.Count - 1; i >= 0; i--)
@@ -257,7 +269,7 @@ namespace ControllerManager
             return slopes;
         }
 
-        public float CalculateDerivative(List<float> comsVector) => (3.0f*comsVector[0] - 4.0f*comsVector[1] + comsVector[2])/2*Time.fixedDeltaTime;
+        public float CalculateDerivative(List<float> comsVector) => (3.0f*comsVector[0] - 4.0f*comsVector[1] + comsVector[2])/(2*Time.fixedDeltaTime);
 
         private Dictionary<string, Dictionary<string, float>> UnbiasedStimulationOutput(Dictionary<string, Dictionary<string, float>> slopes, 
                                                                                         float neuralTorque, float mechanicalTorque, 
@@ -275,16 +287,16 @@ namespace ControllerManager
                 {
                     if (control.Key == "Mech")
                     {
-                        if (0.5f*mechanicalTorque > 0 && stim.Key.Contains("PF")) //only calculate stim if 0.5*mechanicalTorque > 0
+                        if (0.5f*mechanicalTorque > 0 && stim.Key.Contains("PF")) //only calculate stim for pf if 0.5*mechanicalTorque > 0
                             stimulation[control.Key][stim.Key] = slopes[control.Key][stim.Key]*0.5f*mechanicalTorque;
-                        if (0.5f*qsTorque > 0.5f*mechanicalTorque && stim.Key.Contains("DF")) //only calculate stim if 0.5f*qsTorque > 0.5f*mechanicalTorque > 0
+                        if (0.5f*qsTorque > 0.5f*mechanicalTorque && stim.Key.Contains("DF")) //only calculate stim for df if 0.5f*qsTorque > 0.5f*mechanicalTorque > 0
                             stimulation[control.Key][stim.Key] = slopes[control.Key][stim.Key]*0.5f*mechanicalTorque;
                     }
                     else
                     {
-                        if (comVertAng > 0 && stim.Key.Contains("PF")) //only calculate stim if comVertAng > 0
+                        if (comVertAng > 0 && stim.Key.Contains("PF")) //only calculate stim for pf if comVertAng > 0
                             stimulation[control.Key][stim.Key] = slopes[control.Key][stim.Key]*0.5f*neuralTorque;
-                        if (comVertAng < qsVertAng) //only calculate stim if comVertAng < qsVertAng
+                        if (comVertAng < qsVertAng && stim.Key.Contains("DF")) //only calculate stim for df if comVertAng < qsVertAng
                             stimulation[control.Key][stim.Key] = slopes[control.Key][stim.Key]*0.5f*neuralTorque;
                     }
                     
