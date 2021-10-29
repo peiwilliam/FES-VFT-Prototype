@@ -43,7 +43,8 @@ public class TargetCircle : MonoBehaviour
             }
         }
 
-        StopCoroutine(_increaseScore);
+        if (_increaseScore != null)
+            StopCoroutine(_increaseScore);
     }
 
     private void OnTriggerStay2D(Collider2D collider) 
