@@ -11,7 +11,7 @@ public class SettingsManager : MonoBehaviour
     // default values
     private static Dictionary<string, object> _defaultValues = new Dictionary<string, object>()
     {
-        ["Controller Frequency"] = 1/Time.fixedDeltaTime, // this is the same frequency as the physics update speed in unity
+        ["Controller Frequency"] = 50, // this is the same frequency as the default physics update speed in unity
         ["Trial Duration"] = 100, // how long each game will last
         ["Ramp Duration"] = 1.0f, // how long it takes to ramp up to 100% stimulation when the target changes
         ["Max A/P Fraction"] = 18.0926f, // can be removed, unnecessary

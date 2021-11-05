@@ -283,7 +283,7 @@ PrefabInstance:
     - target: {fileID: 7153614973304575436, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
         type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7153614973304575436, guid: 9ee18bb46a5686846ba7a19696cd8cf1,
         type: 3}
@@ -678,7 +678,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 400154, guid: 33e0ee18e5897493a8ab4d5e260f12f4, type: 3}
       propertyPath: m_RootOrder
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 400154, guid: 33e0ee18e5897493a8ab4d5e260f12f4, type: 3}
       propertyPath: m_LocalPosition.x
@@ -786,7 +786,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1515640250 stripped
 MonoBehaviour:
@@ -921,6 +921,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ring 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2250062575775494097, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2250062575775494097, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2524717319273195775, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
       propertyPath: m_RootOrder
@@ -929,17 +939,17 @@ PrefabInstance:
     - target: {fileID: 2524717319273195775, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 14.013797
+      value: 8.888889
       objectReference: {fileID: 0}
     - target: {fileID: 2524717319273195775, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.2360196
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2524717319273195775, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -64.58008
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2524717319273195775, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
@@ -976,15 +986,45 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6481275883345747842, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6481275883345747842, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6481275883345747843, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
       propertyPath: m_Name
       value: Ring 4
       objectReference: {fileID: 0}
+    - target: {fileID: 6481275883431248270, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6481275883431248270, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6481275883431248271, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
       propertyPath: m_Name
       value: Ring 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6481275884142976744, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6481275884142976744, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6481275884142976745, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}
@@ -995,6 +1035,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Ring 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6481275884407851585, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6481275884407851585, guid: 16c2f8c592c7f2942981c5da857f36d1,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6693388890952579543, guid: 16c2f8c592c7f2942981c5da857f36d1,
         type: 3}

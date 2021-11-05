@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ControllerManager
 {
@@ -14,12 +15,12 @@ namespace ControllerManager
         //phyiological constants
         private float _height;
         private float _mass;
+        private float _ankleDisplacement; //to shift everything to the reference point of the ankle (ie. ankle is at y = 0)
         private float _ankleMassFraction;
         private float _comFraction;
         private float _inertiaCoeff;
         private float _ankleLength;
         private float _lengthOffset;
-        private float _ankleQS;
         private float _m;
         private float _hCOM;
         private float _i;
@@ -42,8 +43,9 @@ namespace ControllerManager
         private const float _G = 9.81f; //m/s^2
         private const float _XWidth = 433f; // mm
         private const float _YLength = 238f; // mm
+        private const float _HeelLocation = 117; //mm, measured manually from centre of board to bottom of indicated feet area
         private const float _MaxPFStim = 1.117055995961f; // not sure what these units are
-        private const float _MaxDFStim = 1.170727515177f; //not sure what these units are either
+        private const float _MaxDFStim = 1.170727515177f; // not sure what these units are either
 
         public float RampPercentage { get; private set; }
         public List<float> Angles { get; private set; }
@@ -63,13 +65,10 @@ namespace ControllerManager
             _m = _mass*_ankleMassFraction; //mass without foot
             _hCOM = _height*_comFraction; //height of COM
             _i = _inertiaCoeff*_mass*Mathf.Pow(_height, 2); //inertia
-            _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height/100f; //convert percent to fraction
-            _lengthOffset = PlayerPrefs.GetFloat("Length Offset")*_YLength/2f/1000f/100f; //convert from percentage to length and mm to m and convert from percent to fraction, also uses half the length
-            _ankleQS = _lengthOffset + _ankleLength; //needs to be plus since the length offset is for the heel and the heel is negative on WBB
-            _ankleQS = -_lengthOffset + _ankleLength; //do this for now
-
-            Debug.Log(_ankleQS);
-
+            _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height/100f; //convert percent to fraction, cm to m
+            _lengthOffset = PlayerPrefs.GetFloat("Length Offset")/100f; //keep in fraction form since it's used in different contexts, is also negative!!!
+            _ankleDisplacement = _HeelLocation/1000f - _ankleLength; //to change everything to ankle reference frame
+            
             _limits = new List<float>() //front, back, left, right, converted to m, convert from percentage to fraction
             {
                 PlayerPrefs.GetFloat("Limit of Stability Front")*_YLength/1000f/100f/2f, //percentage corresponds to length/2
@@ -120,9 +119,6 @@ namespace ControllerManager
             _kp = _kpc*_m*_G*_hCOM; //active/neural controller kp and kd
             _kd = _kdc*_m*_G*_hCOM; 
             _k = _kc*_m*_G*_hCOM; //mechanical/passive controller
-            Debug.Log(_kp);
-            Debug.Log(_kd);
-            Debug.Log(_k);
 
             _coms = new List<float> {0f, 0f, 0f, 0f, 0f}; //mechanical controller requires 0-2 and neural controller requires 2-4 for derivative
             _angles = new List<float> {0f, 0f, 0f, 0f, 0f};
@@ -134,35 +130,47 @@ namespace ControllerManager
         public Dictionary<string, float> Stimulate(WiiBoardData data, Vector2 targetCoords)
         {
             //shift everything to the perspective of the ankles
-            var shiftedCOMy = data.fCopY*_YLength/1000f/2f + _ankleQS; //convert percent to actual length
+            var shiftedCOMy = data.fCopY*_YLength/1000f/2f + _ankleDisplacement - _lengthOffset; //convert percent to actual length
             //Debug.Log(shiftedCOMy);
             //conversion of target game coords to board coords
             var targetCoordsShifted = new Vector2(); //shifted target coords from game coords to board coords
-            
-            if (targetCoords.y >= _maxY / 2) //when the target is beyond half way forward in ap direction
-                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[0]*2f/_maxY + _ankleQS;
-            else //if it's not greater, it has to be smaller
-                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[1]*2f/_maxY + _ankleQS;
 
-            if (targetCoords.x >= _maxX / 2) //when the target is beyond half way right in ml direction
-                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[3]*2f/_maxX;
-            else //if it's not greater, it has to be smaller
-                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[2]*2f/_maxX;
+            if (SceneManager.GetActiveScene().name != "Target") 
+            {
+                if (targetCoords.y >= _maxY / 2) //when the target is beyond half way forward in ap direction
+                    targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[0]*2f/_maxY + _lengthOffset*_limits[0] + _ankleDisplacement; //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
+                else //if it's not greater, it has to be smaller
+                    targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[1]*2f/_maxY + _lengthOffset*_limits[1] + _ankleDisplacement;
+
+                if (targetCoords.x >= _maxX / 2) //when the target is beyond half way right in ml direction
+                    targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[3]*2f/_maxX;
+                else //if it's not greater, it has to be smaller
+                    targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[2]*2f/_maxX;
+            }
+            else
+            {
+                //target game assumes that target is at 0,0 wrt length offset
+                //we just need to do the shift factor and no additional conversions or shifts are required unlike the other games.
+                if (targetCoords.y >= _maxY / 2) //when the target is beyond half way forward in ap direction
+                    targetCoordsShifted.y = _lengthOffset*_limits[0] + _ankleDisplacement; //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
+                else //if it's not greater, it has to be smaller
+                    targetCoordsShifted.y = _lengthOffset*_limits[1] + _ankleDisplacement;
+            }
 
             ShiftedPos = new List<float>() {shiftedCOMy, targetCoordsShifted.x, targetCoordsShifted.y};
-            
-            var losF = _limits[0] + _ankleQS;
-            var losB = _ankleQS - _limits[1];
+
+            var losF = _limits[0] + _ankleDisplacement; //adjust front and back limits to ankle reference frame
+            var losB = _ankleDisplacement - _limits[1]; //since torque is negative, sign of losB should also be negative
 
             // calculating mechanical torques
-            var qsTorque = _m*_G*_ankleQS;
+            var qsTorque = _m*_G*_ankleDisplacement;
             var losFTorque = _m*_G*losF;
             var losBTorque = _m*_G*losB;
 
             //angle calculations
             var targetVertAng = Mathf.Atan2(targetCoordsShifted.y, _hCOM);
             var comVertAng = Mathf.Atan2(shiftedCOMy, _hCOM);
-            var qsVertAng = Mathf.Atan2(_ankleQS, _hCOM);
+            var qsVertAng = Mathf.Atan2(_ankleDisplacement, _hCOM);
             var angErr = targetVertAng - comVertAng;
             Angles = new List<float>() {targetVertAng, comVertAng, angErr}; //store in prop
 
@@ -192,8 +200,22 @@ namespace ControllerManager
             var mechanicalTorque = MechanicalController(comVertAng); //calculate passive torque from controller output
             var slopes = Slopes(qsTorque, losFTorque, losBTorque); //calculate controller slopes
             var rawStimOutput = UnbiasedStimulationOutput(slopes, neuralTorque, mechanicalTorque, qsTorque, comVertAng, qsVertAng); //calculate unbiased output
-            var neuralBiases = CalculateNeuralBiases(data, targetCoordsShifted); //calculate neural biases
+            var neuralBiases = CalculateNeuralBiases(data, shiftedCOMy, targetCoordsShifted); //calculate neural biases
             var mechBiases = CalculateMechBiases(data, shiftedCOMy); //calculate mech biases
+            
+            Debug.Log("neural");
+            foreach (var n in neuralBiases)
+            {
+                Debug.Log(n.Key);
+                Debug.Log(n.Value);
+            }
+            Debug.Log("mech");
+            foreach (var n in mechBiases)
+            {
+                Debug.Log(n.Key);
+                Debug.Log(n.Value);
+            }
+
             var actualStimOutput = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
             
             return actualStimOutput;
@@ -306,11 +328,11 @@ namespace ControllerManager
             return stimulation;
         }
 
-        private Dictionary<string, float> CalculateNeuralBiases(WiiBoardData data, Vector2 targetCoords) //calculate ML bias for neural torque
+        private Dictionary<string, float> CalculateNeuralBiases(WiiBoardData data, float shiftedCOMy, Vector2 targetCoords) //calculate ML bias for neural torque
         {
             var biases = new Dictionary<string, float>();
-            var x = data.fCopX - targetCoords.x;
-            var y = data.fCopY - targetCoords.y;
+            var x = data.fCopX*_XWidth/1000f/2f - targetCoords.x;
+            var y = shiftedCOMy - targetCoords.y;
             var biasAng = -Mathf.Atan2(y, x);
 
             BiasFunction(biases, biasAng);
@@ -321,7 +343,7 @@ namespace ControllerManager
         private Dictionary<string, float> CalculateMechBiases(WiiBoardData data, float shiftedCOMy) //calculate ML bias for mechanical torque
         {
             var biases = new Dictionary<string, float>();
-            var biasAng = -Mathf.Atan2(shiftedCOMy, data.fCopX);
+            var biasAng = -Mathf.Atan2(shiftedCOMy, data.fCopX*_XWidth/1000f/2f);
 
             BiasFunction(biases, biasAng);
 
@@ -330,22 +352,22 @@ namespace ControllerManager
 
         private void BiasFunction(Dictionary<string, float> biases, float biasAng) //calculate bias using a polynomial fit
         {
-            foreach (var item in _biasCoeffs) 
+            foreach (var coeffs in _biasCoeffs) 
             {
                 var bias = 0f;
 
-                if (item.Key == "LPF" || item.Key == "RPF")
+                if (coeffs.Key == "LPF" || coeffs.Key == "RPF")
                 {
                     for (var i = 7; i >= 0; i--)
-                        bias += item.Value[i] * Mathf.Pow(biasAng, i);
+                        bias += coeffs.Value[i] * Mathf.Pow(biasAng, i);
                 }
                 else
                 {
                     for (var i = 5; i >= 0; i--)
-                        bias += item.Value[i] * Mathf.Pow(biasAng, i);
+                        bias += coeffs.Value[i] * Mathf.Pow(biasAng, i);
                 }
 
-                biases.Add(item.Key, bias);
+                biases.Add(coeffs.Key, bias);
             }
         }
 
@@ -370,8 +392,7 @@ namespace ControllerManager
             {
                 foreach (var stim in control.Value)
                 {
-                    adjustedStimOutput[control.Key].Add(stim.Key, RampPercentage*stim.Value/100f*biasesCombined[control.Key][stim.Key]); //divide by 100 to conver to decimal
-
+                    adjustedStimOutput[control.Key].Add(stim.Key, RampPercentage/100f*stim.Value*biasesCombined[control.Key][stim.Key]); //divide by 100 to convert to decimal
                     if (stim.Key.Contains("PF")) //divide the maximum possible stim for pf and df stim
                         adjustedStimOutput[control.Key][stim.Key] /= _MaxPFStim;
                     else
@@ -379,15 +400,19 @@ namespace ControllerManager
                 }
             }
 
-            foreach(var muscle in _stimMax) //this is just to add the total stimulation output, don't actually care about _stimMax at this point
+            foreach(var muscle in _stimMax) //this is just to add the total stimulation output
+            {
                 adjustedCombinedStimOutput.Add(muscle.Key, adjustedStimOutput["Mech"][muscle.Key] + adjustedStimOutput["Neural"][muscle.Key]);
+                Debug.Log(adjustedCombinedStimOutput[muscle.Key]);
+            }
+                
 
             return adjustedCombinedStimOutput;
         }
 
         private Dictionary<string, float> CheckLimits(Dictionary<string, float> adjustedStimOutput) //makes sure stim doesn't go above max and below 0
         {
-            var trueStimOutput = new Dictionary<string, float>(4);
+            var trueStimOutput = new Dictionary<string, float>();
 
             foreach (var stim in adjustedStimOutput)
             {

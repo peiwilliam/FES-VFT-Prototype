@@ -292,7 +292,7 @@ public class GameSession : MonoBehaviour
         _sceneLoader.LoadStartScene();
     }
     
-    private void LOS()
+    private void LOS() //changes the colour of the target direction
     {
         foreach (var rectangle in _rectangles)
         {
@@ -317,7 +317,7 @@ public class GameSession : MonoBehaviour
         if (GameObject.FindGameObjectWithTag("Target") != null) //once we press the button, we want to switch to a new target
             GameObject.FindGameObjectWithTag("Target").tag = "Untagged";
 
-        if (_counter == _directionNames.Count) //do this check at the beginning so that the last direction isn't just ended
+        if (_counter == _directionNames.Count) //check when _counter is greater than the max index
         {
             _sceneLoader.LoadStartScene();
             var windowLength = Mathf.FloorToInt(PlayerPrefs.GetInt("Rolling Average Window")*1/Time.fixedDeltaTime);
@@ -328,7 +328,7 @@ public class GameSession : MonoBehaviour
         {
             if (!_shuffled)
             {
-                _directionNames = KnuthShuffler.Shuffle(_directionNames);
+                _directionNames = KnuthShuffler.Shuffle(_directionNames); //order of directions needs to be randomized
                 _shuffled = true;
             }
 
@@ -375,7 +375,7 @@ public class GameSession : MonoBehaviour
                         break;
                 }
 
-                if (averages.Count != 0)
+                if (averages.Count != 0) //since the list for the diagonal directions is currently not coded in, it throws an error, so just want to account for that
                     _limits.Add(direction.Key, averages.Max()*100f);
 
                 averages.Clear(); //clear the list so that it's a new one next loop
