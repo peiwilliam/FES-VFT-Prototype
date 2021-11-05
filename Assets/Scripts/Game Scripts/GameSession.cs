@@ -126,7 +126,7 @@ public class GameSession : MonoBehaviour
 
     private void Start()
     {
-        Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+        Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //the first thing we want to do is instantiate the cursor
 
         var sceneName = SceneManager.GetActiveScene().name;
         _sceneLoader = FindObjectOfType<SceneLoader>();

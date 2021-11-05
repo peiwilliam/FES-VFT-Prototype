@@ -17,14 +17,14 @@ public class Stimulation : MonoBehaviour
 
     private void Start()
     {
-        // only create instance of controller when board is connected
-        if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
-            _controller = new Controller();
-        
         _filterTargetX = new Filter(2);
         _filterTargetY = new Filter(2);
         _cursor = FindObjectOfType<Cursor>();
         _sceneName = SceneManager.GetActiveScene().name;
+
+        // only create instance of controller when board is connected
+        if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
+            _controller = new Controller(_cursor); //pass in the cursor object so that we can access 
 
         if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
             _targetCircle = FindObjectOfType<MovingCircle>().gameObject;

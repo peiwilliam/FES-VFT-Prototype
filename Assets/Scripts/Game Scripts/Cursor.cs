@@ -10,6 +10,8 @@ public class Cursor : MonoBehaviour
     [SerializeField] private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
     [SerializeField] private float _minY = 0f;
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
+    [Tooltip("Get this value from the difference between the rectangles prefab vs the camera")]
+    [SerializeField] private float _rectanglesShift = 0.3f; //can be adjusted if the position of rectangles changes in the future.
 
     private const float _XWidth = 433; // mm, measured manually
     private const float _YLength = 235; // mm, measured manually
@@ -29,9 +31,10 @@ public class Cursor : MonoBehaviour
     private CSVWriter _writer;
 
     public WiiBoardData Data { get; private set; }
-    public bool LOSStarted { get; private set; }
-    public bool ECAssessmentStarted { get; private set; }
-    public bool EOAssessmentStarted { get; private set; }
+    public float LOSShift
+    {
+        get => _rectanglesShift;
+    }
 
     private void Awake() //want to compute these values before anything starts
     {
@@ -41,6 +44,9 @@ public class Cursor : MonoBehaviour
         _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
         _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);
         _sceneName = SceneManager.GetActiveScene().name;
+
+        if (_sceneName == "LOS")
+            _rectangles = GameObject.Find("Rectangles"); //find the rectangles for los to get shifted y coord
 
         if (_sceneName == "LOS" || _sceneName == "Assessment") //only shift and scale cop when it's the games
         {
@@ -61,9 +67,6 @@ public class Cursor : MonoBehaviour
 
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f)/100f; //convert from percent to fraction
         }
-
-        if (_sceneName == "LOS")
-            _rectangles = GameObject.Find("Rectangles"); //find the rectangles for los to get shifted y coord
     }
 
     private void Start() 
@@ -137,7 +140,7 @@ public class Cursor : MonoBehaviour
         {
             //additional shift due to the fact that the LOS centre is slightly shifted down
             //also need to convert game coordinates to percentage of length of board
-            cop.y -= _lengthOffset - (Camera.main.transform.position.y - _rectangles.transform.position.y)*2f/_maxY;
+            cop.y -= _lengthOffset - _rectanglesShift*2f/_maxY;
         } 
 
         var fCopX = 0.0f;
