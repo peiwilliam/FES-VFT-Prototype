@@ -33,9 +33,9 @@ namespace ControllerManager
             return _rampPercentage; //divide by 100 to convert from percent to decimal
         }
 
-        public void TargetChanged() => _reset = true;
+        public void TargetChanged() => _reset = true; //triggers when the target changes
 
-        ~Ramping() //make sure that the event is unsubscribed when object is destroyed to prevent memory leaks
+        ~Ramping() //deconstructor, make sure that the event is unsubscribed when object is destroyed to prevent memory leaks
         {
             GameSession.TargetChangeEvent -= TargetChanged;
         }
