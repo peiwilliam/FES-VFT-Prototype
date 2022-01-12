@@ -30,14 +30,14 @@ public class WiiBoard : MonoBehaviour //this class doesn't actually do that much
 
 	public void OnDiscoveryFailed(int i) 
     {
-		Debug.Log("Error:" + i + ". Try Again.");
-		//searching = false;
+		Debug.Log("Error:" + i + ".  1` Again.");
 	}
 	
 	public void OnWiimoteDiscovered (int thisRemote) 
     {
 		Debug.Log("found this one: " + thisRemote);
-		if(!Wii.IsActive(whichRemote))
+
+		if (!Wii.IsActive(whichRemote))
 			whichRemote = thisRemote;
 	}
 	

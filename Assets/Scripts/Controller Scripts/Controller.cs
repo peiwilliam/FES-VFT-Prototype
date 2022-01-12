@@ -165,29 +165,43 @@ namespace ControllerManager
 
         public Dictionary<string, float> Stimulate(WiiBoardData data, Vector2 targetCoords)
         {
-            //shift everything to the perspective of the ankles
-            //note that the cop stored in wiiboarddata has been shifted to the reference frame of the qs cop
-            var shiftedCOMy = data.fCopY*_YLength/1000f/2f + _ankleDisplacement; //convert percent to actual length
+            var shiftedCOMy = 0.0f;
+
+            if (Wii.GetRemoteCount() == 0) //if we're using the cursor to debug
+                shiftedCOMy = data.fCopY; //conversion to ankle reference frame done in cursor.cs
+            else
+            {
+                //shift everything to the perspective of the ankles
+                //note that the cop stored in wiiboarddata has been shifted to the reference frame of the qs cop
+                shiftedCOMy = (data.fCopY + _lengthOffset)*_YLength/1000f/2f + _ankleDisplacement; //convert percent to actual length
+            }
+            
             //conversion of target game coords to board coords
             var targetCoordsShifted = new Vector2(); //shifted target coords from game coords to board coords
             
             if (SceneManager.GetActiveScene().name != "Target") 
             {
-                if (targetCoords.y >= _maxY / 2) //when the target is beyond half way forward in ap direction
-                    targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[0]*2f/_maxY + _ankleDisplacement; //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
-                else //if it's not greater, it has to be smaller
-                    targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*_limits[1]*2f/_maxY + _ankleDisplacement;
+                var yLimit = 0f;
+                var xLimit = 0f;
 
-                if (targetCoords.x >= _maxX / 2) //when the target is beyond half way right in ml direction
-                    targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[3]*2f/_maxX;
+                if (targetCoords.y >= _maxY / 2) //when the target is beyond half way forward in ap direction
+                    yLimit = _limits[0];
                 else //if it's not greater, it has to be smaller
-                    targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*_limits[2]*2f/_maxX;
+                    yLimit = _limits[1];
+
+                if (targetCoords.x >= _maxX / 2) //when the target is beyond half way forward in ap direction
+                    xLimit = _limits[3];
+                else //if it's not greater, it has to be smaller
+                    xLimit = _limits[2];
+
+                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*xLimit*2f/_maxX;
+                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*yLimit*2f/_maxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
             }
             else
             {
                 //target game assumes that target is at 0,0 wrt length offset
                 //we just need to do the shift factor and no additional conversions or shifts are required unlike the other games.
-                targetCoordsShifted.y = _ankleDisplacement; 
+                targetCoordsShifted.y = _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //need to add length offset so that we get the proper shift to the target wrt ankle position
             }
             // Debug.Log("fcopy");
             // Debug.Log(data.fCopY);
@@ -250,8 +264,31 @@ namespace ControllerManager
             // Debug.Log(mechanicalTorque);
 
             var rawStimOutput = UnbiasedStimulationOutput(neuralTorque, mechanicalTorque, comVertAng, qsVertAng); //calculate unbiased output
-            var neuralBiases = CalculateNeuralBiases(data, shiftedCOMy, targetCoordsShifted); //calculate neural biases
+            
+            // foreach (var i in rawStimOutput)
+            // {
+            //     foreach (var j in i.Value)
+            //     {
+            //         Debug.Log(j.Key);
+            //         Debug.Log(j.Value);
+            //     }
+            // }
+            
+            var neuralBiases = CalculateNeuralBiases(data, targetCoordsShifted); //calculate neural biases
             var mechBiases = CalculateMechBiases(data, shiftedCOMy); //calculate mech biases
+
+            foreach (var i in neuralBiases)
+            {
+                Debug.Log(i.Key);
+                Debug.Log(i.Value);
+            }
+
+            foreach (var i in mechBiases)
+            {
+                Debug.Log(i.Key);
+                Debug.Log(i.Value);
+            }
+
             var actualStimOutput = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
             
             return actualStimOutput;
@@ -275,7 +312,7 @@ namespace ControllerManager
             var velocity = 0.0f;
 
             if (!_comAngles.Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero)
-                velocity = CalculateDerivative(_comAngles.GetRange(0, 3));
+                velocity = CalculateDerivative(_comAngles);
 
             return _k*_comAngles[0] + 5.0f*velocity;
         }
@@ -369,30 +406,30 @@ namespace ControllerManager
             return stimulation;
         }
 
-        private Dictionary<string, float> CalculateNeuralBiases(WiiBoardData data, float shiftedCOMy, Vector2 shiftedTargetCoords) //calculate ML bias for neural torque
+        private Dictionary<string, float> CalculateNeuralBiases(WiiBoardData data, Vector2 shiftedTargetCoords) //calculate ML bias for neural torque
         {
-            var biases = new Dictionary<string, float>();
             var x = data.fCopX*_XWidth/1000f/2f - shiftedTargetCoords.x;
-            var y = shiftedCOMy - shiftedTargetCoords.y;
+            var y = data.fCopY*_YLength/1000f/2f - shiftedTargetCoords.y - _ankleDisplacement - _lengthOffset*_YLength/1000f/2f;
             var biasAng = -Mathf.Atan2(y, x);
 
-            BiasFunction(biases, biasAng);
+            var biases = BiasFunction(biasAng);
 
             return biases;
         }
 
         private Dictionary<string, float> CalculateMechBiases(WiiBoardData data, float shiftedCOMy) //calculate ML bias for mechanical torque
         {
-            var biases = new Dictionary<string, float>();
             var biasAng = -Mathf.Atan2(shiftedCOMy, data.fCopX*_XWidth/1000f/2f);
 
-            BiasFunction(biases, biasAng);
+            var biases = BiasFunction(biasAng);
 
             return biases;
         }
 
-        private void BiasFunction(Dictionary<string, float> biases, float biasAng) //calculate bias using a polynomial fit
+        private Dictionary<string, float> BiasFunction(float biasAng) //calculate bias using a polynomial fit
         {
+            var biases = new Dictionary<string, float>();
+
             foreach (var coeffs in _biasCoeffs) 
             {
                 var bias = 0f;
@@ -419,6 +456,8 @@ namespace ControllerManager
 
                 biases.Add(coeffs.Key, bias);
             }
+
+            return biases;
         }
 
         private Dictionary<string, float> AdjustedCombinedStimulation(Dictionary<string, float> neuralBiases, Dictionary<string, float> mechBiases, 
@@ -442,17 +481,29 @@ namespace ControllerManager
             {
                 foreach (var stim in control.Value)
                 {
+                    // Debug.Log(control.Key);
+                    // Debug.Log(stim.Key);
+                    // Debug.Log(biasesCombined[control.Key][stim.Key]);
+                    // Debug.Log(stim.Value);
                     adjustedStimOutput[control.Key].Add(stim.Key, RampPercentage/100f*stim.Value*biasesCombined[control.Key][stim.Key]); //divide by 100 to convert to decimal
                     if (stim.Key.Contains("PF")) //divide the maximum possible stim for pf and df stim
                         adjustedStimOutput[control.Key][stim.Key] /= _MaxPFStim;
                     else
                         adjustedStimOutput[control.Key][stim.Key] /= _MaxDFStim;
+                    
+                    // Debug.Log(adjustedStimOutput[control.Key][stim.Key]);
                 }
             }
 
-            foreach(var muscle in _stimMax) //this is just to add the total stimulation output
+            foreach (var muscle in _stimMax) //this is just to add the total stimulation output
                 adjustedCombinedStimOutput.Add(muscle.Key, adjustedStimOutput["Mech"][muscle.Key] + adjustedStimOutput["Neural"][muscle.Key]);
                 
+            // foreach (var i in adjustedCombinedStimOutput)
+            // {
+            //     Debug.Log(i.Key);
+            //     Debug.Log(i.Value);
+            // }
+
             return adjustedCombinedStimOutput;
         }
 

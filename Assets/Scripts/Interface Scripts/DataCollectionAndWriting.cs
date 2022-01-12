@@ -28,8 +28,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
     {
         _cursor = FindObjectOfType<Cursor>();
 
-        if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
-            PrepWriter();
+        PrepWriter(); //create the writer object if it's not assessment or los. los and assessment handled differently
 
         if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
             _targetCircle = FindObjectOfType<MovingCircle>().gameObject;
@@ -40,8 +39,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
 
     private void FixedUpdate()
     {
-        if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
-            GetData();
+        GetData();
     }
 
     private void PrepWriter()

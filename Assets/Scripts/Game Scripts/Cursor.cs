@@ -13,22 +13,24 @@ public class Cursor : MonoBehaviour
     [Tooltip("Get this value from the difference between the rectangles prefab vs the camera")]
     [SerializeField] private float _rectanglesShift = 0.3f; //can be adjusted if the position of rectangles changes in the future.
 
-    private const float _XWidth = 433; // mm, measured manually
-    private const float _YLength = 235; // mm, measured manually
-    private const float _G = 9.81f; // m/s^2
+    private string _sceneName;
     private float _mass;
     private float _height;
     private float _m; // kg
     private float _h; // m
     private float _i; // kgm^2
-    private List<float> _limits;
     private float _lengthOffset;
-    private string _sceneName;
+    private float _ankleLength;
+    private float _ankleDisplacement; //to shift everything to the reference point of the ankle (ie. ankle is at y = 0)
+    private List<float> _limits;
     private GameObject _targetCircle;
     private GameObject _rectangles;
     private Filter _filterX;
     private Filter _filterY;
-    private CSVWriter _writer;
+
+    private const float _XWidth = 433f; // mm
+    private const float _YLength = 238f; // mm
+    private const float _HeelLocation = 90; //mm, measured manually from centre of board to bottom of indicated feet area
 
     public WiiBoardData Data { get; private set; }
     public float LOSShift
@@ -38,12 +40,14 @@ public class Cursor : MonoBehaviour
 
     private void Awake() //want to compute these values before anything starts
     {
+        _sceneName = SceneManager.GetActiveScene().name;
         _mass = PlayerPrefs.GetFloat("Mass");
         _height = PlayerPrefs.GetFloat("Height")/100f; //convert to m
+        _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height/100f; //convert percent to fraction, cm to m
         _m = PlayerPrefs.GetFloat("Ankle Mass Fraction")*_mass;
         _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
         _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);
-        _sceneName = SceneManager.GetActiveScene().name;
+        _ankleDisplacement = _HeelLocation/1000f - _ankleLength;
 
         if (_sceneName == "LOS")
             _rectangles = GameObject.Find("Rectangles"); //find the rectangles for los to get shifted y coord
@@ -52,18 +56,29 @@ public class Cursor : MonoBehaviour
         {
             _limits = new List<float>() {1.0f, 1.0f, 1.0f, 1.0f}; //front, back, left, right
 
-            if (_sceneName == "LOS") //offset applied for LOS only, for qs assessment, offset is default zero
+            if (_sceneName == "LOS") //offset applied for LOS only, for qs assessment offset is default zero
                 _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f)/100f; //convert from percent to fraction
         }
         else
         {
-            _limits = new List<float>() 
+            // need to convert from percent to fraction
+            // los is in qs frame of reference but need to remove shift that's inherent to los
+            _limits = new List<float>()
             {
-                PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f)/100f, //convert from percent to fraction
-                PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f)/100f,
+                PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f)/100f - _rectanglesShift*2f/_maxY,
+                PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f)/100f - _rectanglesShift*2f/_maxY,
                 PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f)/100f,
                 PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f)/100f
             };
+
+            Debug.Log("front");
+            Debug.Log(_limits[0]);
+            Debug.Log("back");
+            Debug.Log(_limits[1]);
+            Debug.Log("left");
+            Debug.Log(_limits[2]);
+            Debug.Log("right");
+            Debug.Log(_limits[3]);
 
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f)/100f; //convert from percent to fraction
         }
@@ -71,8 +86,7 @@ public class Cursor : MonoBehaviour
 
     private void Start() 
     {
-        if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
-            SetInitialConditions();
+        SetInitialConditions();
     }
 
     private void FixedUpdate()
@@ -100,6 +114,8 @@ public class Cursor : MonoBehaviour
 
             var pos = new Vector2(transform.position.x, transform.position.y);
             var com = new Vector2();
+            var xLimit = 0.0f;
+            var yLimit = 0.0f;
 
             if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set default to zero in case it isn't set
                 com = new Vector2(Data.fCopX, Data.fCopY);
@@ -108,24 +124,52 @@ public class Cursor : MonoBehaviour
 
             // scale the cursor on screen to the individual's max in each direction
             if (com.x > 0)
-                pos.x = Mathf.Clamp((com.x / _limits[3]) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
+                xLimit = _limits[3];
             else
-                pos.x = Mathf.Clamp((com.x / _limits[2]) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
+                xLimit = _limits[2];
 
             if (com.y > 0)
-                pos.y = Mathf.Clamp((com.y / _limits[0]) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+                yLimit = _limits[0];
             else
-                pos.y = Mathf.Clamp((com.y / _limits[1]) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+                yLimit = _limits[1];
+
+            pos.x = Mathf.Clamp((com.x / xLimit) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
+            pos.y = Mathf.Clamp((com.y / yLimit) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
 
             transform.position = pos;
         }
         else
         {
-            // debugging using mouse
+            // debugging using mouse, mouse is already in qs frame of reference
             var pos = new Vector2(transform.position.x, transform.position.y);
             pos.x = Mathf.Clamp(Input.mousePosition.x / Screen.width * _maxX, _minX, _maxX);
             pos.y = Mathf.Clamp(Input.mousePosition.y / Screen.height * _maxY, _minY, _maxY);
             transform.position = pos;
+            
+            // Debug.Log("x");
+            // Debug.Log(pos.x);
+            // Debug.Log("y");
+            // Debug.Log(pos.y);
+            
+            var xLimit = 0.0f;
+            var yLimit = 0.0f;
+
+            if (pos.x > 0)
+                xLimit = _limits[3];
+            else
+                xLimit = _limits[2];
+
+            if (pos.y > 0)
+                yLimit = _limits[0];
+            else
+                yLimit = _limits[1];
+
+            //transform the mouse position into a board position
+            pos.x = (pos.x - Camera.main.transform.position.x)*xLimit*_XWidth/1000f/_maxX;
+            pos.y = (pos.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_maxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
+            //pos.y = (pos.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_maxY;
+            
+            Data = new WiiBoardData(Time.fixedUnscaledTime, pos.x, pos.y, 0f, 0f, 0f, 0f, pos.x, pos.y); // using mouse data for controller
         }
     }
 
@@ -135,7 +179,7 @@ public class Cursor : MonoBehaviour
         var cop = Wii.GetCenterOfBalance(0);
 
         if (_sceneName != "LOS")
-            cop.y -= _lengthOffset; //subtract AP offset to centre QS to 0,0, subtracting a negative (gives postive)
+            cop.y -= _lengthOffset; //subtract AP offset to centre QS to 0,0, subtracting a negative
         else 
         {
             //additional shift due to the fact that the LOS centre is slightly shifted down

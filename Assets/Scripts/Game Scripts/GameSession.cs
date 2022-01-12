@@ -469,7 +469,7 @@ public class GameSession : MonoBehaviour
     {
         LineRenderer = Ellipse.GetComponent<LineRenderer>();
         Positions = new Vector3[LineRenderer.positionCount];
-        LineRenderer.GetPositions(Positions); //pos has an out on it
+        LineRenderer.GetPositions(Positions); //position has an out on it
         EllipseIndex = UnityEngine.Random.Range(0, Positions.Length); //any instances of UnityEngine.Ranodm is because Random exists in both System and UnityEngine, so need to clarify
         Instantiate(_movingCirclePrefab, new Vector3(Positions[EllipseIndex].x, Positions[EllipseIndex].y, 0), Quaternion.identity);
     }
@@ -595,7 +595,7 @@ public class GameSession : MonoBehaviour
         TargetScore = updatedScore;
     }
 
-    private void OnDisable() //mostly so that _ecDone and _eoDone are false again once assessment is done
+    private void OnDisable() //done so that _ecDone and _eoDone are false again once assessment is done
     {
         _ecDone = false;
         _eoDone = false;

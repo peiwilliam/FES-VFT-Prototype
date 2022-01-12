@@ -5,10 +5,10 @@ using FilterManager;
 
 public class Stimulation : MonoBehaviour
 {
+    private string _sceneName;
     private Controller _controller;
     private Cursor _cursor;
     private GameObject _targetCircle;
-    private string _sceneName;
     private Filter _filterTargetX;
     private Filter _filterTargetY;
 
@@ -22,9 +22,7 @@ public class Stimulation : MonoBehaviour
         _cursor = FindObjectOfType<Cursor>();
         _sceneName = SceneManager.GetActiveScene().name;
 
-        // only create instance of controller when board is connected
-        if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
-            _controller = new Controller(_cursor); //pass in the cursor object so that we can access 
+        _controller = new Controller(_cursor); //pass in the cursor object so that we can access 
 
         if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
             _targetCircle = FindObjectOfType<MovingCircle>().gameObject;
@@ -32,7 +30,7 @@ public class Stimulation : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (_controller != null) //if it's just debugging with the cursor, there is no controller object, so want to prevent null reference error
+        if (_controller != null) // just in case the controller object is null but it should never be null
         {
             //finding circle for colour and hunting handled here since it changes constantly in game
             //need the second condition since the targets don't despawn, only the circle with the "Target" tag changes
