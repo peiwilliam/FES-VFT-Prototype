@@ -138,26 +138,42 @@ namespace ControllerManager
             //initialize ramping function
             _ramping = new Ramping();
             
-            foreach (var i in _limits)
-                Debug.Log(i);
-                
+            // for (var i  = 0; i < _limits.Count - 1; i++)
+            // {
+            //     switch (i)
+            //     {
+            //         case 0:
+            //             Debug.Log("front");
+            //             break;
+            //         case 1:
+            //             Debug.Log("back");
+            //             break;
+            //         case 2:
+            //             Debug.Log("left");
+            //             break;
+            //         case 3:
+            //             Debug.Log("right");
+            //             break;
+            //     }
+            //     Debug.Log(_limits[i]);
+            // }   
 
             _losF = _limits[0] + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //adjust front and back limits to ankle reference frame
             _losB = _ankleDisplacement + _lengthOffset*_YLength/1000f/2f - _limits[1]; //since torque is negative, sign of losB should also be negative
-            Debug.Log("losF");
-            Debug.Log(_losF);
-            Debug.Log("losB");
-            Debug.Log(_losB);
+            // Debug.Log("losF");
+            // Debug.Log(_losF);
+            // Debug.Log("losB");
+            // Debug.Log(_losB);
             // calculating mechanical torques
             _qsTorque = _m*_G*(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f);
             _losFTorque = _m*_G*_losF;
             _losBTorque = _m*_G*_losB;
-            Debug.Log("qsTorque");
-            Debug.Log(_qsTorque);
-            Debug.Log("losFTorque");
-            Debug.Log(_losFTorque);
-            Debug.Log("losBTorque");
-            Debug.Log(_losBTorque);
+            // Debug.Log("qsTorque");
+            // Debug.Log(_qsTorque);
+            // Debug.Log("losFTorque");
+            // Debug.Log(_losFTorque);
+            // Debug.Log("losBTorque");
+            // Debug.Log(_losBTorque);
 
             _slopes = Slopes(); //calculate controller slopes
             _intercepts = new Dictionary<string, float> {["RDF"] = -_slopes["Mech"]["RDF"]*0.5f*_qsTorque, ["LDF"] = -_slopes["Mech"]["LDF"]*0.5f*_qsTorque};
@@ -165,15 +181,20 @@ namespace ControllerManager
 
         public Dictionary<string, float> Stimulate(WiiBoardData data, Vector2 targetCoords)
         {
-            var shiftedCOMy = 0.0f;
+            var shiftedComY = 0.0f;
+            var comX = 0.0f;
 
             if (Wii.GetRemoteCount() == 0) //if we're using the cursor to debug
-                shiftedCOMy = data.fCopY; //conversion to ankle reference frame done in cursor.cs
+            {
+                shiftedComY = data.fCopY; //conversion to ankle reference frame done in cursor.cs
+                comX = data.fCopX;
+            }
             else
             {
                 //shift everything to the perspective of the ankles
                 //note that the cop stored in wiiboarddata has been shifted to the reference frame of the qs cop
-                shiftedCOMy = (data.fCopY + _lengthOffset)*_YLength/1000f/2f + _ankleDisplacement; //convert percent to actual length
+                shiftedComY = (data.fCopY + _lengthOffset)*_YLength/1000f/2f + _ankleDisplacement; //convert percent to actual length
+                comX = data.fCopX*_XWidth/1000f/2f;
             }
             
             //conversion of target game coords to board coords
@@ -194,8 +215,9 @@ namespace ControllerManager
                 else //if it's not greater, it has to be smaller
                     xLimit = _limits[2];
 
-                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*xLimit*2f/_maxX;
-                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*yLimit*2f/_maxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
+                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*xLimit*_XWidth/1000f/_maxX;
+                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_maxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
+                
             }
             else
             {
@@ -203,20 +225,25 @@ namespace ControllerManager
                 //we just need to do the shift factor and no additional conversions or shifts are required unlike the other games.
                 targetCoordsShifted.y = _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //need to add length offset so that we get the proper shift to the target wrt ankle position
             }
+            
             // Debug.Log("fcopy");
             // Debug.Log(data.fCopY);
             // Debug.Log("shiftedcomy");
-            // Debug.Log(shiftedCOMy);
+            // Debug.Log(shiftedComY);
             // Debug.Log("targetcoords");
             // Debug.Log(targetCoords.y);
             // Debug.Log("targetcoordsshifted");
             // Debug.Log(targetCoordsShifted.y);
+            // Debug.Log("ankledisplacement2");
+            // Debug.Log(_ankleDisplacement);
+            // Debug.Log("length offset2");
+            // Debug.Log(_lengthOffset);
 
-            ShiftedPos = new List<float>() {shiftedCOMy, targetCoordsShifted.x, targetCoordsShifted.y};
+            ShiftedPos = new List<float>() {shiftedComY, targetCoordsShifted.x, targetCoordsShifted.y};
 
             //angle calculations
             var targetVertAng = Mathf.Atan2(targetCoordsShifted.y, _hCOM);
-            var comVertAng = Mathf.Atan2(shiftedCOMy, _hCOM);
+            var comVertAng = Mathf.Atan2(shiftedComY, _hCOM);
             var qsVertAng = Mathf.Atan2(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f, _hCOM);
             var angErr = targetVertAng - comVertAng;
             Angles = new List<float>() {targetVertAng, comVertAng, angErr}; //store in prop
@@ -253,8 +280,8 @@ namespace ControllerManager
             //controller calculations
             var neuralTorque = NeuralController(); //calculate neural torque from controller output
 
-            if (_neuralCounter <= 3) //only calculate neural torque after 3 iterations have passed
-                neuralTorque = 0f; 
+            if (_neuralCounter < 3) //only calculate neural torque after 3 iterations have passed
+                neuralTorque = 0f;
                 
             var mechanicalTorque = MechanicalController(); //calculate passive torque from controller output
 
@@ -264,7 +291,7 @@ namespace ControllerManager
             // Debug.Log(mechanicalTorque);
 
             var rawStimOutput = UnbiasedStimulationOutput(neuralTorque, mechanicalTorque, comVertAng, qsVertAng); //calculate unbiased output
-            
+
             // foreach (var i in rawStimOutput)
             // {
             //     foreach (var j in i.Value)
@@ -274,20 +301,20 @@ namespace ControllerManager
             //     }
             // }
             
-            var neuralBiases = CalculateNeuralBiases(data, targetCoordsShifted); //calculate neural biases
-            var mechBiases = CalculateMechBiases(data, shiftedCOMy); //calculate mech biases
+            var neuralBiases = CalculateNeuralBiases(comX, shiftedComY, targetCoordsShifted); //calculate neural biases
+            var mechBiases = CalculateMechBiases(comX, shiftedComY); //calculate mech biases
 
-            foreach (var i in neuralBiases)
-            {
-                Debug.Log(i.Key);
-                Debug.Log(i.Value);
-            }
+            // foreach (var i in neuralBiases)
+            // {
+            //     Debug.Log(i.Key);
+            //     Debug.Log(i.Value);
+            // }
 
-            foreach (var i in mechBiases)
-            {
-                Debug.Log(i.Key);
-                Debug.Log(i.Value);
-            }
+            // foreach (var i in mechBiases)
+            // {
+            //     Debug.Log(i.Key);
+            //     Debug.Log(i.Value);
+            // }
 
             var actualStimOutput = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
             
@@ -406,20 +433,46 @@ namespace ControllerManager
             return stimulation;
         }
 
-        private Dictionary<string, float> CalculateNeuralBiases(WiiBoardData data, Vector2 shiftedTargetCoords) //calculate ML bias for neural torque
+        private Dictionary<string, float> CalculateNeuralBiases(float comX, float shiftedCOMy, Vector2 shiftedTargetCoords) //calculate ML bias for neural torque
         {
-            var x = data.fCopX*_XWidth/1000f/2f - shiftedTargetCoords.x;
-            var y = data.fCopY*_YLength/1000f/2f - shiftedTargetCoords.y - _ankleDisplacement - _lengthOffset*_YLength/1000f/2f;
-            var biasAng = -Mathf.Atan2(y, x);
+            var x = shiftedTargetCoords.x - comX;
+            var y = shiftedTargetCoords.y - shiftedCOMy;
+            // Debug.Log("y");
+            // Debug.Log(y);
+            // Debug.Log("x");
+            // Debug.Log(x);
+            // Debug.Log("neural ratio");
+            // Debug.Log(y/x);
+            // Debug.Log("neural atan");
+            // Debug.Log(Mathf.Atan(y/x));
+            // Debug.Log("neural atan2");
+            // Debug.Log(Mathf.Atan2(y, x));
+            var biasAng = Mathf.Atan2(x, y);
+            
+            // Debug.Log("neural bias");
+            // Debug.Log(biasAng);
 
             var biases = BiasFunction(biasAng);
 
             return biases;
         }
 
-        private Dictionary<string, float> CalculateMechBiases(WiiBoardData data, float shiftedCOMy) //calculate ML bias for mechanical torque
+        private Dictionary<string, float> CalculateMechBiases(float comX, float shiftedCOMy) //calculate ML bias for mechanical torque
         {
-            var biasAng = -Mathf.Atan2(shiftedCOMy, data.fCopX*_XWidth/1000f/2f);
+            // Debug.Log("y");
+            // Debug.Log(shiftedCOMy);
+            // Debug.Log("x");
+            // Debug.Log(comX);
+            // Debug.Log("mech ratio");
+            // Debug.Log(shiftedCOMy/comX);
+            // Debug.Log("mech atan");
+            // Debug.Log(Mathf.Atan(shiftedCOMy/comX));
+            // Debug.Log("mech atan2");
+            // Debug.Log(Mathf.Atan2(shiftedCOMy, comX));
+            var biasAng = Mathf.Atan2(comX, shiftedCOMy);
+
+            // Debug.Log("mech bias");
+            // Debug.Log(biasAng);
 
             var biases = BiasFunction(biasAng);
 
@@ -496,7 +549,12 @@ namespace ControllerManager
             }
 
             foreach (var muscle in _stimMax) //this is just to add the total stimulation output
+            {
+                // Debug.Log(muscle.Key);
+                // Debug.Log(adjustedStimOutput["Mech"][muscle.Key] + adjustedStimOutput["Neural"][muscle.Key]);
                 adjustedCombinedStimOutput.Add(muscle.Key, adjustedStimOutput["Mech"][muscle.Key] + adjustedStimOutput["Neural"][muscle.Key]);
+            }
+                
                 
             // foreach (var i in adjustedCombinedStimOutput)
             // {

@@ -42,7 +42,7 @@ public class Cursor : MonoBehaviour
     {
         _sceneName = SceneManager.GetActiveScene().name;
         _mass = PlayerPrefs.GetFloat("Mass");
-        _height = PlayerPrefs.GetFloat("Height")/100f; //convert to m
+        _height = PlayerPrefs.GetInt("Height")/100f; //convert to m
         _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height/100f; //convert percent to fraction, cm to m
         _m = PlayerPrefs.GetFloat("Ankle Mass Fraction")*_mass;
         _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
@@ -71,14 +71,14 @@ public class Cursor : MonoBehaviour
                 PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f)/100f
             };
 
-            Debug.Log("front");
-            Debug.Log(_limits[0]);
-            Debug.Log("back");
-            Debug.Log(_limits[1]);
-            Debug.Log("left");
-            Debug.Log(_limits[2]);
-            Debug.Log("right");
-            Debug.Log(_limits[3]);
+            // Debug.Log("front");
+            // Debug.Log(_limits[0]);
+            // Debug.Log("back");
+            // Debug.Log(_limits[1]);
+            // Debug.Log("left");
+            // Debug.Log(_limits[2]);
+            // Debug.Log("right");
+            // Debug.Log(_limits[3]);
 
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f)/100f; //convert from percent to fraction
         }
@@ -154,12 +154,12 @@ public class Cursor : MonoBehaviour
             var xLimit = 0.0f;
             var yLimit = 0.0f;
 
-            if (pos.x > 0)
+            if (pos.x > _maxX/2f)
                 xLimit = _limits[3];
             else
                 xLimit = _limits[2];
 
-            if (pos.y > 0)
+            if (pos.y > _maxY/2f)
                 yLimit = _limits[0];
             else
                 yLimit = _limits[1];
@@ -167,6 +167,12 @@ public class Cursor : MonoBehaviour
             //transform the mouse position into a board position
             pos.x = (pos.x - Camera.main.transform.position.x)*xLimit*_XWidth/1000f/_maxX;
             pos.y = (pos.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_maxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
+            // Debug.Log("shift");
+            // Debug.Log(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f);
+            // Debug.Log("ankledisplacement");
+            // Debug.Log(_ankleDisplacement);
+            // Debug.Log("length offset");
+            // Debug.Log(_lengthOffset);
             //pos.y = (pos.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_maxY;
             
             Data = new WiiBoardData(Time.fixedUnscaledTime, pos.x, pos.y, 0f, 0f, 0f, 0f, pos.x, pos.y); // using mouse data for controller
