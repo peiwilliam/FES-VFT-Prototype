@@ -22,7 +22,8 @@ public class Stimulation : MonoBehaviour
         _cursor = FindObjectOfType<Cursor>();
         _sceneName = SceneManager.GetActiveScene().name;
 
-        _controller = new Controller(_cursor); //pass in the cursor object so that we can access 
+        var foundWiiBoard = (bool)FindObjectOfType<WiiBoard>();
+        _controller = new Controller(_cursor, foundWiiBoard); //pass in the cursor object so that we can access 
 
         if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
             _targetCircle = FindObjectOfType<MovingCircle>().gameObject;

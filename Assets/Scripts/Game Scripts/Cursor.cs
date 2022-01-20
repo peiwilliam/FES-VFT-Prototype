@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using CSV;
 using FilterManager;
 
 public class Cursor : MonoBehaviour
@@ -23,7 +22,6 @@ public class Cursor : MonoBehaviour
     private float _ankleLength;
     private float _ankleDisplacement; //to shift everything to the reference point of the ankle (ie. ankle is at y = 0)
     private List<float> _limits;
-    private GameObject _targetCircle;
     private GameObject _rectangles;
     private Filter _filterX;
     private Filter _filterY;
@@ -165,8 +163,9 @@ public class Cursor : MonoBehaviour
                 yLimit = _limits[1];
 
             //transform the mouse position into a board position
+            //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
             pos.x = (pos.x - Camera.main.transform.position.x)*xLimit*_XWidth/1000f/_maxX;
-            pos.y = (pos.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_maxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
+            pos.y = (pos.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_maxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; 
             // Debug.Log("shift");
             // Debug.Log(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f);
             // Debug.Log("ankledisplacement");

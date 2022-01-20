@@ -7,6 +7,8 @@ namespace ControllerManager
 {
     public class Controller
     {
+        //whether we're using the cursor or board
+        private bool _foundWiiBoard;
         //neural controller
         private float _kdc;
         private float _kpc;
@@ -61,7 +63,7 @@ namespace ControllerManager
         public List<float> Angles { get; private set; }
         public List<float> ShiftedPos { get; private set; } //get com and target positions in real coordinates and shifted to ankle perspective
 
-        public Controller(Cursor cursor)
+        public Controller(Cursor cursor, bool foundWiiBoard)
         {
             //define various constants
             _kdc = PlayerPrefs.GetFloat("Kd Coefficient");
@@ -80,13 +82,17 @@ namespace ControllerManager
             _ankleDisplacement = _HeelLocation/1000f - _ankleLength; //to change everything to ankle reference frame
             //initialize cursor object
             _cursor = cursor;
+            //if true, we use the board, if false, we use cursor.
+            _foundWiiBoard = foundWiiBoard;
             
-            _limits = new List<float>() //front, back, left, right, converted to m, convert from percentage to fraction
+            // need to convert from percent to fraction
+            // los is in qs frame of reference but need to remove shift that's inherent to los
+            _limits = new List<float>() //front, back, left, right
             {
-                (PlayerPrefs.GetFloat("Limit of Stability Front")/100f - _cursor.LOSShift*2f/_maxY)*_YLength/1000f/2f, //percentage corresponds to length/2, also need to account for extra shift that's only in los
-                (PlayerPrefs.GetFloat("Limit of Stability Back")/100f - _cursor.LOSShift*2f/_maxY)*_YLength/1000f/2f,
-                PlayerPrefs.GetFloat("Limit of Stability Left")/100f*_XWidth/1000f/2f,
-                PlayerPrefs.GetFloat("Limit of Stability Right")/100f*_XWidth/1000f/2f
+                PlayerPrefs.GetFloat("Limit of Stability Front")/100f - _cursor.LOSShift*2f/_maxY,
+                PlayerPrefs.GetFloat("Limit of Stability Back")/100f - _cursor.LOSShift*2f/_maxY,
+                PlayerPrefs.GetFloat("Limit of Stability Left")/100f,
+                PlayerPrefs.GetFloat("Limit of Stability Right")/100f
             };
 
             _stimMax = new Dictionary<string, float>() //RPF, RDF, LPF, LDF
@@ -138,7 +144,7 @@ namespace ControllerManager
             //initialize ramping function
             _ramping = new Ramping();
             
-            // for (var i  = 0; i < _limits.Count - 1; i++)
+            // for (var i  = 0; i <= _limits.Count - 1; i++)
             // {
             //     switch (i)
             //     {
@@ -184,7 +190,7 @@ namespace ControllerManager
             var shiftedComY = 0.0f;
             var comX = 0.0f;
 
-            if (Wii.GetRemoteCount() == 0) //if we're using the cursor to debug
+            if (!_foundWiiBoard) //if we're using the cursor to debug
             {
                 shiftedComY = data.fCopY; //conversion to ankle reference frame done in cursor.cs
                 comX = data.fCopX;
@@ -199,25 +205,25 @@ namespace ControllerManager
             
             //conversion of target game coords to board coords
             var targetCoordsShifted = new Vector2(); //shifted target coords from game coords to board coords
-            
+
             if (SceneManager.GetActiveScene().name != "Target") 
             {
                 var yLimit = 0f;
                 var xLimit = 0f;
 
-                if (targetCoords.y >= _maxY / 2) //when the target is beyond half way forward in ap direction
-                    yLimit = _limits[0];
-                else //if it's not greater, it has to be smaller
-                    yLimit = _limits[1];
-
-                if (targetCoords.x >= _maxX / 2) //when the target is beyond half way forward in ap direction
+                if (targetCoords.x >= _maxX/2) //when the target is beyond half way forward in ap direction
                     xLimit = _limits[3];
                 else //if it's not greater, it has to be smaller
                     xLimit = _limits[2];
 
+                if (targetCoords.y >= _maxY/2) //when the target is beyond half way forward in ap direction
+                    yLimit = _limits[0];
+                else //if it's not greater, it has to be smaller
+                    yLimit = _limits[1];
+
+                //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
                 targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*xLimit*_XWidth/1000f/_maxX;
-                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_maxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
-                
+                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_maxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f;
             }
             else
             {
@@ -239,7 +245,7 @@ namespace ControllerManager
             // Debug.Log("length offset2");
             // Debug.Log(_lengthOffset);
 
-            ShiftedPos = new List<float>() {shiftedComY, targetCoordsShifted.x, targetCoordsShifted.y};
+            ShiftedPos = new List<float>() {comX, shiftedComY, targetCoordsShifted.x, targetCoordsShifted.y};
 
             //angle calculations
             var targetVertAng = Mathf.Atan2(targetCoordsShifted.y, _hCOM);
@@ -323,11 +329,10 @@ namespace ControllerManager
 
         private float NeuralController() //calculate torque based on neural command
         {
-            var derivativeError = 0.0f;
-
             if (!_comAngleErrors.GetRange(2, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero), 2 point delay on neural controller
             {
-                derivativeError = CalculateDerivative(_comAngleErrors.GetRange(2, 3)); //two point delay on the neural controller
+                var derivativeError = CalculateDerivative(_comAngleErrors.GetRange(2, 3)); //two point delay on the neural controller
+                
                 return _kp*_comAngleErrors.GetRange(2, 3)[0] + _kd*derivativeError;
             }
 
