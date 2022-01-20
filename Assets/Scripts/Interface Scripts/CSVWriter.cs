@@ -35,10 +35,16 @@ namespace CSV
 
             var di = new DirectoryInfo(_path);
             var files = di.GetFiles(_fileName + _condition + "*"); //only find the relevant csv files
-            var indices = new List<int>(
+            
+            if (files.Length == 0) //if no files with the appropriate name exist, start from 1
+                _index = 1;
+            else // go through the files that exist and find the highest index, new file will be highest index + 1
+            {
+                var indices = new List<int>(
                 from file in files 
                 select Convert.ToInt32(file.Name.Substring((_fileName + _condition).Length, file.Name.IndexOf('.') - (_fileName + _condition).Length)));
-            _index = indices.Max() + 1;
+                _index = indices.Max() + 1;
+            }
 
             File.AppendAllText(_path + @"\" + _fileName + _condition + _index + _extension, _header.ToString());
         }
