@@ -164,8 +164,8 @@ namespace ControllerManager
             //     Debug.Log(_limits[i]);
             // }   
 
-            _losF = _limits[0] + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //adjust front and back limits to ankle reference frame
-            _losB = _ankleDisplacement + _lengthOffset*_YLength/1000f/2f - _limits[1]; //since torque is negative, sign of losB should also be negative
+            _losF = (_limits[0] + _lengthOffset)*_YLength/1000f/2f + _ankleDisplacement; //adjust front and back limits to ankle reference frame
+            _losB = _ankleDisplacement + (_lengthOffset - _limits[1])*_YLength/1000f/2f ; //since torque is negative, sign of losB should also be negative
             // Debug.Log("losF");
             // Debug.Log(_losF);
             // Debug.Log("losB");
@@ -367,11 +367,11 @@ namespace ControllerManager
                         {
                             case "RPF":
                             case "LPF":
-                                slopes[control.Key].Add(muscles.Key, _stimMax[muscles.Key] / (_losFTorque / 2f));
+                                slopes[control.Key][muscles.Key] = _stimMax[muscles.Key] / (_losFTorque / 2f);
                                 break;
                             case "RDF":
                             case "LDF":
-                                slopes[control.Key].Add(muscles.Key, -_stimMax[muscles.Key] / ((_qsTorque - _losBTorque) / 2f));
+                                slopes[control.Key][muscles.Key] = -_stimMax[muscles.Key] / ((_qsTorque - _losBTorque) / 2f);
                                 break;
                         }
                     }
@@ -381,12 +381,11 @@ namespace ControllerManager
                         {
                             case "RPF":
                             case "LPF":
-                                slopes[control.Key].Add(muscles.Key, _stimMax[muscles.Key] / ((_losFTorque - _losBTorque) / 2f));
-
+                                slopes[control.Key][muscles.Key] = _stimMax[muscles.Key] / ((_losFTorque - _losBTorque) / 2f);
                                 break;
                             case "RDF":
                             case "LDF":
-                                slopes[control.Key].Add(muscles.Key, _stimMax[muscles.Key] / ((_losBTorque - _losFTorque) / 2f));
+                                slopes[control.Key][muscles.Key] = _stimMax[muscles.Key] / ((_losBTorque - _losFTorque) / 2f);
                                 break;
                         }
                     }
@@ -422,7 +421,6 @@ namespace ControllerManager
                             else
                                 stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*0.5f*mechanicalTorque + _intercepts[stim.Key];
                         }
-                           
                     }
                     else
                     {
@@ -442,20 +440,7 @@ namespace ControllerManager
         {
             var x = shiftedTargetCoords.x - comX;
             var y = shiftedTargetCoords.y - shiftedCOMy;
-            // Debug.Log("y");
-            // Debug.Log(y);
-            // Debug.Log("x");
-            // Debug.Log(x);
-            // Debug.Log("neural ratio");
-            // Debug.Log(y/x);
-            // Debug.Log("neural atan");
-            // Debug.Log(Mathf.Atan(y/x));
-            // Debug.Log("neural atan2");
-            // Debug.Log(Mathf.Atan2(y, x));
             var biasAng = Mathf.Atan2(x, y);
-            
-            // Debug.Log("neural bias");
-            // Debug.Log(biasAng);
 
             var biases = BiasFunction(biasAng);
 
@@ -464,21 +449,7 @@ namespace ControllerManager
 
         private Dictionary<string, float> CalculateMechBiases(float comX, float shiftedCOMy) //calculate ML bias for mechanical torque
         {
-            // Debug.Log("y");
-            // Debug.Log(shiftedCOMy);
-            // Debug.Log("x");
-            // Debug.Log(comX);
-            // Debug.Log("mech ratio");
-            // Debug.Log(shiftedCOMy/comX);
-            // Debug.Log("mech atan");
-            // Debug.Log(Mathf.Atan(shiftedCOMy/comX));
-            // Debug.Log("mech atan2");
-            // Debug.Log(Mathf.Atan2(shiftedCOMy, comX));
             var biasAng = Mathf.Atan2(comX, shiftedCOMy);
-
-            // Debug.Log("mech bias");
-            // Debug.Log(biasAng);
-
             var biases = BiasFunction(biasAng);
 
             return biases;
@@ -539,27 +510,17 @@ namespace ControllerManager
             {
                 foreach (var stim in control.Value)
                 {
-                    // Debug.Log(control.Key);
-                    // Debug.Log(stim.Key);
-                    // Debug.Log(biasesCombined[control.Key][stim.Key]);
-                    // Debug.Log(stim.Value);
-                    adjustedStimOutput[control.Key].Add(stim.Key, RampPercentage/100f*stim.Value*biasesCombined[control.Key][stim.Key]); //divide by 100 to convert to decimal
+                    adjustedStimOutput[control.Key][stim.Key] = RampPercentage/100f*stim.Value*biasesCombined[control.Key][stim.Key]; //divide by 100 to convert to decimal
+                    
                     if (stim.Key.Contains("PF")) //divide the maximum possible stim for pf and df stim
                         adjustedStimOutput[control.Key][stim.Key] /= _MaxPFStim;
                     else
                         adjustedStimOutput[control.Key][stim.Key] /= _MaxDFStim;
-                    
-                    // Debug.Log(adjustedStimOutput[control.Key][stim.Key]);
                 }
             }
 
             foreach (var muscle in _stimMax) //this is just to add the total stimulation output
-            {
-                // Debug.Log(muscle.Key);
-                // Debug.Log(adjustedStimOutput["Mech"][muscle.Key] + adjustedStimOutput["Neural"][muscle.Key]);
-                adjustedCombinedStimOutput.Add(muscle.Key, adjustedStimOutput["Mech"][muscle.Key] + adjustedStimOutput["Neural"][muscle.Key]);
-            }
-                
+                adjustedCombinedStimOutput[muscle.Key] = adjustedStimOutput["Mech"][muscle.Key] + adjustedStimOutput["Neural"][muscle.Key];
                 
             // foreach (var i in adjustedCombinedStimOutput)
             // {
@@ -577,11 +538,11 @@ namespace ControllerManager
             foreach (var stim in adjustedStimOutput)
             {
                 if (stim.Value > _stimMax[stim.Key]) //make sure stimulation never goes above max
-                    trueStimOutput.Add(stim.Key, _stimMax[stim.Key]);
+                    trueStimOutput[stim.Key] = _stimMax[stim.Key];
                 else if (stim.Value < 0) //if stim is for some reason negative, always set it back to zero
-                    trueStimOutput.Add(stim.Key, 0f);
+                    trueStimOutput[stim.Key] = 0f;
                 else
-                    trueStimOutput.Add(stim.Key, stim.Value);
+                    trueStimOutput[stim.Key] = stim.Value;
             }
 
             return trueStimOutput;
