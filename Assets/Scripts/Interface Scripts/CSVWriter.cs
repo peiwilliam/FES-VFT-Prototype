@@ -24,7 +24,7 @@ namespace CSV
             _condition = condition;
         }
 
-        public void WriteHeader(Stimulation stimulation = null) //writes the header but also creates the csv file
+        public async void WriteHeader(Stimulation stimulation = null) //writes the header but also creates the csv file
         {
             if (_fileName == "LOS" || _fileName == "Assessment")
                 _header = "Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY\n";
@@ -77,7 +77,7 @@ namespace CSV
             }
 
             using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true))
-                w.WriteLine(_header);
+                await w.WriteLineAsync(_header);
         }
 
         public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords) //make this async so it doesn't potentially slow down the game, for LOS and assessment
