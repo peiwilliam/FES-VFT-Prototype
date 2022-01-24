@@ -42,7 +42,7 @@ public class SettingsManager : MonoBehaviour
         ["Limit of Stability Right"] = 1f,
     };
     private static Dictionary<string, InputField> _fields = new Dictionary<string, InputField>();
-    private static Dictionary<string, string> _fieldNamesAndTypes = new Dictionary<string, string>() 
+    public static Dictionary<string, string> _fieldNamesAndTypes = new Dictionary<string, string>() 
     {
         ["Controller Frequency"] = "int",
         ["Trial Duration"] = "int",

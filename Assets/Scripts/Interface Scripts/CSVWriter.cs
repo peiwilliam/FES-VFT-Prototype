@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,7 +9,7 @@ namespace CSV
 {
     public class CSVWriter
     {
-        private StringBuilder _header;
+        private string _header;
         private string _fileName;
         private string _extension;
         private string _path;
@@ -19,19 +18,50 @@ namespace CSV
 
         public CSVWriter(string condition = "")
         {
-            _header = new StringBuilder();
             _fileName = SceneManager.GetActiveScene().name; //file name is name of scene
             _extension = ".csv";
             _path = Directory.GetCurrentDirectory();
             _condition = condition;
         }
 
-        public void WriteHeader() //writes the header but also creates the csv file
+        public void WriteHeader(Stimulation stimulation = null) //writes the header but also creates the csv file
         {
             if (_fileName == "LOS" || _fileName == "Assessment")
-                _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY");
+                _header = "Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY\n";
             else
-                _header.AppendLine("Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY, TargetXFiltered, TargetYFiltered, ShiftedfCOPx, ShiftedfCOPy, ShiftedTargetx, ShiftedTargety, TargetVertAngle, COMVertAngle, AngleErr, RPFStim, RDFStim, LPFStim, LDFStim, Ramping");
+            {
+                //extracts the keys as a list and joins it with commas, utlizes linq methods
+                _header += String.Join<string>(", ", SettingsManager._fieldNamesAndTypes.Keys.ToList());
+                _header += "\n"; //need to add this so that the values of the parameters are added on the next line
+
+                foreach (var field in SettingsManager._fieldNamesAndTypes)
+                {
+                    if (field.Value == "int")
+                        _header += PlayerPrefs.GetInt(field.Key, 123).ToString() + ", "; //123 means that the value wasn't stored on the computer
+                    else if (field.Value == "float")
+                        _header += PlayerPrefs.GetFloat(field.Key, 123f) + ", "; //123f means that the value wasn't stored on the computer
+                    else
+                        _header += PlayerPrefs.GetString(field.Key, "abc") + ", "; //abc means that the value wasn't stored on the computer
+                }
+
+                _header += "\n";
+                
+                foreach (var constants in stimulation.ControllerConstants)
+                {
+                    if (constants.Key == "Constants")
+                        _header += "Calculated " + constants.Key;
+                    else
+                        _header += constants.Key;
+
+                    _header += "\n";
+                    _header += String.Join<string>(", ", constants.Value.Keys.ToList());
+                    _header += "\n";
+                    _header += String.Join<float>(", ", constants.Value.Values.ToList());
+                    _header += "\n";
+                }
+                
+                _header += "\nTime, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY, TargetXFiltered, TargetYFiltered, ShiftedfCOPx, ShiftedfCOPy, ShiftedTargetx, ShiftedTargety, TargetVertAngle, COMVertAngle, AngleErr, RPFStim, RDFStim, LPFStim, LDFStim, Ramping";
+            }
 
             var di = new DirectoryInfo(_path);
             var files = di.GetFiles(_fileName + _condition + "*"); //only find the relevant csv files
@@ -46,7 +76,8 @@ namespace CSV
                 _index = indices.Max() + 1;
             }
 
-            File.AppendAllText(_path + @"\" + _fileName + _condition + _index + _extension, _header.ToString());
+            using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true))
+                w.WriteLine(_header);
         }
 
         public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords) //make this async so it doesn't potentially slow down the game, for LOS and assessment

@@ -28,18 +28,18 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
     {
         _cursor = FindObjectOfType<Cursor>();
 
-        PrepWriter(); //create the writer object if it's not assessment or los. los and assessment handled differently
-
         if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
             _targetCircle = FindObjectOfType<MovingCircle>().gameObject;
 
         if (_sceneName != "LOS" && _sceneName != "Assessment")
             _stimulation = FindObjectOfType<Stimulation>();
+
+        PrepWriter(); //create the writer object if it's not assessment or los. los and assessment handled differently
     }
 
     private void FixedUpdate()
     {
-        GetData();
+        GetAndWriteData();
     }
 
     private void PrepWriter()
@@ -47,11 +47,11 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
         if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
         {
             _writer = new CSVWriter();
-            _writer.WriteHeader();
+            _writer.WriteHeader(_stimulation);
         }
     }
 
-    private void GetData()
+    private void GetAndWriteData()
     {
         var data = _cursor.Data;
         var targetCoords = GetTargetCoords();
@@ -73,15 +73,12 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
 
         //finding circle for colour and hunting handled here since it changes constantly in game
         //need the second condition since the targets don't despawn, only the circle with the "Target" tag changes
-        if (_targetCircle == null || _targetCircle.tag != "Target")
+        if (_sceneName == "Colour Matching" || _sceneName == "Hunting")
         {
-            switch (_sceneName)
+            if (_targetCircle == null || _targetCircle.tag != "Target")
             {
-                case "Colour Matching":
-                case "Hunting":
-                    //using findgameobjectwithtag is faster since it's more like searching through dict
-                    _targetCircle = GameObject.FindGameObjectWithTag("Target");
-                    break;
+                //using findgameobjectwithtag is faster since it's more like searching through dict
+                _targetCircle = GameObject.FindGameObjectWithTag("Target");
             }
         }
 

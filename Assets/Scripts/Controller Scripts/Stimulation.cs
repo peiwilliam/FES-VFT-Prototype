@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using ControllerManager;
@@ -12,6 +13,7 @@ public class Stimulation : MonoBehaviour
     private Filter _filterTargetX;
     private Filter _filterTargetY;
 
+    public Dictionary<string, Dictionary<string, float>> ControllerConstants { get; private set; }
     public ControllerData ControllerData { get; private set; }
     public Vector2 TargetPositionFiltered { get; private set; }
 
@@ -23,7 +25,21 @@ public class Stimulation : MonoBehaviour
         _sceneName = SceneManager.GetActiveScene().name;
 
         var foundWiiBoard = (bool)FindObjectOfType<WiiBoard>();
-        _controller = new Controller(_cursor, foundWiiBoard); //pass in the cursor object so that we can access 
+        _controller = new Controller(_cursor, foundWiiBoard); //pass in the cursor object so that we can access
+        var slopesCondensed = new Dictionary<string, float>(); // want to condense the original dictionary to a string, float dictionary
+
+        foreach (var control in _controller.Slopes)
+        {
+            foreach (var muscle in control.Value)
+                slopesCondensed[control.Key + " " + muscle.Key] = muscle.Value;
+        }
+
+        ControllerConstants = new Dictionary<string, Dictionary<string, float>>()
+        {
+            ["Constants"] = _controller.CalculatedConstants,
+            ["Slopes"] = slopesCondensed,
+            ["Intercepts"] = _controller.Intercepts
+        };
 
         if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
             _targetCircle = FindObjectOfType<MovingCircle>().gameObject;

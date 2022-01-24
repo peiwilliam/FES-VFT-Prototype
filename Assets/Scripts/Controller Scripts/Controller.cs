@@ -62,6 +62,15 @@ namespace ControllerManager
         public float RampPercentage { get; private set; }
         public List<float> Angles { get; private set; }
         public List<float> ShiftedPos { get; private set; } //get com and target positions in real coordinates and shifted to ankle perspective
+        public Dictionary<string, float> CalculatedConstants { get; private set; }
+        public Dictionary<string, Dictionary<string, float>> Slopes
+        {
+            get => _slopes;
+        }
+        public Dictionary<string, float> Intercepts
+        {
+            get => _intercepts;
+        }
 
         public Controller(Cursor cursor, bool foundWiiBoard)
         {
@@ -138,6 +147,13 @@ namespace ControllerManager
             _kd = _kdc*_m*_G*_hCOM; 
             _k = _kc*_m*_G*_hCOM; //mechanical/passive controller
 
+            // Debug.Log("kp");
+            // Debug.Log(_kp);
+            // Debug.Log("kd");
+            // Debug.Log(_kd);
+            // Debug.Log("k");
+            // Debug.Log(_k);
+
             _comAngles = new List<float> {0f, 0f, 0f}; //for mechanical controller only
             _comAngleErrors = new List<float> {0f, 0f, 0f, 0f, 0f}; //neural controller requires 2-4 for derivative
 
@@ -181,8 +197,21 @@ namespace ControllerManager
             // Debug.Log("losBTorque");
             // Debug.Log(_losBTorque);
 
-            _slopes = Slopes(); //calculate controller slopes
-            _intercepts = new Dictionary<string, float> {["RDF"] = -_slopes["Mech"]["RDF"]*0.5f*_qsTorque, ["LDF"] = -_slopes["Mech"]["LDF"]*0.5f*_qsTorque};
+            CalculatedConstants = new Dictionary<string, float>()
+            {
+                ["Kp"] = _kp, 
+                ["Kd"] = _kd, 
+                ["K"] = _k, 
+                ["LOSF"] = _losF, 
+                ["LOSB"] = _losB, 
+                ["QSTorque"] = _qsTorque, 
+                ["LOSFTorque"] = _losFTorque, 
+                ["LOSBTorque"] = _losBTorque
+            };
+
+            _slopes = GetSlopes(); //calculate controller slopes
+            _intercepts = new Dictionary<string, float> {["RDF"] = -_slopes["Mech"]["RDF"]*_qsTorque, 
+                                                         ["LDF"] = -_slopes["Mech"]["LDF"]*_qsTorque};
         }
 
         public Dictionary<string, float> Stimulate(WiiBoardData data, Vector2 targetCoords)
@@ -229,7 +258,8 @@ namespace ControllerManager
             {
                 //target game assumes that target is at 0,0 wrt length offset
                 //we just need to do the shift factor and no additional conversions or shifts are required unlike the other games.
-                targetCoordsShifted.y = _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; //need to add length offset so that we get the proper shift to the target wrt ankle position
+                //need to add length offset so that we get the proper shift to the target wrt ankle position
+                targetCoordsShifted.y = _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; 
             }
             
             // Debug.Log("fcopy");
@@ -291,10 +321,10 @@ namespace ControllerManager
                 
             var mechanicalTorque = MechanicalController(); //calculate passive torque from controller output
 
-            // Debug.Log("neuraltorque");
-            // Debug.Log(neuralTorque);
-            // Debug.Log("mechanicaltorque");
-            // Debug.Log(mechanicalTorque);
+            Debug.Log("neuraltorque");
+            Debug.Log(neuralTorque);
+            Debug.Log("mechanicaltorque");
+            Debug.Log(mechanicalTorque);
 
             var rawStimOutput = UnbiasedStimulationOutput(neuralTorque, mechanicalTorque, comVertAng, qsVertAng); //calculate unbiased output
 
@@ -349,7 +379,7 @@ namespace ControllerManager
             return _k*_comAngles[0] + 5.0f*velocity;
         }
 
-        private Dictionary<string, Dictionary<string, float>> Slopes() //calculate slopes for neural and mech controllers
+        private Dictionary<string, Dictionary<string, float>> GetSlopes() //calculate slopes for neural and mech controllers
         {
             var slopes = new Dictionary<string, Dictionary<string, float>>()
             {
@@ -367,11 +397,11 @@ namespace ControllerManager
                         {
                             case "RPF":
                             case "LPF":
-                                slopes[control.Key][muscles.Key] = _stimMax[muscles.Key] / (_losFTorque / 2f);
+                                slopes[control.Key][muscles.Key] = _stimMax[muscles.Key] / _losFTorque;
                                 break;
                             case "RDF":
                             case "LDF":
-                                slopes[control.Key][muscles.Key] = -_stimMax[muscles.Key] / ((_qsTorque - _losBTorque) / 2f);
+                                slopes[control.Key][muscles.Key] = -_stimMax[muscles.Key] / (_qsTorque - _losBTorque);
                                 break;
                         }
                     }
@@ -381,11 +411,11 @@ namespace ControllerManager
                         {
                             case "RPF":
                             case "LPF":
-                                slopes[control.Key][muscles.Key] = _stimMax[muscles.Key] / ((_losFTorque - _losBTorque) / 2f);
+                                slopes[control.Key][muscles.Key] = _stimMax[muscles.Key] / (_losFTorque - _losBTorque);
                                 break;
                             case "RDF":
                             case "LDF":
-                                slopes[control.Key][muscles.Key] = _stimMax[muscles.Key] / ((_losBTorque - _losFTorque) / 2f);
+                                slopes[control.Key][muscles.Key] = _stimMax[muscles.Key] / (_losBTorque - _losFTorque);
                                 break;
                         }
                     }
@@ -395,7 +425,7 @@ namespace ControllerManager
             return slopes;
         }
 
-        public float CalculateDerivative(List<float> comsVector) => (3.0f*comsVector[0] - 4.0f*comsVector[1] + comsVector[2])/(2*Time.fixedDeltaTime);
+        private float CalculateDerivative(List<float> comsVector) => (3.0f*comsVector[0] - 4.0f*comsVector[1] + comsVector[2])/(2*Time.fixedDeltaTime);
 
         private Dictionary<string, Dictionary<string, float>> UnbiasedStimulationOutput(float neuralTorque, float mechanicalTorque, 
                                                                                         float comVertAng, float qsVertAng) //calculate stimulation output based on calculated torques from the controller
@@ -413,23 +443,17 @@ namespace ControllerManager
                     if (control.Key == "Mech")
                     {
                         if (0.5f*mechanicalTorque > 0 && stim.Key.Contains("PF")) //only calculate stim for pf if 0.5*mechanicalTorque > 0
-                            stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*0.5f*mechanicalTorque;
+                            stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*mechanicalTorque;
                         else if (0.5f*_qsTorque > 0.5f*mechanicalTorque && stim.Key.Contains("DF")) //only calculate stim for df if 0.5f*qsTorque > 0.5f*mechanicalTorque > 0
-                        {
-                            if (stim.Key == "RDF")
-                                stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*0.5f*mechanicalTorque + _intercepts[stim.Key];
-                            else
-                                stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*0.5f*mechanicalTorque + _intercepts[stim.Key];
-                        }
+                           stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*mechanicalTorque + _intercepts[stim.Key];
                     }
                     else
                     {
                         if (comVertAng > 0 && stim.Key.Contains("PF")) //only calculate stim for pf if comVertAng > 0
-                            stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*0.5f*neuralTorque;
+                            stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*neuralTorque;
                         else if (comVertAng < qsVertAng && stim.Key.Contains("DF")) //only calculate stim for df if comVertAng < qsVertAng
-                            stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*0.5f*neuralTorque;
+                            stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*neuralTorque;
                     }
-                    
                 }
             }
 
