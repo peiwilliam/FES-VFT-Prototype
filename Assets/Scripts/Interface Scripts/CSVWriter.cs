@@ -70,10 +70,26 @@ namespace CSV
                 _index = 1;
             else // go through the files that exist and find the highest index, new file will be highest index + 1
             {
-                var indices = new List<int>(
-                from file in files 
-                select Convert.ToInt32(file.Name.Substring((_fileName + _condition).Length, file.Name.IndexOf('.') - (_fileName + _condition).Length)));
-                _index = indices.Max() + 1;
+                List<int> indices;
+
+                try
+                {
+                    indices = new List<int>(
+                    from file in files
+                    select Convert.ToInt32(file.Name.Substring((_fileName + _condition).Length, file.Name.IndexOf('.') - (_fileName + _condition).Length)));
+                    indices.Sort();
+                }
+                catch (System.Exception)
+                {
+                    Debug.Log("File with illegal naming convention in game directory");
+                    Application.Quit();
+                    throw;
+                }
+
+                if (indices.Max() != indices.Count) //this means that there's a smaller number that's missing, use that number instead
+                    _index = indices.Where(index => index - 1 == indices.IndexOf(index)).Max() + 1;
+                else
+                    _index = indices.Max() + 1;
             }
 
             using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true))
