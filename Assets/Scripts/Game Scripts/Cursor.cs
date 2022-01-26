@@ -110,7 +110,7 @@ public class Cursor : MonoBehaviour
         {
             Data = GetBoardValues();
 
-            var pos = new Vector2(transform.position.x, transform.position.y);
+            var pos = new Vector2();
             var com = new Vector2();
             var xLimit = 0.0f;
             var yLimit = 0.0f;
@@ -139,7 +139,7 @@ public class Cursor : MonoBehaviour
         else
         {
             // debugging using mouse, mouse is already in qs frame of reference
-            var pos = new Vector2(transform.position.x, transform.position.y);
+            var pos = new Vector2();
             pos.x = Mathf.Clamp(Input.mousePosition.x / Screen.width * _maxX, _minX, _maxX);
             pos.y = Mathf.Clamp(Input.mousePosition.y / Screen.height * _maxY, _minY, _maxY);
             transform.position = pos;

@@ -31,15 +31,13 @@ namespace ControllerManager
         private float _k;
         //counter for keeping track of when the derivative should be turned on for the controller
         private int _neuralCounter;
-        //game screen params
-        private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
-        private float _maxY = 5f*2f; //2*camera size
         //controller parameters
         private float _losF;
         private float _losB;
         private float _qsTorque;
         private float _losFTorque;
         private float _losBTorque;
+        private float _qsVertAng;
         private Vector2 _previousTarget;
         private List<float> _limits;
         private List<float> _comAngles;
@@ -55,6 +53,8 @@ namespace ControllerManager
         private const float _G = 9.81f; //m/s^2
         private const float _XWidth = 433f; // mm
         private const float _YLength = 238f; // mm
+        private const float _MaxX = 2f*5f*16f/9f; //2*height*aspect ratio
+        private const float _MaxY = 5f*2f; //2*camera size
         private const float _HeelLocation = 90; //mm, measured manually from centre of board to bottom of indicated feet area
         private const float _MaxPFStim = 1.117055995961f; // not sure what these units are
         private const float _MaxDFStim = 1.170727515177f; // not sure what these units are either
@@ -98,8 +98,8 @@ namespace ControllerManager
             // los is in qs frame of reference but need to remove shift that's inherent to los
             _limits = new List<float>() //front, back, left, right
             {
-                PlayerPrefs.GetFloat("Limit of Stability Front")/100f - _cursor.LOSShift*2f/_maxY,
-                PlayerPrefs.GetFloat("Limit of Stability Back")/100f - _cursor.LOSShift*2f/_maxY,
+                PlayerPrefs.GetFloat("Limit of Stability Front")/100f - _cursor.LOSShift*2f/_MaxY,
+                PlayerPrefs.GetFloat("Limit of Stability Back")/100f - _cursor.LOSShift*2f/_MaxY,
                 PlayerPrefs.GetFloat("Limit of Stability Left")/100f,
                 PlayerPrefs.GetFloat("Limit of Stability Right")/100f
             };
@@ -212,6 +212,7 @@ namespace ControllerManager
             _slopes = GetSlopes(); //calculate controller slopes
             _intercepts = new Dictionary<string, float> {["RDF"] = -_slopes["Mech"]["RDF"]*_qsTorque, 
                                                          ["LDF"] = -_slopes["Mech"]["LDF"]*_qsTorque};
+            _qsVertAng = Mathf.Atan2(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f, _hCOM);
         }
 
         public Dictionary<string, float> Stimulate(WiiBoardData data, Vector2 targetCoords)
@@ -240,19 +241,19 @@ namespace ControllerManager
                 var yLimit = 0f;
                 var xLimit = 0f;
 
-                if (targetCoords.x >= _maxX/2) //when the target is beyond half way forward in ap direction
+                if (targetCoords.x >= _MaxX/2) //when the target is beyond half way forward in ap direction
                     xLimit = _limits[3];
                 else //if it's not greater, it has to be smaller
                     xLimit = _limits[2];
 
-                if (targetCoords.y >= _maxY/2) //when the target is beyond half way forward in ap direction
+                if (targetCoords.y >= _MaxY/2) //when the target is beyond half way forward in ap direction
                     yLimit = _limits[0];
                 else //if it's not greater, it has to be smaller
                     yLimit = _limits[1];
 
                 //need to account for _lengthOffset since targets in game are with respect to the cop shifted to the quiet standing centre of pressure.
-                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*xLimit*_XWidth/1000f/_maxX;
-                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_maxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f;
+                targetCoordsShifted.x = (targetCoords.x - Camera.main.transform.position.x)*xLimit*_XWidth/1000f/_MaxX;
+                targetCoordsShifted.y = (targetCoords.y - Camera.main.transform.position.y)*yLimit*_YLength/1000f/_MaxY + _ankleDisplacement + _lengthOffset*_YLength/1000f/2f;
             }
             else
             {
@@ -280,7 +281,6 @@ namespace ControllerManager
             //angle calculations
             var targetVertAng = Mathf.Atan2(targetCoordsShifted.y, _hCOM);
             var comVertAng = Mathf.Atan2(shiftedComY, _hCOM);
-            var qsVertAng = Mathf.Atan2(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f, _hCOM);
             var angErr = targetVertAng - comVertAng;
             Angles = new List<float>() {targetVertAng, comVertAng, angErr}; //store in prop
 
@@ -320,38 +320,9 @@ namespace ControllerManager
                 neuralTorque = 0f;
                 
             var mechanicalTorque = MechanicalController(); //calculate passive torque from controller output
-
-            Debug.Log("neuraltorque");
-            Debug.Log(neuralTorque);
-            Debug.Log("mechanicaltorque");
-            Debug.Log(mechanicalTorque);
-
-            var rawStimOutput = UnbiasedStimulationOutput(neuralTorque, mechanicalTorque, comVertAng, qsVertAng); //calculate unbiased output
-
-            // foreach (var i in rawStimOutput)
-            // {
-            //     foreach (var j in i.Value)
-            //     {
-            //         Debug.Log(j.Key);
-            //         Debug.Log(j.Value);
-            //     }
-            // }
-            
+            var rawStimOutput = UnbiasedStimulationOutput(neuralTorque, mechanicalTorque, comVertAng); //calculate unbiased output
             var neuralBiases = CalculateNeuralBiases(comX, shiftedComY, targetCoordsShifted); //calculate neural biases
             var mechBiases = CalculateMechBiases(comX, shiftedComY); //calculate mech biases
-
-            // foreach (var i in neuralBiases)
-            // {
-            //     Debug.Log(i.Key);
-            //     Debug.Log(i.Value);
-            // }
-
-            // foreach (var i in mechBiases)
-            // {
-            //     Debug.Log(i.Key);
-            //     Debug.Log(i.Value);
-            // }
-
             var actualStimOutput = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
             
             return actualStimOutput;
@@ -427,8 +398,8 @@ namespace ControllerManager
 
         private float CalculateDerivative(List<float> comsVector) => (3.0f*comsVector[0] - 4.0f*comsVector[1] + comsVector[2])/(2*Time.fixedDeltaTime);
 
-        private Dictionary<string, Dictionary<string, float>> UnbiasedStimulationOutput(float neuralTorque, float mechanicalTorque, 
-                                                                                        float comVertAng, float qsVertAng) //calculate stimulation output based on calculated torques from the controller
+        //calculate stimulation output based on calculated torques from the controller
+        private Dictionary<string, Dictionary<string, float>> UnbiasedStimulationOutput(float neuralTorque, float mechanicalTorque, float comVertAng) 
         {
             var stimulation = new Dictionary<string, Dictionary<string, float>>
             {
@@ -451,7 +422,7 @@ namespace ControllerManager
                     {
                         if (comVertAng > 0 && stim.Key.Contains("PF")) //only calculate stim for pf if comVertAng > 0
                             stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*neuralTorque;
-                        else if (comVertAng < qsVertAng && stim.Key.Contains("DF")) //only calculate stim for df if comVertAng < qsVertAng
+                        else if (comVertAng < _qsVertAng && stim.Key.Contains("DF")) //only calculate stim for df if comVertAng < qsVertAng
                             stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*neuralTorque;
                     }
                 }

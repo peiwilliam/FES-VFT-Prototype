@@ -82,7 +82,7 @@ namespace CSV
                 catch (System.Exception)
                 {
                     Debug.Log("File with illegal naming convention in game directory");
-                    Application.Quit();
+                    SceneManager.LoadScene(0); //go back to the start screen if there is a file with an illegal name
                     throw;
                 }
 
