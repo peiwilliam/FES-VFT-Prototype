@@ -85,3 +85,6 @@ crashlytics-build.properties
 
 # VSCode cache directory
 .vscode/
+
+# Matlab files
+*.m
