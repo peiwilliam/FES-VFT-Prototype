@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using ControllerManager;
 
 namespace CSV
 {
@@ -59,8 +60,8 @@ namespace CSV
                     _header += String.Join<float>(", ", constants.Value.Values.ToList());
                     _header += "\n";
                 }
-                
-                _header += "\nTime, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY, TargetXFiltered, TargetYFiltered, ShiftedfCOPx, ShiftedfCOPy, ShiftedTargetx, ShiftedTargety, TargetVertAngle, COMVertAngle, AngleErr, RPFStim, RDFStim, LPFStim, LDFStim, Ramping";
+
+                _header += "\nTime, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY, TargetXFiltered, TargetYFiltered, ShiftedfCOPx, ShiftedfCOPy, ShiftedTargetx, ShiftedTargety, TargetVertAngle, COMVertAngle, AngleErr, NeuralTorque, MechTorque, UnbiasedRPFStim, UnbiasedRDFStim, UnbiasedLPFStim, UnbiasedLDFStim, RPFStim, RDFStim, LPFStim, LDFStim, Ramping";
             }
 
             var di = new DirectoryInfo(_path);
@@ -79,9 +80,10 @@ namespace CSV
                     select Convert.ToInt32(file.Name.Substring((_fileName + _condition).Length, file.Name.IndexOf('.') - (_fileName + _condition).Length)));
                     indices.Sort();
                 }
-                catch (System.Exception)
+                catch (Exception ex)
                 {
                     Debug.Log("File with illegal naming convention in game directory");
+                    Debug.Log(ex.Message);
                     SceneManager.LoadScene(0); //go back to the start screen if there is a file with an illegal name
                     throw;
                 }
@@ -100,7 +102,7 @@ namespace CSV
         {
             using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true)) // true to append and not overwrite
             {
-                var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}";
+                var line = $@"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}";
                 await w.WriteLineAsync(line);
             }
         }
@@ -109,7 +111,7 @@ namespace CSV
         {
             using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true)) // true to append and not overwrite
             {
-                var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}, {targetCoordsFiltered.x}, {targetCoordsFiltered.y}, {controllerData.comX}, {controllerData.shiftedComY}, {controllerData.shiftedTargetCoordsX}, {controllerData.shiftedTargetCoordsY}, {controllerData.targetVertAng}, {controllerData.comVertAng}, {controllerData.angErr}, {controllerData.rpfStim}, {controllerData.rdfStim}, {controllerData.lpfStim}, {controllerData.ldfStim}, {controllerData.ramp}";
+                var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}, {targetCoordsFiltered.x}, {targetCoordsFiltered.y}, {controllerData.comX}, {controllerData.shiftedComY}, {controllerData.shiftedTargetCoordsX}, {controllerData.shiftedTargetCoordsY}, {controllerData.targetVertAng}, {controllerData.comVertAng}, {controllerData.angErr}, {controllerData.neuralTorque}, {controllerData.mechTorque}, {controllerData.rawRpfStim}, {controllerData.rawRdfStim}, {controllerData.rawLpfStim}, {controllerData.rawLdfStim}, {controllerData.rpfStim}, {controllerData.rdfStim}, {controllerData.lpfStim}, {controllerData.ldfStim}, {controllerData.ramp}";
                 await w.WriteLineAsync(line);
             }
         }

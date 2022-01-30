@@ -74,7 +74,8 @@ public class Stimulation : MonoBehaviour
                 TargetPositionFiltered = new Vector2(0f, 0f); //no filtering for target either
             
             var stimOutput = _controller.Stimulate(_cursor.Data, TargetPositionFiltered);
-            ControllerData = new ControllerData(stimOutput, _controller.RampPercentage, _controller.Angles, _controller.ShiftedPos);
+            ControllerData = new ControllerData(stimOutput, _controller.RampPercentage, _controller.Angles, _controller.ShiftedPos, 
+                                                _controller.NeuralTorque, _controller.MechanicalTorque);
         }
     }
 }

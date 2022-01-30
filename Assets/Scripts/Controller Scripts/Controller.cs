@@ -9,6 +9,8 @@ namespace ControllerManager
     {
         //whether we're using the cursor or board
         private bool _foundWiiBoard;
+        private bool _isTargetGame;
+        private string _sceneName;
         //neural controller
         private float _kdc;
         private float _kpc;
@@ -43,9 +45,7 @@ namespace ControllerManager
         private List<float> _comAngles;
         private List<float> _comAngleErrors;
         private Dictionary<string, float> _stimMax;
-        private Dictionary<string, float> _intercepts; // only need intercepts for mechanical controller stim calculation
         private Dictionary<string, List<float>> _biasCoeffs;
-        private Dictionary<string, Dictionary<string, float>> _slopes;
         //ramping function
         private Ramping _ramping;
         private Cursor _cursor;
@@ -56,21 +56,17 @@ namespace ControllerManager
         private const float _MaxX = 2f*5f*16f/9f; //2*height*aspect ratio
         private const float _MaxY = 5f*2f; //2*camera size
         private const float _HeelLocation = 90; //mm, measured manually from centre of board to bottom of indicated feet area
-        private const float _MaxPFStim = 1.117055995961f; // not sure what these units are
-        private const float _MaxDFStim = 1.170727515177f; // not sure what these units are either
+        private const float _MaxPFStim = 1.117055995961f; // maximum of PF bias scaling, need to divide this to get range to 0-1
+        private const float _MaxDFStim = 1.170727515177f; // maximum of DF bias scaling, need to divide this to get range to 0-1
 
         public float RampPercentage { get; private set; }
+        public float NeuralTorque { get; private set; }
+        public float MechanicalTorque { get; private set; }
         public List<float> Angles { get; private set; }
         public List<float> ShiftedPos { get; private set; } //get com and target positions in real coordinates and shifted to ankle perspective
         public Dictionary<string, float> CalculatedConstants { get; private set; }
-        public Dictionary<string, Dictionary<string, float>> Slopes
-        {
-            get => _slopes;
-        }
-        public Dictionary<string, float> Intercepts
-        {
-            get => _intercepts;
-        }
+        public Dictionary<string, float> Intercepts { get; private set; } // only need intercepts for mechanical controller stim calculation
+        public Dictionary<string, Dictionary<string, float>> Slopes { get; private set; }
 
         public Controller(Cursor cursor, bool foundWiiBoard)
         {
@@ -93,6 +89,8 @@ namespace ControllerManager
             _cursor = cursor;
             //if true, we use the board, if false, we use cursor.
             _foundWiiBoard = foundWiiBoard;
+            _sceneName = SceneManager.GetActiveScene().name;
+            _isTargetGame = _sceneName == "Target" ? true : false;
             
             // need to convert from percent to fraction
             // los is in qs frame of reference but need to remove shift that's inherent to los
@@ -147,57 +145,27 @@ namespace ControllerManager
             _kd = _kdc*_m*_G*_hCOM; 
             _k = _kc*_m*_G*_hCOM; //mechanical/passive controller
 
-            // Debug.Log("kp");
-            // Debug.Log(_kp);
-            // Debug.Log("kd");
-            // Debug.Log(_kd);
-            // Debug.Log("k");
-            // Debug.Log(_k);
-
             _comAngles = new List<float> {0f, 0f, 0f}; //for mechanical controller only
-            _comAngleErrors = new List<float> {0f, 0f, 0f, 0f, 0f}; //neural controller requires 2-4 for derivative
+            _comAngleErrors = new List<float> {0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f}; //neural controller requires 5-7 for derivative, delay of 100ms
 
             //initialize ramping function
             _ramping = new Ramping();
-            
-            // for (var i  = 0; i <= _limits.Count - 1; i++)
-            // {
-            //     switch (i)
-            //     {
-            //         case 0:
-            //             Debug.Log("front");
-            //             break;
-            //         case 1:
-            //             Debug.Log("back");
-            //             break;
-            //         case 2:
-            //             Debug.Log("left");
-            //             break;
-            //         case 3:
-            //             Debug.Log("right");
-            //             break;
-            //     }
-            //     Debug.Log(_limits[i]);
-            // }   
 
+            //shift los to ankle reference frame for calculating torque
             _losF = (_limits[0] + _lengthOffset)*_YLength/1000f/2f + _ankleDisplacement; //adjust front and back limits to ankle reference frame
             _losB = _ankleDisplacement + (_lengthOffset - _limits[1])*_YLength/1000f/2f ; //since torque is negative, sign of losB should also be negative
-            // Debug.Log("losF");
-            // Debug.Log(_losF);
-            // Debug.Log("losB");
-            // Debug.Log(_losB);
+
             // calculating mechanical torques
             _qsTorque = _m*_G*(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f);
             _losFTorque = _m*_G*_losF;
             _losBTorque = _m*_G*_losB;
-            // Debug.Log("qsTorque");
-            // Debug.Log(_qsTorque);
-            // Debug.Log("losFTorque");
-            // Debug.Log(_losFTorque);
-            // Debug.Log("losBTorque");
-            // Debug.Log(_losBTorque);
 
-            CalculatedConstants = new Dictionary<string, float>()
+            Slopes = GetSlopes(); //calculate controller slopes
+            Intercepts = new Dictionary<string, float> {["RDF"] = -Slopes["Mech"]["RDF"]*_qsTorque, 
+                                                         ["LDF"] = -Slopes["Mech"]["LDF"]*_qsTorque};
+            _qsVertAng = Mathf.Atan2(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f, _hCOM);
+
+            CalculatedConstants = new Dictionary<string, float>() //fill property
             {
                 ["Kp"] = _kp, 
                 ["Kd"] = _kd, 
@@ -208,14 +176,9 @@ namespace ControllerManager
                 ["LOSFTorque"] = _losFTorque, 
                 ["LOSBTorque"] = _losBTorque
             };
-
-            _slopes = GetSlopes(); //calculate controller slopes
-            _intercepts = new Dictionary<string, float> {["RDF"] = -_slopes["Mech"]["RDF"]*_qsTorque, 
-                                                         ["LDF"] = -_slopes["Mech"]["LDF"]*_qsTorque};
-            _qsVertAng = Mathf.Atan2(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f, _hCOM);
         }
 
-        public Dictionary<string, float> Stimulate(WiiBoardData data, Vector2 targetCoords)
+        public Dictionary<string, Dictionary<string, float>> Stimulate(WiiBoardData data, Vector2 targetCoords)
         {
             var shiftedComY = 0.0f;
             var comX = 0.0f;
@@ -236,7 +199,7 @@ namespace ControllerManager
             //conversion of target game coords to board coords
             var targetCoordsShifted = new Vector2(); //shifted target coords from game coords to board coords
 
-            if (SceneManager.GetActiveScene().name != "Target") 
+            if (_sceneName != "Target") 
             {
                 var yLimit = 0f;
                 var xLimit = 0f;
@@ -262,19 +225,6 @@ namespace ControllerManager
                 //need to add length offset so that we get the proper shift to the target wrt ankle position
                 targetCoordsShifted.y = _ankleDisplacement + _lengthOffset*_YLength/1000f/2f; 
             }
-            
-            // Debug.Log("fcopy");
-            // Debug.Log(data.fCopY);
-            // Debug.Log("shiftedcomy");
-            // Debug.Log(shiftedComY);
-            // Debug.Log("targetcoords");
-            // Debug.Log(targetCoords.y);
-            // Debug.Log("targetcoordsshifted");
-            // Debug.Log(targetCoordsShifted.y);
-            // Debug.Log("ankledisplacement2");
-            // Debug.Log(_ankleDisplacement);
-            // Debug.Log("length offset2");
-            // Debug.Log(_lengthOffset);
 
             ShiftedPos = new List<float>() {comX, shiftedComY, targetCoordsShifted.x, targetCoordsShifted.y};
 
@@ -282,7 +232,6 @@ namespace ControllerManager
             var targetVertAng = Mathf.Atan2(targetCoordsShifted.y, _hCOM);
             var comVertAng = Mathf.Atan2(shiftedComY, _hCOM);
             var angErr = targetVertAng - comVertAng;
-            Angles = new List<float>() {targetVertAng, comVertAng, angErr}; //store in prop
 
             //first need to adjust the stored COM values as new values are added from cursor, max is count - 2 so that we don't get index error
             for (var i = _comAngles.Count - 1; i >= 0; i--)
@@ -301,50 +250,52 @@ namespace ControllerManager
                     _comAngleErrors[i] = _comAngleErrors[i - 1];
             }
 
-            // since previoustarget is initialized as 0,0, we set it to the current target coords
-            if (_previousTarget == new Vector2(0f, 0f))
-                _previousTarget = targetCoordsShifted;
-
-            if (targetCoordsShifted == _previousTarget)
-                _neuralCounter++;
-            else
+            if (_sceneName == "Hunting" || _sceneName == "Colour Matching")
             {
-                _neuralCounter = 0;
-                _previousTarget = targetCoordsShifted;
+                if (targetCoordsShifted == _previousTarget)
+                    _neuralCounter++;
+                else
+                {
+                    _neuralCounter = 0;
+                    _previousTarget = targetCoordsShifted;
+                }
             }
 
+            //store in prop for saving in csv, only start saving the errors once there is a value in the 5th spots of the vector
+            Angles = new List<float>() {targetVertAng, comVertAng, _comAngleErrors[5]}; 
+            
             //controller calculations
-            var neuralTorque = NeuralController(); //calculate neural torque from controller output
-
-            if (_neuralCounter < 3) //only calculate neural torque after 3 iterations have passed
-                neuralTorque = 0f;
-                
-            var mechanicalTorque = MechanicalController(); //calculate passive torque from controller output
-            var rawStimOutput = UnbiasedStimulationOutput(neuralTorque, mechanicalTorque, comVertAng); //calculate unbiased output
+            NeuralTorque = NeuralController(); //calculate neural torque from controller output
+            MechanicalTorque = MechanicalController(); //calculate passive torque from controller output
+            var rawStimOutput = UnbiasedStimulationOutput(NeuralTorque, MechanicalTorque, comVertAng); //calculate unbiased output
             var neuralBiases = CalculateNeuralBiases(comX, shiftedComY, targetCoordsShifted); //calculate neural biases
             var mechBiases = CalculateMechBiases(comX, shiftedComY); //calculate mech biases
             var actualStimOutput = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
             
-            return actualStimOutput;
+            var unbiasedStimOutput = new Dictionary<string, float>();
+
+            //want to get unbiased stimulation as well for documentation in data file
+            foreach (var muscle in _stimMax) //used for iteration and adding together total unbiased stimulation output
+                unbiasedStimOutput[muscle.Key] = rawStimOutput["Mech"][muscle.Key] + rawStimOutput["Neural"][muscle.Key];
+            
+            return new Dictionary<string, Dictionary<string, float>>() {["Unbiased"] = unbiasedStimOutput, ["Actual"] = actualStimOutput};
         }
 
         private float NeuralController() //calculate torque based on neural command
         {
-            if (!_comAngleErrors.GetRange(2, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero), 2 point delay on neural controller
-            {
-                var derivativeError = CalculateDerivative(_comAngleErrors.GetRange(2, 3)); //two point delay on the neural controller
-                
-                return _kp*_comAngleErrors.GetRange(2, 3)[0] + _kd*derivativeError;
-            }
-
-            return 0f; //return zero when the condition above isn't fulfilled
+            var derivativeError = 0.0f;
+            // TODO: this is incorrect, also find delay in the code or matlab code, not sure where it's coming from
+            if ((_neuralCounter >= 7 || _isTargetGame) && !_comAngleErrors.GetRange(5, 3).Any(v => v == 0.0f)) //7 correspond to delay of 140ms, original labview delay was 150ms  
+                derivativeError = CalculateDerivative(_comAngleErrors.GetRange(5, 3));
+            
+            return _kp*_comAngleErrors.GetRange(5, 3)[0] + _kd*derivativeError; //only p portion when derivative error vec isn't filled
         }
 
         private float MechanicalController() //calculate torque based on mechanical properties
         {
             var velocity = 0.0f;
 
-            if (!_comAngles.Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero)
+            if (!_comAngles.Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero), only really initially
                 velocity = CalculateDerivative(_comAngles);
 
             return _k*_comAngles[0] + 5.0f*velocity;
@@ -407,23 +358,23 @@ namespace ControllerManager
                 ["Neural"] = new Dictionary<string, float>() {["RPF"] = 0f, ["RDF"] = 0f, ["LPF"] = 0f, ["LDF"] = 0f}
             };
 
-            foreach (var control in _slopes)
+            foreach (var control in Slopes)
             {
                 foreach (var stim in control.Value) 
                 {
                     if (control.Key == "Mech")
                     {
                         if (0.5f*mechanicalTorque > 0 && stim.Key.Contains("PF")) //only calculate stim for pf if 0.5*mechanicalTorque > 0
-                            stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*mechanicalTorque;
+                            stimulation[control.Key][stim.Key] = Slopes[control.Key][stim.Key]*mechanicalTorque;
                         else if (0.5f*_qsTorque > 0.5f*mechanicalTorque && stim.Key.Contains("DF")) //only calculate stim for df if 0.5f*qsTorque > 0.5f*mechanicalTorque > 0
-                           stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*mechanicalTorque + _intercepts[stim.Key];
+                           stimulation[control.Key][stim.Key] = Slopes[control.Key][stim.Key]*mechanicalTorque + Intercepts[stim.Key];
                     }
                     else
                     {
                         if (comVertAng > 0 && stim.Key.Contains("PF")) //only calculate stim for pf if comVertAng > 0
-                            stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*neuralTorque;
+                            stimulation[control.Key][stim.Key] = Slopes[control.Key][stim.Key]*neuralTorque;
                         else if (comVertAng < _qsVertAng && stim.Key.Contains("DF")) //only calculate stim for df if comVertAng < qsVertAng
-                            stimulation[control.Key][stim.Key] = _slopes[control.Key][stim.Key]*neuralTorque;
+                            stimulation[control.Key][stim.Key] = Slopes[control.Key][stim.Key]*neuralTorque;
                     }
                 }
             }
@@ -516,12 +467,6 @@ namespace ControllerManager
 
             foreach (var muscle in _stimMax) //this is just to add the total stimulation output
                 adjustedCombinedStimOutput[muscle.Key] = adjustedStimOutput["Mech"][muscle.Key] + adjustedStimOutput["Neural"][muscle.Key];
-                
-            // foreach (var i in adjustedCombinedStimOutput)
-            // {
-            //     Debug.Log(i.Key);
-            //     Debug.Log(i.Value);
-            // }
 
             return adjustedCombinedStimOutput;
         }
