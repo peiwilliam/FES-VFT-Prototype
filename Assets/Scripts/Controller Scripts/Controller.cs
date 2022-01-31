@@ -16,6 +16,11 @@ namespace ControllerManager
         private float _kpc;
         //mechanical controller
         private float _kc;
+        //initial ramping
+        private float _rampDuration;
+        private float _frequency;
+        private float _rampIterations;
+        private float _rampPercentage; //starts at zero
         //phyiological constants
         private float _height;
         private float _mass;
@@ -46,8 +51,6 @@ namespace ControllerManager
         private List<float> _comAngleErrors;
         private Dictionary<string, float> _stimMax;
         private Dictionary<string, List<float>> _biasCoeffs;
-        //ramping function
-        private Ramping _ramping;
         private Cursor _cursor;
 
         private const float _G = 9.81f; //m/s^2
@@ -56,8 +59,8 @@ namespace ControllerManager
         private const float _MaxX = 2f*5f*16f/9f; //2*height*aspect ratio
         private const float _MaxY = 5f*2f; //2*camera size
         private const float _HeelLocation = 90; //mm, measured manually from centre of board to bottom of indicated feet area
-        private const float _MaxPFStim = 1.117055995961f; // maximum of PF bias scaling, need to divide this to get range to 0-1
-        private const float _MaxDFStim = 1.170727515177f; // maximum of DF bias scaling, need to divide this to get range to 0-1
+        private const float _MaxPFStim = 1.117056035082781f; // maximum of PF bias scaling, need to divide this to get range to 0-1
+        private const float _MaxDFStim = 1.170727435896939f; // maximum of DF bias scaling, need to divide this to get range to 0-1
 
         public float RampPercentage { get; private set; }
         public float NeuralTorque { get; private set; }
@@ -91,6 +94,10 @@ namespace ControllerManager
             _foundWiiBoard = foundWiiBoard;
             _sceneName = SceneManager.GetActiveScene().name;
             _isTargetGame = _sceneName == "Target" ? true : false;
+            //define ramping parameters
+            _rampDuration = PlayerPrefs.GetFloat("Ramp Duration");
+            _frequency = 1/Time.fixedDeltaTime;
+            _rampIterations = 100f/(_rampDuration*_frequency); //how much to ramp per iteration to get to 100% stim output in 1 second
             
             // need to convert from percent to fraction
             // los is in qs frame of reference but need to remove shift that's inherent to los
@@ -147,9 +154,6 @@ namespace ControllerManager
 
             _comAngles = new List<float> {0f, 0f, 0f}; //for mechanical controller only
             _comAngleErrors = new List<float> {0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f}; //neural controller requires 5-7 for derivative, delay of 100ms
-
-            //initialize ramping function
-            _ramping = new Ramping();
 
             //shift los to ankle reference frame for calculating torque
             _losF = (_limits[0] + _lengthOffset)*_YLength/1000f/2f + _ankleDisplacement; //adjust front and back limits to ankle reference frame
@@ -450,7 +454,8 @@ namespace ControllerManager
                 ["Mech"] = mechBiases
             };
 
-            RampPercentage = _ramping.CalculateRamp();
+            if (RampPercentage < 100f)
+                RampPercentage = CalculateRamp();
 
             foreach (var control in rawStimOutput)
             {
@@ -486,6 +491,14 @@ namespace ControllerManager
             }
 
             return trueStimOutput;
+        }
+
+        private float CalculateRamp()
+        {
+            if (_rampPercentage < 100f)
+                _rampPercentage += _rampIterations;
+
+            return _rampPercentage; //divide by 100 to convert from percent to decimal
         }
     }
 }

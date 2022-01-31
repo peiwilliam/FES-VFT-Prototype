@@ -50,10 +50,6 @@ public class GameSession : MonoBehaviour
     private float _totalGameDeltaTime = 1f; //incrementing timer by 1 sec each time, doesn't need to be changed
     private Coroutine _timer;
     private SceneLoader _sceneLoader;
-
-    //for all games
-    public delegate void OnTargetChange(); //event created to tell the controller that the target has changed
-    public static event OnTargetChange TargetChangeEvent;
     
     [Header("Ellipse Game")]
     [SerializeField] private GameObject _movingCirclePrefab;
@@ -418,9 +414,6 @@ public class GameSession : MonoBehaviour
             
             if (_colourChangeEvent != null)
                 _colourChangeEvent.Invoke();
-            
-            if (TargetChangeEvent != null) //invoke the event, tell controller that the target has changed
-                TargetChangeEvent();
 
             while (_colourDuration > 0 && !_conditionColourMet)
             {
@@ -510,9 +503,6 @@ public class GameSession : MonoBehaviour
             }
 
             Instantiate(_huntingCirclePrefab, new Vector3(pos[0], pos[1], 0), Quaternion.identity);
-
-            if (TargetChangeEvent != null) //invoke the event, tell controller that the target has changed
-                TargetChangeEvent();
             
             _huntingCircle = FindObjectOfType<HuntingCircle>();
 
