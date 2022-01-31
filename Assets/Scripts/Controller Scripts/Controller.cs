@@ -46,12 +46,11 @@ namespace ControllerManager
         private float _losBTorque;
         private float _qsVertAng;
         private Vector2 _previousTarget;
-        private List<float> _limits;
+        private float[] _limits;
         private List<float> _comAngles;
         private List<float> _comAngleErrors;
         private Dictionary<string, float> _stimMax;
-        private Dictionary<string, List<float>> _biasCoeffs;
-        private Cursor _cursor;
+        private Dictionary<string, float[]> _biasCoeffs;
 
         private const float _G = 9.81f; //m/s^2
         private const float _XWidth = 433f; // mm
@@ -65,11 +64,13 @@ namespace ControllerManager
         public float RampPercentage { get; private set; }
         public float NeuralTorque { get; private set; }
         public float MechanicalTorque { get; private set; }
-        public List<float> Angles { get; private set; }
+        public List<float> Angles { get; private set; } //float[] not advised by official msdn, so we use list instead
         public List<float> ShiftedPos { get; private set; } //get com and target positions in real coordinates and shifted to ankle perspective
+        public List<float> MlAngles { get; private set; }
         public Dictionary<string, float> CalculatedConstants { get; private set; }
         public Dictionary<string, float> Intercepts { get; private set; } // only need intercepts for mechanical controller stim calculation
         public Dictionary<string, Dictionary<string, float>> Slopes { get; private set; }
+        public Dictionary<string, Dictionary<string, float>> Biases { get; private set; }
 
         public Controller(Cursor cursor, bool foundWiiBoard)
         {
@@ -88,8 +89,6 @@ namespace ControllerManager
             _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height/100f; //convert percent to fraction, cm to m
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset")/100f; //keep in fraction form since it's used in different contexts, is also negative!!!
             _ankleDisplacement = _HeelLocation/1000f - _ankleLength; //to change everything to ankle reference frame
-            //initialize cursor object
-            _cursor = cursor;
             //if true, we use the board, if false, we use cursor.
             _foundWiiBoard = foundWiiBoard;
             _sceneName = SceneManager.GetActiveScene().name;
@@ -99,12 +98,15 @@ namespace ControllerManager
             _frequency = 1/Time.fixedDeltaTime;
             _rampIterations = 100f/(_rampDuration*_frequency); //how much to ramp per iteration to get to 100% stim output in 1 second
             
+            //initialize MlAngles property
+            MlAngles = new List<float>() {0f, 0f};
+
             // need to convert from percent to fraction
             // los is in qs frame of reference but need to remove shift that's inherent to los
-            _limits = new List<float>() //front, back, left, right
+            _limits = new float[] //front, back, left, right
             {
-                PlayerPrefs.GetFloat("Limit of Stability Front")/100f - _cursor.LOSShift*2f/_MaxY,
-                PlayerPrefs.GetFloat("Limit of Stability Back")/100f - _cursor.LOSShift*2f/_MaxY,
+                PlayerPrefs.GetFloat("Limit of Stability Front")/100f - cursor.LOSShift*2f/_MaxY,
+                PlayerPrefs.GetFloat("Limit of Stability Back")/100f - cursor.LOSShift*2f/_MaxY,
                 PlayerPrefs.GetFloat("Limit of Stability Left")/100f,
                 PlayerPrefs.GetFloat("Limit of Stability Right")/100f
             };
@@ -117,29 +119,29 @@ namespace ControllerManager
                 ["LDF"] = PlayerPrefs.GetInt("LDF Max")
             };
 
-            _biasCoeffs = new Dictionary<string, List<float>>() //obtained from fitting
+            _biasCoeffs = new Dictionary<string, float[]>() //obtained from fitting
             {
-                ["RPF"] = new List<float>() 
+                ["RPF"] = new float[] 
                 {
                     0.99526806515243f, -0.408976667987885f,
                     -0.281770983806191f, 0.134197918133647f,
                     0.0401008570179150f, -0.014741825821627f,
                     -0.001834382543371510f, 0.000541387568634961f
                 },
-                ["RDF"] = new List<float>()
+                ["RDF"] = new float[]
                 {
                     0.1724382284725f, -0.004599540776172f,
                     0.170648963603272f, -0.039721561143300f,
                     -0.008618639088500f, 0.004059400329855f
                 },
-                ["LPF"] = new List<float>() 
+                ["LPF"] = new float[] 
                 {
                     0.99526806515243f, -0.408976667987885f,
                     -0.281770983806191f, 0.134197918133647f,
                     0.0401008570179150f, -0.014741825821627f,
                     -0.001834382543371510f, 0.000541387568634961f
                 },
-                ["LDF"] = new List<float>() 
+                ["LDF"] = new float[] 
                 {
                     0.1724382284725f, -0.004599540776172f,
                     0.170648963603272f, -0.039721561143300f,
@@ -275,8 +277,13 @@ namespace ControllerManager
             var neuralBiases = CalculateNeuralBiases(comX, shiftedComY, targetCoordsShifted); //calculate neural biases
             var mechBiases = CalculateMechBiases(comX, shiftedComY); //calculate mech biases
             var actualStimOutput = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
-            
             var unbiasedStimOutput = new Dictionary<string, float>();
+
+            Biases = new Dictionary<string, Dictionary<string, float>>()
+            {
+                ["Neural"] = neuralBiases,
+                ["Mech"] = mechBiases
+            };
 
             //want to get unbiased stimulation as well for documentation in data file
             foreach (var muscle in _stimMax) //used for iteration and adding together total unbiased stimulation output
@@ -288,7 +295,7 @@ namespace ControllerManager
         private float NeuralController() //calculate torque based on neural command
         {
             var derivativeError = 0.0f;
-            // TODO: this is incorrect, also find delay in the code or matlab code, not sure where it's coming from
+            
             if ((_neuralCounter >= 7 || _isTargetGame) && !_comAngleErrors.GetRange(5, 3).Any(v => v == 0.0f)) //7 correspond to delay of 140ms, original labview delay was 150ms  
                 derivativeError = CalculateDerivative(_comAngleErrors.GetRange(5, 3));
             
@@ -390,17 +397,17 @@ namespace ControllerManager
         {
             var x = shiftedTargetCoords.x - comX;
             var y = shiftedTargetCoords.y - shiftedCOMy;
-            var biasAng = Mathf.Atan2(x, y);
+            MlAngles[0] = Mathf.Atan2(x, y);
 
-            var biases = BiasFunction(biasAng);
+            var biases = BiasFunction(MlAngles[0]);
 
             return biases;
         }
 
         private Dictionary<string, float> CalculateMechBiases(float comX, float shiftedCOMy) //calculate ML bias for mechanical torque
         {
-            var biasAng = Mathf.Atan2(comX, shiftedCOMy);
-            var biases = BiasFunction(biasAng);
+            MlAngles[1] = Mathf.Atan2(comX, shiftedCOMy);
+            var biases = BiasFunction(MlAngles[1]);
 
             return biases;
         }
@@ -412,9 +419,9 @@ namespace ControllerManager
             foreach (var coeffs in _biasCoeffs) 
             {
                 var bias = 0f;
-                if (coeffs.Key == "LPF" || coeffs.Key == "RPF")
+                if (coeffs.Key.Contains("PF"))
                 {
-                    for (var i = 7; i >= 0; i--)
+                    for (var i = coeffs.Value.Length - 1; i >= 0; i--)
                     {
                         if (coeffs.Key.Contains("R"))
                             bias += coeffs.Value[i] * Mathf.Pow(-biasAng, i);
@@ -424,7 +431,7 @@ namespace ControllerManager
                 }
                 else
                 {
-                    for (var i = 5; i >= 0; i--)
+                    for (var i = coeffs.Value.Length - 1; i >= 0; i--)
                     {
                         if (coeffs.Key.Contains("R"))
                             bias += coeffs.Value[i] * Mathf.Pow(-biasAng, i);

@@ -1,4 +1,6 @@
-﻿public struct WiiBoardData
+﻿using System;
+
+public struct WiiBoardData
 {
     public float time;
     public float copX;
@@ -22,5 +24,19 @@
         this.bottomRight = bottomRight;
         this.fCopX = fCopX;
         this.fCopY = fCopY;
+    }
+
+    public string GetParameterNames()
+    {
+        var names = String.Join(", ", new string[] {nameof(time), nameof(copX), nameof(copY), nameof(topLeft), nameof(topRight),
+                                                    nameof(bottomLeft), nameof(bottomRight), nameof(fCopX), nameof(fCopY)});
+        return names;
+    }
+
+    public string GetParameterValues()
+    {
+        var values = String.Join(", ", new float[] {time, copX, copY, topLeft, topRight, bottomLeft, bottomRight, fCopX, fCopY});
+        
+        return values;
     }
 }
