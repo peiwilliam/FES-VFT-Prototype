@@ -54,6 +54,7 @@ SpriteRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -139,8 +140,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 546b9e7578d49394d8c69d283a2e9921, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _circleVelocity: 5
+  _circleVelocity: 3
   _deltaTimeScore: 0.2
+  _startingGracePeriod: 5
   _gracePeriod: 1
   _score: 0
   _isDecreasing: 0

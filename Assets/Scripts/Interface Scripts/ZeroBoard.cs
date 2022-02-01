@@ -2,7 +2,7 @@
 using System.Linq;
 using UnityEngine;
 
-public class ZeroBoard : MonoBehaviour
+public class ZeroBoard : MonoBehaviour //do not use, not actually that helpful for the use of the wiiboard.
 {
     private float _topLeft;
     private float _topRight;

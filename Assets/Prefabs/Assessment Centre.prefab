@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 5241008247593528400}
   - component: {fileID: 7717614136824660919}
   - component: {fileID: 4554103285828133570}
-  - component: {fileID: 4563822667594253450}
   m_Layer: 0
   m_Name: Assessment Centre
   m_TagString: Untagged
@@ -53,6 +52,7 @@ SpriteRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -105,15 +105,3 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.49999997
---- !u!114 &4563822667594253450
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8653604677049346941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2aa179896cf71ce4ca7b2a0b88655c23, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

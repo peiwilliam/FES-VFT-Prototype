@@ -27,7 +27,7 @@ public class ColourCircle : MonoBehaviour
         {
             if (_gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
                 StopAllCoroutines();
-            if (gameObject.GetComponent<SpriteRenderer>().color == new Color(0, 255, 0))
+            if (gameObject.GetComponent<SpriteRenderer>().color == Color.green)
                 DetectCursor.ChangeColourBack(gameObject, _oldColour);
         }
     }

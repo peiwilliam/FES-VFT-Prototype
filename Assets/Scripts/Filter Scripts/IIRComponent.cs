@@ -20,7 +20,7 @@ namespace FilterManager
                 for (var i = 0; i < _y.Length; i++)
                     output += _y[i] * b[i];
             }
-
+            
             if (_y.Length == 2) //2nd order
             {
                 _y[1] = _y[0];

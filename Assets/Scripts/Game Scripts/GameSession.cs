@@ -1,40 +1,67 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using KnuthShuffle;
+using TMPro;
 
 public class GameSession : MonoBehaviour
 {
     [Header("Assessment")]
-    [SerializeField] private bool _ecDone;
-    [SerializeField] private bool _eoDone;
-    [SerializeField] private List<string> _instructions;
-    [SerializeField] private InputField _instructionsBox;
+    [SerializeField] private List<string> _assessInstructions;
+    [SerializeField] private InputField _assessInstructionsBox;
 
+    public static bool _ecDone; //public static so cursor is able to access these values
+    public static bool _eoDone;
+
+    public delegate void OnConditionChange(string condition);
+    public static event OnConditionChange ConditionChangeEvent;
+
+    private Dictionary<string, List<WiiBoardData>> _qsAssessment;
     private Cursor _cursor;
+    private float _assessmentTime;
 
-    private static List<float> _xPosAssessEC; //cursor position during ec assessment
-    private static List<float> _yPosAssessEC;
-    private static List<float> _xPosAssessEO; //cursor position during eo assessment
-    private static List<float> _yPosAssessEO;
+    [Header("Limits of Stability")]
+    [SerializeField] private InputField _losInstructionsBox;
+    [SerializeField] private int _counter;
+    [SerializeField] private float _windowSize;
+    [SerializeField] private bool _shuffled;
+    [SerializeField] private List<SpriteRenderer> _rectangles;
+    [SerializeField] private string _direction;
+    
+    //event for handling the changing of directions, can't use unity event because cursor is instan. at the beginning and doesnn't exist before start of game
+    public delegate void OnDirectionChange(string direction);
+    public static event OnDirectionChange DirectionChangeEvent;
+
+    private List<string> _directionNames = new List<string>(); //list of direction names, public static so cursor has access to it and not a field
+    private Dictionary<string, string> _losInstructions; //dictionary of instructions text for each direction
+    private Dictionary<string, List<WiiBoardData>> _directionData; //dictionary to store data from each direction
+    private Dictionary<string, float> _limits; //dictionary to store the limits
 
     [Header("All Games")]
     [SerializeField] private GameObject _cursorPrefab;
     [SerializeField] private float _totalGameTime = 100f;
     [SerializeField] private Text _timeText;
 
-    private float _totalGameDeltaTime = 1f;
+    private float _totalGameDeltaTime = 1f; //incrementing timer by 1 sec each time, doesn't need to be changed
     private Coroutine _timer;
     private SceneLoader _sceneLoader;
     
     [Header("Ellipse Game")]
     [SerializeField] private GameObject _movingCirclePrefab;
+    [SerializeField] private Ellipse _ellipse;
 
     private MovingCircle _movingCircle;
-    public Ellipse Ellipse { get; set; }
+
+    // for the _ellipse variable so that moving circle can also get access to ellipse
+    public Ellipse Ellipse
+    {
+        get => _ellipse;
+    }
     public LineRenderer LineRenderer { get; set; }
     public Vector3[] Positions { get; set; }
     public int EllipseIndex { get; private set; }
@@ -45,13 +72,12 @@ public class GameSession : MonoBehaviour
     [SerializeField] private bool _conditionColourMet;
     [SerializeField] private List<ColourCircle> _colourCircles;
     //default colours, need to change if the colours have been changed
-    [SerializeField] private List<string> _colourTexts = new List<string>() {"White", "Black", "Blue", "Green", "Purple", 
-                                                                             "Yellow", "Cyan", "Pink", "Grey", "Beige", 
-                                                                             "Brown", "Orange"};
+    [SerializeField] private List<string> _colourTexts;
     [SerializeField] private UnityEvent _colourChangeEvent;
-    
-    private Text _colourText;
+
+    private TextMeshProUGUI _colourText;
     private Coroutine _changeColour;
+
     public int ColourMatchingScore { get; private set; }
     public ColourCircle TargetColourCircle { get; private set; }
     //for the _conditionColourMet variable so that other classes can easily access
@@ -71,6 +97,7 @@ public class GameSession : MonoBehaviour
     [SerializeField] private bool _conditionHuntingMet;
     
     private HuntingCircle _huntingCircle;
+
     public int HuntingScore { get; private set; }
     //for the _conditionHuntingMet variable so that other classes can easily access
     public bool ConditionHuntingMet
@@ -84,6 +111,7 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _deltaTimeScore = 0.25f;
 
     private Coroutine _increaseScore;
+
     public float TargetScore { get; private set; }
     //for the _deltaTimeScore variable so that other classes can easily access
     public float DeltaTimeScore
@@ -94,30 +122,43 @@ public class GameSession : MonoBehaviour
 
     private void Start()
     {
-        Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //need cursor for all games
-        
+        Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //the first thing we want to do is instantiate the cursor
+
+        var sceneName = SceneManager.GetActiveScene().name;
         _sceneLoader = FindObjectOfType<SceneLoader>();
 
-        switch (SceneManager.GetActiveScene().name)
+        switch (sceneName)
         {
             case "Assessment":
-                _xPosAssessEC = new List<float>();
-                _yPosAssessEC = new List<float>();
-                _xPosAssessEO = new List<float>();
-                _yPosAssessEO = new List<float>();
+                _qsAssessment = new Dictionary<string, List<WiiBoardData>>() 
+                {
+                    ["EC"] = new List<WiiBoardData>(),
+                    ["EO"] = new List<WiiBoardData>()
+                };
 
-                _cursor = FindObjectOfType<Cursor>();
+                _assessmentTime = _totalGameTime; //set this so that when time is reset, it can be set back to set value
 
                 SetupAssessment();
+                
+                break;
+            case "LOS":
+                _cursor = FindObjectOfType<Cursor>();
+                _directionNames = new List<string>(from rectangle in _rectangles select rectangle.name); //linq syntax
+                //first lambda is for the keys, the second lambda is for the values
+                _directionData = _directionNames.ToDictionary(v => v, v => new List<WiiBoardData>());
+                _losInstructions = _directionNames.ToDictionary(v => v, v => "Please lean " + v.ToLower() + " as far as you can and hold for 3 seconds.");
+                _losInstructionsBox.text = "Press Start to start the Limits of Stability Assessment. Be prepared to lean in one of the 8 directions.";
+
                 break;
             case "Colour Matching":
-                var colourCircles = FindObjectsOfType<ColourCircle>();
-                _colourCircles = colourCircles.ToList();
-
+                _colourCircles = FindObjectsOfType<ColourCircle>().ToList();
+                _colourTexts = new List<string>(from circle in _colourCircles select circle.name); //linq syntax
+                
                 if (_colourChangeEvent == null)
-                    _colourChangeEvent = new UnityEvent(); 
+                    _colourChangeEvent = new UnityEvent();
 
                 ColourMatchingGame();
+
                 break;
             case "Ellipse":
                 EllipseGame();
@@ -126,13 +167,15 @@ public class GameSession : MonoBehaviour
                 break;
             case "Hunting":
                 HuntingGame();
+
                 break;
             case "Target":
                 _targetCircles = FindObjectsOfType<TargetCircle>().ToList();
+
                 break;
         }
 
-        if (SceneManager.GetActiveScene().name != "Assessment") //timer for assessment started manually
+        if (sceneName != "Assessment" && sceneName != "LOS") //timer for assessment started manually and los doesn't have timer
             StartCoroutine(StartTimer());
     }
 
@@ -141,6 +184,9 @@ public class GameSession : MonoBehaviour
         // with these two games, the scores are not dependent on getting to targets, so it's just one cumulative score
         switch (SceneManager.GetActiveScene().name)
         {
+            case "LOS":
+                LOS();
+                break;
             case "Ellipse":
                 EllipseGameScore();
                 break;
@@ -149,10 +195,11 @@ public class GameSession : MonoBehaviour
                 break;
         }
 
-        _timeText.text = _totalGameTime.ToString();
+        if (_timeText != null) //LOS doesn't have this so don't want to create null exception
+            _timeText.text = _totalGameTime.ToString();
 
         //how to handle transitions for all scenes other than assessment
-        if ((_totalGameTime <= 0 && SceneManager.GetActiveScene().name != "Assessment") || _eoDone)
+        if ((_totalGameTime <= 0 && SceneManager.GetActiveScene().name != "Assessment"))
         {
             if (SceneLoader.GetFamiliarization() && SceneLoader.GetGameIndex() < 4)
                 _sceneLoader.Familiarization();
@@ -165,58 +212,185 @@ public class GameSession : MonoBehaviour
 
     private void FixedUpdate() //fixed update to keep it in sync with cursor data
     {
-        if (SceneManager.GetActiveScene().name == "Assessment")
+        switch (SceneManager.GetActiveScene().name)
         {
-            if (_timer != null) //timer for the assessment has started
-            {
-                Assessment();
-
-                if (_totalGameTime <= 0) //reset for eyes open condition
+            case "Assessment":
+                
+                if (_timer != null) //timer for the assessment has started
                 {
-                    if (_ecDone && !_eoDone)
+                    Assessment();
+
+                    if (_totalGameTime <= 0) //reset for eyes open condition
                     {
-                        _timer = null;
-                        _instructionsBox.text = _instructions[1];
-                        _totalGameTime = 100;
+                        if (_ecDone && !_eoDone) //change the instructions and reset timer for next condition
+                        {
+                            _timer = null;
+                            _assessInstructionsBox.text = _assessInstructions[1];
+                            _totalGameTime = _assessmentTime;
+                        }
+                        else if (_ecDone && _eoDone) //set length offset when assessment is done
+                            ComputeLengthOffset();
                     }
-                    else if (_ecDone && _eoDone)
-                        _sceneLoader.LoadStartScene();
                 }
-            }
+
+                break;
+            case "LOS":
+                var data = _cursor.Data;
+
+                if (!string.IsNullOrEmpty(_direction))
+                    _directionData[_direction].Add(data);
+
+                break;
         }
     }
 
     private void SetupAssessment()
     {
-        _instructionsBox.text = _instructions[0];
-        _instructionsBox.transform.Find("Instructions Text").GetComponent<Text>().fontSize = 30;
+        _cursor = FindObjectOfType<Cursor>();
+        _cursor.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0); //alpha is zero to make it invisible
+        _assessInstructionsBox.text = _assessInstructions[0];
     }
 
     private void Assessment()
     {
+        var data = _cursor.Data;
+
         if (!_ecDone)
-        {
-            var data = _cursor.GetBoardValues();
-            _xPosAssessEC.Add(data.copX);
-            _yPosAssessEC.Add(data.copY);
-        }
+            _qsAssessment["EC"].Add(data);
         else
+            _qsAssessment["EO"].Add(data);
+    }
+
+    public void StartAssessmentTimer() // started on button click
+    {        
+        _timer = StartCoroutine(StartTimer());
+
+        if (ConditionChangeEvent != null)
         {
-            var data = _cursor.GetBoardValues();
-            _xPosAssessEO.Add(data.copX);
-            _yPosAssessEO.Add(data.copY);
+            if (!_ecDone)
+                ConditionChangeEvent(_qsAssessment.Keys.ToList()[0]);
+            else if (!_eoDone)
+                ConditionChangeEvent(_qsAssessment.Keys.ToList()[1]);
         }
     }
 
-    public void StartAssessmentTimer()
+    private void ComputeLengthOffset()
     {
-        _timer = StartCoroutine(StartTimer());
+        var yValues = new List<float>();
+
+        if (Convert.ToBoolean(PlayerPrefs.GetInt("EC or EO", 1))) //default to eyes open if for some reason this key doesn't exist
+            yValues = new List<float>(from value in _qsAssessment["EO"] select value.copY); //linq syntax
+        else
+            yValues = new List<float>(from value in _qsAssessment["EC"] select value.copY); //linq syntax
+
+        PlayerPrefs.SetFloat("Length Offset", yValues.Average()*100f);
+
+        _sceneLoader.LoadStartScene();
+    }
+    
+    private void LOS() //changes the colour of the target direction
+    {
+        foreach (var rectangle in _rectangles)
+        {
+            if (rectangle.tag == "Target" && rectangle.color != Color.green)
+            {
+                rectangle.color = Color.green;
+                rectangle.sortingOrder = 1;
+            }
+            else if (rectangle.tag == "Untagged" && rectangle.color != new Color(0, 0.2775006f, 1f))
+            {
+                rectangle.color = new Color(0f, 0.2775006f, 1f);
+                rectangle.sortingOrder = 0;
+            }
+        }
+    }
+
+    public void StartLOS() //initiated from button click
+    {
+        if (FindObjectOfType<Cursor>() == null) // make sure only one cursor is spawned
+            Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //instantiate at button click instead of at beginning
+
+        if (GameObject.FindGameObjectWithTag("Target") != null) //once we press the button, we want to switch to a new target
+            GameObject.FindGameObjectWithTag("Target").tag = "Untagged";
+
+        if (_counter == _directionNames.Count) //check when _counter is greater than the max index
+        {
+            _sceneLoader.LoadStartScene();
+            var windowLength = Mathf.FloorToInt(PlayerPrefs.GetInt("Rolling Average Window")*1/Time.fixedDeltaTime);
+            
+            GetLimits(windowLength);
+        }
+        else
+        {
+            if (!_shuffled)
+            {
+                _directionNames = KnuthShuffler.Shuffle(_directionNames); //order of directions needs to be randomized
+                _shuffled = true;
+            }
+
+            _direction = _directionNames[_counter++]; //want incrementation after using _counter
+            _losInstructionsBox.text = _losInstructions[_direction];
+            var rectangle = _rectangles.Find(n => n.name == _direction);
+            rectangle.tag = "Target";
+
+            if (DirectionChangeEvent != null) //invoke the direction change event
+                DirectionChangeEvent(_direction);
+        }
+    }
+
+    private void GetLimits(int windowLength) 
+    {
+        _limits = new Dictionary<string, float>();
+        var averages = new List<float>();
+        
+        if (_directionData.Values != null) //check if the board was used, if it's just cursor, the vales will be null
+        {
+            foreach (var direction in _directionData)
+            {
+                switch (direction.Key)
+                {
+                    case "Forward":
+                    case "Back":
+                        for (var i = 0; i <= direction.Value.Count - windowLength; i++)
+                        {
+                            // Makes each value absolute value because we only care about the magnitude
+                            var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copY));
+                            averages.Add(rangeOfValues.Average());
+                        }
+
+                        break;
+                    case "Left":
+                    case "Right":
+                        for (var i = 0; i <= direction.Value.Count - windowLength; i++)
+                        {
+                            // Makes each value absolute value because we only care about the magnitude
+                            var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copX));
+                            averages.Add(rangeOfValues.Average());
+                        }
+
+                        break;
+                }
+
+                if (averages.Count != 0) //since the list for the diagonal directions is currently not coded in, it throws an error, so just want to account for that
+                    _limits.Add(direction.Key, averages.Max()*100f);
+
+                averages.Clear(); //clear the list so that it's a new one next loop
+            }
+
+            PlayerPrefs.SetFloat("Limit of Stability Front", _limits["Forward"] * 0.9f); //store values, want just 90% of max
+            PlayerPrefs.SetFloat("Limit of Stability Back", _limits["Back"] * 0.9f);
+            PlayerPrefs.SetFloat("Limit of Stability Left", _limits["Left"] * 0.9f);
+            PlayerPrefs.SetFloat("Limit of Stability Right", _limits["Right"] * 0.9f);
+        }
+        else
+            Debug.Log("Cursor was used, no limit data colleccted.");
+        
+        return;
     }
 
     private void ColourMatchingGame()
     {
-        //need to do it this convoluted way because findobjectsoftype finds other text objects in the game
-        _colourText = FindObjectOfType<Canvas>().transform.Find("Colour Text").gameObject.GetComponent<Text>();
+        _colourText = FindObjectOfType<TextMeshProUGUI>();
         
         var averageDistance = 0f;
 
@@ -230,16 +404,66 @@ public class GameSession : MonoBehaviour
         _changeColour = StartCoroutine(ColourSelection(averageDistance));
     }
 
+    private IEnumerator ColourSelection(float averageDistance)
+    {
+        ColourCircle oldCircle = null;
+
+        while (true)
+        {
+            PickColour(averageDistance, oldCircle);
+            
+            if (_colourChangeEvent != null)
+                _colourChangeEvent.Invoke();
+
+            while (_colourDuration > 0 && !_conditionColourMet)
+            {
+                _colourDuration -= Time.unscaledDeltaTime;
+
+                yield return null;
+            }
+
+            TargetColourCircle.gameObject.tag = "Untagged";
+            oldCircle = TargetColourCircle;
+            ColourGameScore();
+
+            _colourDuration = 10f; //reset values to loop again, += to account for when the time is negative and to subtract form 10f
+            _conditionColourMet = false;
+        }
+    }
+
+    private void PickColour(float averageDistance, ColourCircle oldCircle)
+    {
+        var randText = _colourTexts[UnityEngine.Random.Range(0, _colourTexts.Count)];
+        TargetColourCircle = _colourCircles[UnityEngine.Random.Range(0, _colourCircles.Count)];
+        var randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+
+        if (oldCircle != null) //only start checking distances after the first circle is spawned
+        {
+            var dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
+                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+
+            while (dist < averageDistance)
+            {
+                TargetColourCircle = _colourCircles[UnityEngine.Random.Range(0, _colourCircles.Count)];
+                randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
+
+                dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
+                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
+            }
+        }
+
+        // once a colour is picked, set text, colour and add taget to target circle
+        _colourText.text = randText;
+        _colourText.color = randColour;
+        TargetColourCircle.gameObject.tag = "Target";
+    }
+
     private void EllipseGame()
     {
-        Ellipse = FindObjectOfType<Ellipse>();
-        var radii = Ellipse.GetRadii();
-        var centre = Ellipse.GetCentre();
         LineRenderer = Ellipse.GetComponent<LineRenderer>();
         Positions = new Vector3[LineRenderer.positionCount];
-
-        LineRenderer.GetPositions(Positions); //pos has an out on it
-        EllipseIndex = UnityEngine.Random.Range(0, Positions.Length);
+        LineRenderer.GetPositions(Positions); //position has an out on it
+        EllipseIndex = UnityEngine.Random.Range(0, Positions.Length); //any instances of UnityEngine.Ranodm is because Random exists in both System and UnityEngine, so need to clarify
         Instantiate(_movingCirclePrefab, new Vector3(Positions[EllipseIndex].x, Positions[EllipseIndex].y, 0), Quaternion.identity);
     }
 
@@ -247,6 +471,7 @@ public class GameSession : MonoBehaviour
 
     private IEnumerator SpawnCircles()
     {
+        //we always want to spawn circle in a different quadrant than the current one and sufficiently far away
         var rand = new System.Random(); //use system.random because I have more control over what I randomize
         var quads = new List<int>() {1, 2, 3, 4}; //quadrants
         var pos = new float[2]; //always will be size 2
@@ -296,7 +521,7 @@ public class GameSession : MonoBehaviour
                 prevQuad = quad;
                 quads.Remove(quad);
             }
-            else
+            else //eliminate the current quad as a place the next circle can spawn
             {
                 quads.Add(prevQuad);
                 prevQuad = quad;
@@ -310,18 +535,13 @@ public class GameSession : MonoBehaviour
 
     private float[] GetPositions(float minX, float maxX, float minY, float maxY, float[] oldPos)
     {
-        if (oldPos == new float[] {0f, 0f})
-        {
-            var xPos = UnityEngine.Random.Range(minX, maxX);
-            var yPos = UnityEngine.Random.Range(minY, maxY);
+        var xPos = UnityEngine.Random.Range(minX, maxX);
+        var yPos = UnityEngine.Random.Range(minY, maxY);
 
+        if (oldPos == new float[] {0f, 0f})
             return new float[] {xPos, yPos};
-        }
         else //checks to make sure that the new circle always spawns a decent distance away, threshold set at quarter of total x dist
         {
-            var xPos = UnityEngine.Random.Range(minX, maxX);
-            var yPos = UnityEngine.Random.Range(minY, maxY);
-
             while (Mathf.Sqrt(Mathf.Pow(xPos - oldPos[0], 2) + Mathf.Pow(yPos - oldPos[1], 2)) <= 2f*5f*16f/9f*0.25f)
             {
                 xPos = UnityEngine.Random.Range(minX, maxX);
@@ -330,58 +550,6 @@ public class GameSession : MonoBehaviour
 
             return new float[] {xPos, yPos};
         }   
-    }
-
-    private IEnumerator ColourSelection(float averageDistance)
-    {
-        ColourCircle oldCircle = null;
-
-        while (true)
-        {
-            PickColour(averageDistance, oldCircle);
-            _colourChangeEvent.Invoke();
-
-            while (_colourDuration > 0 && !_conditionColourMet)
-            {
-                _colourDuration -= Time.unscaledDeltaTime;
-
-                yield return null;
-            }
-
-            TargetColourCircle.gameObject.tag = "Untagged";
-            oldCircle = TargetColourCircle;
-            ColourGameScore();
-
-            _colourDuration = 10f; //reset values to loop again, += to account for when the time is negative and to subtract form 10f
-            _conditionColourMet = false;
-        }
-    }
-
-    private void PickColour(float averageDistance, ColourCircle oldCircle)
-    {
-        var randText = _colourTexts[Random.Range(0, _colourTexts.Count)];
-        TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
-        var randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
-
-        if (oldCircle != null) //only start checking distances after the first circle is spawned
-        {
-            var dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
-                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
-
-            while (dist < averageDistance)
-            {
-                TargetColourCircle = _colourCircles[Random.Range(0, _colourCircles.Count)];
-                randColour = TargetColourCircle.GetComponent<SpriteRenderer>().color;
-
-                dist = Mathf.Sqrt(Mathf.Pow(TargetColourCircle.transform.position.x - oldCircle.transform.position.x, 2) +
-                                  Mathf.Pow(TargetColourCircle.transform.position.y - oldCircle.transform.position.y, 2));
-            }
-        }
-
-        // once a colour is picked, set text, colour and add taget to target circle
-        _colourText.text = randText;
-        _colourText.color = randColour;
-        TargetColourCircle.gameObject.tag = "Target";
     }
 
     private IEnumerator StartTimer()
@@ -415,5 +583,11 @@ public class GameSession : MonoBehaviour
             updatedScore += circle.GetScore();
 
         TargetScore = updatedScore;
-    } 
+    }
+
+    private void OnDisable() //done so that _ecDone and _eoDone are false again once assessment is done
+    {
+        _ecDone = false;
+        _eoDone = false;
+    }
 }

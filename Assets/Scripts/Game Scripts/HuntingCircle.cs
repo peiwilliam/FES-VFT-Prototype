@@ -85,7 +85,7 @@ public class HuntingCircle : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(_gettingToCircleBuffer);
 
-        if (!_hasEntered) //need it here because the coroutine operates independetly from the initial condition
+        if (!_hasEntered) //need it here because the coroutine operates independently from the initial condition
         {
             while (true)
             {

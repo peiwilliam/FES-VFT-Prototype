@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using KnuthShuffle;
 
 public class SceneLoader : MonoBehaviour
 {
@@ -62,6 +63,8 @@ public class SceneLoader : MonoBehaviour
 
     public void BeginAssesment() => SceneManager.LoadScene("Assessment"); 
 
+    public void BeginSensitivity() => SceneManager.LoadScene("LOS");
+
     public void Familiarization()
     {
         if (!_beginFamiliarization)
@@ -79,7 +82,7 @@ public class SceneLoader : MonoBehaviour
         
         if (!_indicesRandomized) //check if unshuffled
         {
-            KnuthShuffleIndices();
+            _gameIndices = KnuthShuffler.Shuffle(_gameIndices);
             _indicesRandomized = true;
         }
 
@@ -93,22 +96,6 @@ public class SceneLoader : MonoBehaviour
     public static bool GetExperimentation() => _beginExperimentation;
 
     public static int GetGameIndicesIndex() => _gameIndicesIndex;
-
-    private void KnuthShuffleIndices() //taken from here: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-    {
-        for (var i = _gameIndices.Count - 1; i > 0; i--)
-        {
-            var randomValue = Random.value;
-
-            if (Random.value == 1f) //very unlikely to happen, but want to make sure that it never happens
-                randomValue = Random.value; //will almost certainly not return 1 again if it happens
-
-            var j = Mathf.FloorToInt(randomValue * (i + 1));
-            var temp = _gameIndices[i];
-            _gameIndices[i] = _gameIndices[j];
-            _gameIndices[j] = temp;
-        }
-    }
 
     private void OnEnable() 
     {

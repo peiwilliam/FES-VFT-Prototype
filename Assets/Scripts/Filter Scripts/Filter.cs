@@ -1,15 +1,22 @@
 ﻿using UnityEngine;
 
-namespace FilterManager
+namespace FilterManager 
 {
-    public class Filter
+    public class Filter //not used currently, switched to moving average filter because of delay caused by bw
     {
+        //All filters
+        private int _order;
+
+        //BW filter
         private const float _PI = Mathf.PI;
         private float _wc;
-        private int _order;
         private FilterStage[] _filterStages;
+
+        //MA filter
+        private FIRComponent _fir;
+        private float[] _coeffs;
         
-        public Filter(float cutoffHz, float sampleHz, int order, bool high = false) // true is high, false is low (default)
+        public Filter(float cutoffHz, float sampleHz, int order, bool high = false) // BW filter true is high, false is low (default)
         {
             _wc = 2.0f * sampleHz * Mathf.Tan(_PI * cutoffHz / sampleHz); //default for low pass
             _order = order;
@@ -23,6 +30,16 @@ namespace FilterManager
                 _filterStages = new FilterStage[_order / 2 + 1]; //int division rounds down to zero
         
             GetStages(_order, sampleHz, high);
+        }
+
+        public Filter(int order) // MA filter
+        {
+            _order = order;
+            _coeffs = new float[order + 1];
+            _fir = new FIRComponent(order + 1);
+
+            for (var i = 0; i <= _order; i++)
+                _coeffs[i] = 1f/(float)(order + 1);
         }
 
         private void GetStages(int order, float sampleHz, bool high)
@@ -52,7 +69,7 @@ namespace FilterManager
             }
         }
 
-        public float Compute(float input)
+        public float ComputeBW(float input)
         {
             var output = input;
             
@@ -65,6 +82,13 @@ namespace FilterManager
                     output = _filterStages[stage].IIRComponent2nd.Solve(_filterStages[stage].FIRComponent2nd.Solve(output, 
                                                                         _filterStages[stage].A), _filterStages[stage].B);
             }
+
+            return output;
+        }
+
+        public float ComputeMA(float input)
+        {
+            var output = _fir.Solve(input, _coeffs);
 
             return output;
         }
