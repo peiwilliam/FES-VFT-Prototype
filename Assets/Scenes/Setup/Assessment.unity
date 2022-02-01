@@ -191,6 +191,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: DataCollectorAndWriter
       objectReference: {fileID: 0}
+    - target: {fileID: 8772587963840161065, guid: a29fc2405182faf45b484d8db983fd98,
+        type: 3}
+      propertyPath: _gameSession
+      value: 
+      objectReference: {fileID: 446012763}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a29fc2405182faf45b484d8db983fd98, type: 3}
 --- !u!1001 &144498909

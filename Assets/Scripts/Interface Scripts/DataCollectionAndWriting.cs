@@ -4,6 +4,8 @@ using CSV;
 
 public class DataCollectionAndWriting : MonoBehaviour //separate object for writing data, set in unity to execute later than other classes
 {
+    [SerializeField] private GameSession _gameSession;
+
     private string _sceneName;
     private bool _ecAssessmentStarted;
     private bool _eoAssessmentStarted;
@@ -46,7 +48,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
     {
         if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
         {
-            _writer = new CSVWriter();
+            _writer = new CSVWriter(_sceneName);
             _writer.WriteHeader(_cursor.Data, _stimulation);
         }
     }
@@ -57,7 +59,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate object for writ
         var targetCoords = GetTargetCoords();
 
         if (_sceneName != "LOS" && _sceneName != "Assessment") //LOS and assessment handled differently from games
-            _writer.WriteDataAsync(data, targetCoords, _stimulation.TargetPositionFiltered, _stimulation.ControllerData);
+            _writer.WriteDataAsync(data, targetCoords, _stimulation.TargetPositionFiltered, _stimulation.ControllerData, _gameSession);
         else if (_losStarted || _ecAssessmentStarted) //wait for user to click the button to start recording for los and assessment
         {
             if (!GameSession._ecDone)

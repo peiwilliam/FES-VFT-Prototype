@@ -34,7 +34,8 @@ public class BluetoothPin : MonoBehaviour
         {
             string hex = btAddress.Substring(i, 2);
             bluetoothPin += (char)Convert.ToInt32(hex, 16);
-            if (hex == "00") doubleZeroInAddr = true;
+            if (hex == "00") 
+                doubleZeroInAddr = true;
         }
         if (doubleZeroInAddr) //apparently this is no good, not really sure why lol
         { 

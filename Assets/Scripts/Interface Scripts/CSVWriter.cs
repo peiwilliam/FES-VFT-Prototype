@@ -16,21 +16,39 @@ namespace CSV
         private string _condition;
         private int _index;
 
-        public CSVWriter(string condition = "")
+        public CSVWriter(string activeSceneName, string condition = "")
         {
-            _fileName = SceneManager.GetActiveScene().name; //file name is name of scene
-            _extension = ".csv";
-            _path = Directory.GetCurrentDirectory();
+            //want to check is null or empty so that on repeat calls of the writer, we don't keep settign the same thing.
+            if (String.IsNullOrEmpty(_fileName))
+                _fileName = activeSceneName;
+            
+            if (String.IsNullOrEmpty(_extension))
+                _extension = ".csv";
+            
+            if(String.IsNullOrEmpty(_path))
+                _path = Directory.GetCurrentDirectory();
+            
             _condition = condition;
         }
 
         public void WriteHeader(WiiBoardData data, Stimulation stimulation = null) //writes the header but also creates the csv file, stimulation optional
         {
+            var header = GetHeader(data, stimulation);
+            var di = new DirectoryInfo(_path);
+            var files = di.GetFiles(_fileName + _condition + "*"); //only find the relevant csv files
+            
+            SetIndex(files);
+
+            using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true))
+                w.WriteLine(header);
+        }
+
+        private string GetHeader(WiiBoardData data, Stimulation stimulation)
+        {
             var header = "";
 
             if (_fileName == "LOS" || _fileName == "Assessment")
                 header += data.GetParameterNames() + ", targetX, targetY";
-                //header = "Time, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY\n";
             else
             {
                 //extracts the keys as a list and joins it with commas, utlizes linq methods
@@ -48,7 +66,7 @@ namespace CSV
                 }
 
                 header += "\n";
-                
+
                 foreach (var constants in stimulation.ControllerConstants)
                 {
                     if (constants.Key == "Constants")
@@ -62,14 +80,15 @@ namespace CSV
                     header += String.Join<float>(", ", constants.Value.Values.ToList());
                     header += "\n";
                 }
-                
-                header += "\n" + data.GetParameterNames() + ", targetX, targetY, targetXFilterd, targetYFiltered, " + stimulation.ControllerData.GetParameterNames();
-                //header += "\nTime, COPx, COPy, TopLeft, TopRight, BottomLeft, BottomRight, fCOPx, fCOPy, TargetX, TargetY, TargetXFiltered, TargetYFiltered, ShiftedfCOPx, ShiftedfCOPy, ShiftedTargetx, ShiftedTargety, TargetVertAngle, COMVertAngle, AngleErr, NeuralTorque, MechTorque, NeuralMLAngle, MechMLAngle, UnbiasedRPFStim, UnbiasedRDFStim, UnbiasedLPFStim, UnbiasedLDFStim, RPFStim, RDFStim, LPFStim, LDFStim, Ramping";
+
+                header += "\n" + data.GetParameterNames() + ", targetX, targetY, targetXFilterd, targetYFiltered, " + stimulation.ControllerData.GetParameterNames() + ", score";
             }
 
-            var di = new DirectoryInfo(_path);
-            var files = di.GetFiles(_fileName + _condition + "*"); //only find the relevant csv files
-            
+            return header;
+        }
+
+        private void SetIndex(FileInfo[] files)
+        {
             if (files.Length == 0) //if no files with the appropriate name exist, start from 1
                 _index = 1;
             else // go through the files that exist and find the highest index, new file will be highest index + 1
@@ -96,27 +115,40 @@ namespace CSV
                 else
                     _index = indices.Max() + 1;
             }
-            
-            using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true))
-                w.WriteLine(header);
         }
 
         public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords) //make this async so it doesn't potentially slow down the game, for LOS and assessment
         {
             using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true)) // true to append and not overwrite
             {
-                //var line = $@"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}";
                 var line = data.GetParameterValues() + $", {targetCoords.x}, {targetCoords.y}";
                 await w.WriteLineAsync(line);
             }
         }
 
-        public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords, Vector2 targetCoordsFiltered, ControllerData controllerData) //make this async so it doesn't potentially slow down the game, for games
+        public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords, Vector2 targetCoordsFiltered, ControllerData controllerData, GameSession gameSession) //make this async so it doesn't potentially slow down the game, for games
         {
             using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true)) // true to append and not overwrite
             {
-                //var line = $"{data.time}, {data.copX}, {data.copY}, {data.topLeft}, {data.topRight}, {data.bottomLeft}, {data.bottomRight}, {data.fCopX}, {data.fCopY}, {targetCoords.x}, {targetCoords.y}, {targetCoordsFiltered.x}, {targetCoordsFiltered.y}, {controllerData.comX}, {controllerData.shiftedComY}, {controllerData.shiftedTargetCoordsX}, {controllerData.shiftedTargetCoordsY}, {controllerData.targetVertAng}, {controllerData.comVertAng}, {controllerData.angErr}, {controllerData.neuralTorque}, {controllerData.mechTorque}, {controllerData.neuroMlAngle}, {controllerData.mechMlAngle}, {controllerData.rawRpfStim}, {controllerData.rawRdfStim}, {controllerData.rawLpfStim}, {controllerData.rawLdfStim}, {controllerData.rpfStim}, {controllerData.rdfStim}, {controllerData.lpfStim}, {controllerData.ldfStim}, {controllerData.ramp}";
-                var line = data.GetParameterValues() + $", {targetCoords.x}, {targetCoords.y}, {targetCoordsFiltered.x}, {targetCoordsFiltered.y}, " + controllerData.GetParameterValues();
+                var score = 0f;
+
+                switch (_fileName)
+                {
+                    case "Ellipse":
+                        score = gameSession.EllipseScore;
+                        break;
+                    case "Hunting":
+                        score = gameSession.HuntingScore;
+                        break;
+                    case "Colour Matching":
+                        score = gameSession.ColourMatchingScore;
+                        break;
+                    case "Target":
+                        score = gameSession.TargetScore;
+                        break;
+                }
+                
+                var line = data.GetParameterValues() + $", {targetCoords.x}, {targetCoords.y}, {targetCoordsFiltered.x}, {targetCoordsFiltered.y}, " + controllerData.GetParameterValues() + ", " + score.ToString();
                 await w.WriteLineAsync(line);
             }
         }
