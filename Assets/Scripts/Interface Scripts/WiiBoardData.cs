@@ -33,7 +33,7 @@ public struct WiiBoardData
         return names;
     }
 
-    public string GetParameterValues()
+    public string GetParameterValues() //don't really like this since it involves boxing here and unboxing when converting to string
     {
         var values = String.Join(", ", new float[] {time, copX, copY, topLeft, topRight, bottomLeft, bottomRight, fCopX, fCopY});
         

@@ -82,7 +82,7 @@ namespace ControllerManager
             return names;
         }
         
-        public string GetParameterValues()
+        public string GetParameterValues() //don't really like this since it involves boxing here and unboxing when converting to string
         {
             var values = String.Join(", ", new float[] {comX, shiftedComY, shiftedTargetCoordsX, shiftedTargetCoordsY, targetVertAng,
                                                         comVertAng, angErr, neuralTorque, mechTorque, neuroMlAngle, mechMlAngle, 
