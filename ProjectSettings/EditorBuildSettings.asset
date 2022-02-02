@@ -4,5 +4,38 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Setup/Start Screen.unity
+    guid: b08182d80c35dc34ba7699424e441f14
+  - enabled: 1
+    path: Assets/Scenes/Setup/Settings.unity
+    guid: e11d7b4d4c0e6f043a3bf5c3ea094710
+  - enabled: 1
+    path: Assets/Scenes/Setup/LOS.unity
+    guid: 60472664ccffb02408ebead1bddd6985
+  - enabled: 1
+    path: Assets/Scenes/Setup/Bluetooth PIN.unity
+    guid: 2668c360ccce41d43bbc66abafb57f75
+  - enabled: 1
+    path: Assets/Scenes/Setup/Assessment.unity
+    guid: 969d1390a83aa07468ad1aad1f141f65
+  - enabled: 1
+    path: Assets/Scenes/Games/Colour Matching.unity
+    guid: a56998babb0d097479eb9cf7b40554bf
+  - enabled: 1
+    path: Assets/Scenes/Games/Ellipse.unity
+    guid: 1aab7a337da5ffd4d9709a64feedb072
+  - enabled: 1
+    path: Assets/Scenes/Games/Hunting.unity
+    guid: c0603e1f3ecf99d4084d3f51fda27cf8
+  - enabled: 1
+    path: Assets/Scenes/Games/Target.unity
+    guid: 4693467ece777c34a8c21fb626941fad
+  - enabled: 1
+    path: Assets/Scenes/Game Transitions/Experimentation Transition.unity
+    guid: bef626d78971c6c41bce1977c4b23eb1
+  - enabled: 1
+    path: Assets/Scenes/Game Transitions/Familiarization Transition.unity
+    guid: 1a8e7f680246cd347a15579ea8681e3c
   m_configObjects: {}
