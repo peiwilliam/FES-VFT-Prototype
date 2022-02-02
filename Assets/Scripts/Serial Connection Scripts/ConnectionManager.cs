@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Threading;
 using System.Collections;
 using System.IO.Ports;
 using UnityEngine;
 
 public class ConnectionManager : MonoBehaviour
 {
+    [SerializeField] private string _comPort = "COM4"; //port used for the serial connection, this will be different depending on arudino
+    [SerializeField] private int _baudRate = 9600; //default is 9600, but can be adjusted
+
     private SerialPort _stream;
+    private Thread _thread;
 
     private void Start()
     {
@@ -51,6 +56,7 @@ public class ConnectionManager : MonoBehaviour
             {
                 dataString = null;
             }
+
             if (dataString != null)
             {
                 callback(dataString);
@@ -58,6 +64,7 @@ public class ConnectionManager : MonoBehaviour
             } 
             else
                 yield return null; // Wait for next frame
+
             nowTime = DateTime.Now;
             diff = nowTime - initialTime;
         } while (diff.Milliseconds < timeout);

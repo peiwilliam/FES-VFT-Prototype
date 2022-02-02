@@ -83,9 +83,6 @@ crashlytics-build.properties
 /[Aa]ssets/Editor.meta
 /[Aa]ssets/Plugins.meta
 
-# Ardity things
-/[Aa]ssets/Ardity/
-
 # VSCode cache directory
 .vscode/
 
