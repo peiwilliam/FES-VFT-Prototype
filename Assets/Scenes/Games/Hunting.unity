@@ -270,10 +270,6 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 480433281}
-    - target: {fileID: 7153614972997210792, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: LoadStartScene
-      objectReference: {fileID: 0}
     - target: {fileID: 7153614973304575424, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
       propertyPath: m_Name
       value: Game Canvas
@@ -366,10 +362,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8041094670606321291, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
-      propertyPath: _gameSession
-      value: 
-      objectReference: {fileID: 22804545}
     - target: {fileID: 8120697900936396649, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
       propertyPath: _gameSession
       value: 

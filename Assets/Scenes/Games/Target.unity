@@ -287,6 +287,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 7153614972752674038, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
+      propertyPath: m_FontData.m_MinSize
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153614972752674038, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
+      propertyPath: m_FontData.m_FontSize
+      value: 30
+      objectReference: {fileID: 0}
     - target: {fileID: 7153614972997210792, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -298,6 +306,22 @@ PrefabInstance:
     - target: {fileID: 7153614972997210792, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
       value: SceneLoader, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153614972997210799, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 230
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153614972997210799, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 65
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153614972997210799, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -140
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153614972997210799, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 7153614973304575424, guid: 9ee18bb46a5686846ba7a19696cd8cf1, type: 3}
       propertyPath: m_Name
