@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8225973776732718345}
   - component: {fileID: 2225239732450067497}
+  - component: {fileID: 7460285253836950816}
   m_Layer: 0
   m_Name: SerialControllerCustomDelimiter
   m_TagString: Untagged
@@ -48,4 +49,17 @@ MonoBehaviour:
   messageListener: {fileID: 0}
   reconnectionDelay: 1000
   maxUnreadMessages: 1
-  separator: 90
+  separator: 0
+--- !u!114 &7460285253836950816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739342315706191460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e77672bcc5b02c45abf0a2d0d8759f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stimulation: {fileID: 0}

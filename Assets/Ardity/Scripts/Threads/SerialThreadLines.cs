@@ -17,23 +17,27 @@ using System.IO.Ports;
  * 
  * For method comments, refer to the base class.
  */
-public class SerialThreadLines : AbstractSerialThread
+
+namespace Ardity
 {
-    public SerialThreadLines(string portName,
-                             int baudRate,
-                             int delayBeforeReconnecting,
-                             int maxUnreadMessages)
-        : base(portName, baudRate, delayBeforeReconnecting, maxUnreadMessages, true)
+    public class SerialThreadLines : AbstractSerialThread
     {
-    }
+        public SerialThreadLines(string portName,
+                                int baudRate,
+                                int delayBeforeReconnecting,
+                                int maxUnreadMessages)
+            : base(portName, baudRate, delayBeforeReconnecting, maxUnreadMessages, true)
+        {
+        }
 
-    protected override void SendToWire(object message, SerialPort serialPort)
-    {
-        serialPort.WriteLine((string) message);
-    }
+        protected override void SendToWire(object message, SerialPort serialPort)
+        {
+            serialPort.WriteLine((string) message);
+        }
 
-    protected override object ReadFromWire(SerialPort serialPort)
-    {
-        return serialPort.ReadLine();
+        protected override object ReadFromWire(SerialPort serialPort)
+        {
+            return serialPort.ReadLine();
+        }
     }
 }

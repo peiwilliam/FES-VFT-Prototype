@@ -17,57 +17,60 @@ using System.IO.Ports;
  * 
  * For method comments, refer to the base class.
  */
-public class SerialThreadBinaryDelimited : AbstractSerialThread
+namespace Ardity
 {
-    // Messages to/from the serial port should be delimited using this separator.
-    private byte separator;
-    // Buffer where a single message must fit
-    private byte[] buffer = new byte[1024];
-    private int bufferUsed = 0;
-    
-    public SerialThreadBinaryDelimited(string portName,
-                                       int baudRate,
-                                       int delayBeforeReconnecting,
-                                       int maxUnreadMessages,
-                                       byte separator)
-        : base(portName, baudRate, delayBeforeReconnecting, maxUnreadMessages, false)
+    public class SerialThreadBinaryDelimited : AbstractSerialThread
     {
-        this.separator = separator;
-    }
+        // Messages to/from the serial port should be delimited using this separator.
+        private byte separator;
+        // Buffer where a single message must fit
+        private byte[] buffer = new byte[1024];
+        private int bufferUsed = 0;
+        
+        public SerialThreadBinaryDelimited(string portName,
+                                        int baudRate,
+                                        int delayBeforeReconnecting,
+                                        int maxUnreadMessages,
+                                        byte separator)
+            : base(portName, baudRate, delayBeforeReconnecting, maxUnreadMessages, false)
+        {
+            this.separator = separator;
+        }
 
-    // ------------------------------------------------------------------------
-    // Must include the separator already (as it shold have been passed to
-    // the SendMessage method).
-    // ------------------------------------------------------------------------
-    protected override void SendToWire(object message, SerialPort serialPort)
-    {
-        byte[] binaryMessage = (byte[])message;
-        serialPort.Write(binaryMessage, 0, binaryMessage.Length);
-    }
+        // ------------------------------------------------------------------------
+        // Must include the separator already (as it shold have been passed to
+        // the SendMessage method).
+        // ------------------------------------------------------------------------
+        protected override void SendToWire(object message, SerialPort serialPort)
+        {
+            byte[] binaryMessage = (byte[])message;
+            serialPort.Write(binaryMessage, 0, binaryMessage.Length);
+        }
 
-    protected override object ReadFromWire(SerialPort serialPort)
-    {
-        // Try to fill the internal buffer
-        bufferUsed += serialPort.Read(buffer, bufferUsed, buffer.Length - bufferUsed);
+        protected override object ReadFromWire(SerialPort serialPort)
+        {
+            // Try to fill the internal buffer
+            bufferUsed += serialPort.Read(buffer, bufferUsed, buffer.Length - bufferUsed);
 
-        // Search for the separator in the buffer
-        int index = System.Array.FindIndex<byte>(buffer, 0, bufferUsed, IsSeparator);
-        if (index == -1)
-            return null;
+            // Search for the separator in the buffer
+            int index = System.Array.FindIndex<byte>(buffer, 0, bufferUsed, IsSeparator);
+            if (index == -1)
+                return null;
 
-        byte[] returnBuffer = new byte[index];
-        System.Array.Copy(buffer, returnBuffer, index);
+            byte[] returnBuffer = new byte[index];
+            System.Array.Copy(buffer, returnBuffer, index);
 
-        // Shift the buffer so next time the unused bytes start at 0 (safe even
-        // if there is overlap)
-        System.Array.Copy(buffer, index + 1, buffer, 0, bufferUsed - index);
-        bufferUsed -= index + 1;
+            // Shift the buffer so next time the unused bytes start at 0 (safe even
+            // if there is overlap)
+            System.Array.Copy(buffer, index + 1, buffer, 0, bufferUsed - index);
+            bufferUsed -= index + 1;
 
-        return returnBuffer;
-    }
+            return returnBuffer;
+        }
 
-    private bool IsSeparator(byte aByte)
-    {
-        return aByte == separator;
+        private bool IsSeparator(byte aByte)
+        {
+            return aByte == separator;
+        }
     }
 }

@@ -8,6 +8,7 @@
 
 using UnityEngine;
 using System.Threading;
+using Ardity;
 
 /**
  * This class allows a Unity program to continually check for messages from a

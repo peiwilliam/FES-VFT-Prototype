@@ -8,6 +8,7 @@
 
 using UnityEngine;
 using System.Threading;
+using Ardity;
 
 /**
  * While 'SerialController' only allows reading/sending text data that is
