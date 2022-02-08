@@ -3,11 +3,17 @@ using UnityEngine;
 
 public class ColourCircle : MonoBehaviour
 {
+    [Tooltip("The time period at which the highest possible score the player can get decreases")]
     [SerializeField] private float _deltaTimeScore = 0.25f;
+    [Tooltip("The amount of time allowed to get to a circle before the highest possible score starts to decrease")]
     [SerializeField] private float _gettingToCircleBuffer = 5f;
+    [Tooltip("The amount of time required to stay inside a circle to get the points")]
     [SerializeField] private float _timeToGetScore = 3f;
+    [Tooltip("The highest possible score")]
     [SerializeField] private int _score = 250;
+    [Tooltip("For debugging purposes only: Shows when the score is decreasing")]
     [SerializeField] private bool _isDecreasing;
+    [Tooltip("For debugging purposes only: Shows when the cursor has entered the target circle")]
     [SerializeField] private bool _hasEntered;
 
     private Color _oldColour;
@@ -100,7 +106,7 @@ public class ColourCircle : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(_gettingToCircleBuffer);
 
-        if (!_hasEntered) //need it here because the coroutine operates independetly from the initial condition
+        if (!_hasEntered) //need it here because the coroutine operates independently from the initial condition
         {
             while (true)
             {

@@ -829,10 +829,10 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 25
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 2
     m_MaxSize: 40
     m_Alignment: 4
     m_AlignByGeometry: 0
@@ -877,8 +877,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -801, y: -403}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: -771.5, y: -399}
+  m_SizeDelta: {x: 230, y: 65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &860381934
 CanvasRenderer:
@@ -962,8 +962,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6276942094947912393, guid: b1a8f777d9bdd4343b11ed51c895cef5,
-          type: 3}
+      - m_Target: {fileID: 6276942094947912393, guid: b1a8f777d9bdd4343b11ed51c895cef5, type: 3}
         m_TargetAssemblyTypeName: 
         m_MethodName: SaveSettings
         m_Mode: 1
@@ -1901,8 +1900,7 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6276942094947912393, guid: b1a8f777d9bdd4343b11ed51c895cef5,
-          type: 3}
+      - m_Target: {fileID: 6276942094947912393, guid: b1a8f777d9bdd4343b11ed51c895cef5, type: 3}
         m_TargetAssemblyTypeName: SettingsManager, Assembly-CSharp
         m_MethodName: ZeroBoard
         m_Mode: 1
@@ -2000,8 +1998,7 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6276942094947912393, guid: b1a8f777d9bdd4343b11ed51c895cef5,
-          type: 3}
+      - m_Target: {fileID: 6276942094947912393, guid: b1a8f777d9bdd4343b11ed51c895cef5, type: 3}
         m_TargetAssemblyTypeName: SettingsManager, Assembly-CSharp
         m_MethodName: FilterData
         m_Mode: 1
@@ -4325,10 +4322,10 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 25
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 2
     m_MaxSize: 40
     m_Alignment: 4
     m_AlignByGeometry: 0
@@ -6004,8 +6001,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -131, y: 60}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: -140, y: 60}
+  m_SizeDelta: {x: 230, y: 65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2482801487325356146
 CanvasRenderer:
@@ -8419,10 +8416,10 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 25
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 0
     m_MaxSize: 40
     m_Alignment: 4
     m_AlignByGeometry: 0
@@ -8430,7 +8427,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Result Default Values
+  m_Text: Result To Default Values
 --- !u!1 &3181430289652724231
 GameObject:
   m_ObjectHideFlags: 0
@@ -8982,7 +8979,7 @@ GameObject:
   - component: {fileID: 82216399049086753}
   - component: {fileID: 4369008267361011105}
   m_Layer: 5
-  m_Name: Limit of Stability Back Text
+  m_Name: Limit of Stability Left Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9048,7 +9045,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Limit of Stability Back
+  m_Text: Limit of Stability Left
 --- !u!1 &3532373810812850648
 GameObject:
   m_ObjectHideFlags: 0
@@ -10682,8 +10679,7 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6276942094947912393, guid: b1a8f777d9bdd4343b11ed51c895cef5,
-          type: 3}
+      - m_Target: {fileID: 6276942094947912393, guid: b1a8f777d9bdd4343b11ed51c895cef5, type: 3}
         m_TargetAssemblyTypeName: SettingsManager, Assembly-CSharp
         m_MethodName: ECOrEO
         m_Mode: 1
@@ -12032,8 +12028,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -801, y: -338}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: -771.5, y: -320}
+  m_SizeDelta: {x: 230, y: 65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6992661244058148850
 CanvasRenderer:
@@ -12117,8 +12113,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6276942094947912393, guid: b1a8f777d9bdd4343b11ed51c895cef5,
-          type: 3}
+      - m_Target: {fileID: 6276942094947912393, guid: b1a8f777d9bdd4343b11ed51c895cef5, type: 3}
         m_TargetAssemblyTypeName: 
         m_MethodName: ResetToDefaults
         m_Mode: 1
