@@ -45,11 +45,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   portName: COM3
-  baudRate: 9600
+  baudRate: 19200
   messageListener: {fileID: 0}
   reconnectionDelay: 1000
-  maxUnreadMessages: 1
-  separator: 0
+  maxUnreadMessages: 10
+  separator: 44
 --- !u!114 &7460285253836950816
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -398,7 +398,6 @@ namespace ControllerManager
             var x = shiftedTargetCoords.x - comX;
             var y = shiftedTargetCoords.y - shiftedCOMy;
             MlAngles[0] = Mathf.Atan2(x, y);
-
             var biases = BiasFunction(MlAngles[0]);
 
             return biases;

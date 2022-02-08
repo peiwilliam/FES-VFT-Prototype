@@ -19,7 +19,13 @@ public class CommunicationManager : MonoBehaviour
                                         "b" + _stimulation.ControllerData.ldfStim.ToString("00")};
 
         foreach (var stim in stimulation)
+        {
             _serialController.SendSerialMessage(Encoding.ASCII.GetBytes(stim));
-           
+            // Debug.Log(stim + " send"); //used for debugging the arduino
+            // var message = _serialController.ReadSerialMessage();
+            // if (message == null)
+            //     continue;
+            // Debug.Log(Encoding.ASCII.GetString(message) + " receive");
+        }
     }
 }

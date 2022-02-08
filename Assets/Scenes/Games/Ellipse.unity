@@ -839,6 +839,10 @@ PrefabInstance:
       value: SerialControllerCustomDelimiter
       objectReference: {fileID: 0}
     - target: {fileID: 2225239732450067497, guid: a3817fece2099d648ace6b29f111c10f, type: 3}
+      propertyPath: baudRate
+      value: 115200
+      objectReference: {fileID: 0}
+    - target: {fileID: 2225239732450067497, guid: a3817fece2099d648ace6b29f111c10f, type: 3}
       propertyPath: separator
       value: 0
       objectReference: {fileID: 0}
