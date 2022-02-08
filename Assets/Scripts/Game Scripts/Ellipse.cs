@@ -2,9 +2,13 @@
 
 public class Ellipse : MonoBehaviour
 {
-    [SerializeField] private int _vertexCount = 60; 
+    [Tooltip("The number of vertices used to draw the ellipse")]
+    [SerializeField] private int _vertexCount = 60;
+    [Tooltip("Line width of the ellipse that is drawn on screen")]
     [SerializeField] private float _lineWidth = 0.05f;
+    [Tooltip("Radius of the x axis of the ellipse")]
     [SerializeField] private float _xRadius = 7;
+    [Tooltip("Radius of the y axis of the ellipse")]
     [SerializeField] private float _yRadius = 4;
  
     private LineRenderer _lineRenderer;

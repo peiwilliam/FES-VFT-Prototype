@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 public class FamiliarizationTransition : MonoBehaviour
 {
+    [Tooltip("The text that is used to inform the player about what's coming in the familiarization")]
     [SerializeField] private List<string> _infoText; //0 is beginning familiarization, 1 is during familiarization
 
     private void Start()

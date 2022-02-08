@@ -5,6 +5,7 @@ using KnuthShuffle;
 
 public class SceneLoader : MonoBehaviour
 {
+    [Tooltip("Stores the zero board object")]
     [SerializeField] private ZeroBoard _zeroBoard;
 
     private static bool _beginFamiliarization;

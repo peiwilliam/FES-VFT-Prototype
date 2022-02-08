@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class DrawHorizontal : MonoBehaviour
 {
+    [Tooltip("Line width of the horizontal line marking the top and bottom half of the game screen")]
     [SerializeField] private float _lineWidth = 0.05f;
  
     private LineRenderer _horizontal;

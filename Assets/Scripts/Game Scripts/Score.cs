@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 
 public class Score : MonoBehaviour
 {
+    [Tooltip("GameSession object for the game")]
     [SerializeField] private GameSession _gameSession;
 
     private void Update()

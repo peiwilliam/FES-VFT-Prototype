@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class CommunicationManager : MonoBehaviour
 {
+    [Tooltip("For storing the stimulation object associated with the game")]
     [SerializeField] private Stimulation _stimulation;
     private SerialControllerCustomDelimiter _serialController;
 

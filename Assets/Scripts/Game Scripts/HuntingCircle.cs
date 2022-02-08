@@ -3,11 +3,17 @@ using UnityEngine;
 
 public class HuntingCircle : MonoBehaviour
 {
+    [Tooltip("How quickly the score increases and decreases")]
     [SerializeField] private float _deltaTimeScore = 0.25f;
+    [Tooltip("How much time is given to the player to go from circle to circle before the maximum score starts to decrease")]
     [SerializeField] private float _gettingToCircleBuffer = 5f;
+    [Tooltip("How much time the player needs to stay in the circle to get points")]
     [SerializeField] private float _timeToGetScore = 3f;
+    [Tooltip("The maximum score per circle")]
     [SerializeField] private int _score = 250;
+    [Tooltip("For debugging purposes only, shows when the maximum score is decreasing")]
     [SerializeField] private bool _isDecreasing;
+    [Tooltip("For debugging purposes only, shows when the cursor has entered the circle")]
     [SerializeField] private bool _hasEntered;
 
     private Color _oldColour;

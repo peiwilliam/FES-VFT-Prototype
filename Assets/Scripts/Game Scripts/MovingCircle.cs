@@ -3,19 +3,25 @@ using UnityEngine;
 
 public class MovingCircle : MonoBehaviour
 {
+    [Tooltip("How quickly the circle moves along the ellipse")]
     [SerializeField] private float _circleVelocity = 3f;
+    [Tooltip("How quickly the score increases and decreases")]
     [SerializeField] private float _deltaTimeScore = 0.2f;
+    [Tooltip("Initial grace period at the start of the game to give the player time to get use to the game and be able to get to target")]
     [SerializeField] private float _startingGracePeriod = 5f;
+    [Tooltip("If the player goes out of the circle, this is how long the player has before they start losing points")]
     [SerializeField] private float _gracePeriod = 1f;
+    [Tooltip("For debugging purposes only, the score that the player has achieved")]
     [SerializeField] private int _score = 0;
+    [Tooltip("For debugging purposes only, whether or not the score is decreasing")]
     [SerializeField] private bool _isDecreasing = false;
     
+    private int _positionIndex;
+    private int _direction;
     private Ellipse _ellipse;
     private Vector3[] _ellipsePositions;
     private LineRenderer _lineRenderer;
     private Color _oldColour;
-    private int _positionIndex;
-    private int _direction;
     private Coroutine _scoreIncreaseCoroutine;
     private Coroutine _scoreDecreaseCoroutine;
     private Coroutine _initialGracePeriod;

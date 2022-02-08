@@ -12,7 +12,9 @@ using TMPro;
 public class GameSession : MonoBehaviour
 {
     [Header("Assessment")]
+    [Tooltip("Instructions to the player when doing the quiet standing assessment")]
     [SerializeField] private List<string> _assessInstructions;
+    [Tooltip("The box where the instructions are displayed")]
     [SerializeField] private InputField _assessInstructionsBox;
 
     public static bool _ecDone; //public static so cursor is able to access these values
@@ -26,14 +28,18 @@ public class GameSession : MonoBehaviour
     private float _assessmentTime;
 
     [Header("Limits of Stability")]
+    [Tooltip("Instructions to the player when doing the limits of stability test")]
     [SerializeField] private InputField _losInstructionsBox;
+    [Tooltip("For debugging purposes only, keeps track of how many of the directiosn have been done")]
     [SerializeField] private int _counter;
-    [SerializeField] private float _windowSize;
+    [Tooltip("For debugging purposes only, shows if the order that the directions show up in has been shuffled or not")]
     [SerializeField] private bool _shuffled;
+    [Tooltip("The list of rectangle objects in the limits of stability test")]
     [SerializeField] private List<SpriteRenderer> _rectangles;
+    [Tooltip("For debugging purposes only, shows which direction is the current direction being tested")]
     [SerializeField] private string _direction;
     
-    //event for handling the changing of directions, can't use unity event because cursor is instan. at the beginning and doesnn't exist before start of game
+    //event for handling the changing of directions, can't use unity event because cursor is instan. at the beginning and doesn't exist before start of game
     public delegate void OnDirectionChange(string direction);
     public static event OnDirectionChange DirectionChangeEvent;
 
@@ -43,8 +49,11 @@ public class GameSession : MonoBehaviour
     private Dictionary<string, float> _limits; //dictionary to store the limits
 
     [Header("All Games")]
+    [Tooltip("Place to put the cursor prefab so that it is instantiated for all games")]
     [SerializeField] private GameObject _cursorPrefab;
+    [Tooltip("The amount of time that each game and quiet standing assessment is played")]
     [SerializeField] private float _totalGameTime = 100f;
+    [Tooltip("The object that holds how much time is left in the game")]
     [SerializeField] private Text _timeText;
 
     private float _totalGameDeltaTime = 1f; //incrementing timer by 1 sec each time, doesn't need to be changed
@@ -52,7 +61,9 @@ public class GameSession : MonoBehaviour
     private SceneLoader _sceneLoader;
     
     [Header("Ellipse Game")]
+    [Tooltip("Place to put the moving circle prefab so that it's instantiated for the ellipse game")]
     [SerializeField] private GameObject _movingCirclePrefab;
+    [Tooltip("Place to put the ellipse object so that moving circle has access to it, more efficient than FindObjectOfType")]
     [SerializeField] private Ellipse _ellipse;
 
     private MovingCircle _movingCircle;
@@ -68,11 +79,15 @@ public class GameSession : MonoBehaviour
     public int EllipseScore { get; private set; }
 
     [Header("Colour Matching Game")]
+    [Tooltip("How long each target should last before switching")]
     [SerializeField] private float _colourDuration = 10f;
+    [Tooltip("For determining if the player has stayed in the target circle long enough")]
     [SerializeField] private bool _conditionColourMet;
+    [Tooltip("For storing the colour circle objects")]
     [SerializeField] private List<ColourCircle> _colourCircles;
-    //default colours, need to change if the colours have been changed
-    [SerializeField] private List<string> _colourTexts;
+    [Tooltip("Text of the names of the colours")]
+    [SerializeField] private List<string> _colourTexts; //default colours, need to change if the colours have been changed
+    [Tooltip("For handling target changing when the target circle changes")]
     [SerializeField] private UnityEvent _colourChangeEvent;
 
     private TextMeshProUGUI _colourText;
@@ -80,7 +95,7 @@ public class GameSession : MonoBehaviour
 
     public int ColourMatchingScore { get; private set; }
     public ColourCircle TargetColourCircle { get; private set; }
-    //for the _conditionColourMet variable so that other classes can easily access
+    //for the _conditionColourMet variable so that colour circle has access to this variable
     public bool ConditionColourMet 
     {
         get => _conditionColourMet;
@@ -88,12 +103,19 @@ public class GameSession : MonoBehaviour
     }
 
     [Header("Hunting Game")]
+    [Tooltip("For storing the hunting circle prefab so that it can be instantiated during the game")]
     [SerializeField] private GameObject _huntingCirclePrefab;
+    [Tooltip("The minimum x or the left side edge of the camera")]
     [SerializeField] private float _minX = 0f;
+    [Tooltip("The maximum x or the right side edge of the camera")]
     [SerializeField] private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
+    [Tooltip("The minimum y or the bottom side edge of the camera")]
     [SerializeField] private float _minY = 0f;
+    [Tooltip("The maximum y or the top side edge of the camera")]
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
+    [Tooltip("How long the target lasts before switching to another target")]
     [SerializeField] private float _huntingDuration = 10f;
+    [Tooltip("For determining if the player has met the condition to switch targets")]
     [SerializeField] private bool _conditionHuntingMet;
     
     private HuntingCircle _huntingCircle;
@@ -107,7 +129,9 @@ public class GameSession : MonoBehaviour
     }
 
     [Header("Target Game")]
+    [Tooltip("For storing the circles that compose the target")]
     [SerializeField] private List<TargetCircle> _targetCircles;
+    [Tooltip("The rate at which score increases for the target game. It's here instead of in TargetCircle because each circle needs to use the same timer")]
     [SerializeField] private float _deltaTimeScore = 0.25f;
 
     private Coroutine _increaseScore;
@@ -215,22 +239,21 @@ public class GameSession : MonoBehaviour
         switch (SceneManager.GetActiveScene().name)
         {
             case "Assessment":
-                
-                if (_timer != null) //timer for the assessment has started
-                {
-                    Assessment();
+                if (_timer == null) //timer for the assessment hasn't started, don't go past this point
+                    break;
 
-                    if (_totalGameTime <= 0) //reset for eyes open condition
+                Assessment();
+
+                if (_totalGameTime <= 0) //reset for eyes open condition
+                {
+                    if (_ecDone && !_eoDone) //change the instructions and reset timer for next condition
                     {
-                        if (_ecDone && !_eoDone) //change the instructions and reset timer for next condition
-                        {
-                            _timer = null;
-                            _assessInstructionsBox.text = _assessInstructions[1];
-                            _totalGameTime = _assessmentTime;
-                        }
-                        else if (_ecDone && _eoDone) //set length offset when assessment is done
-                            ComputeLengthOffset();
+                        _timer = null;
+                        _assessInstructionsBox.text = _assessInstructions[1];
+                        _totalGameTime = _assessmentTime;
                     }
+                    else if (_ecDone && _eoDone) //set length offset when assessment is done
+                        ComputeLengthOffset();
                 }
 
                 break;
@@ -343,7 +366,7 @@ public class GameSession : MonoBehaviour
         _limits = new Dictionary<string, float>();
         var averages = new List<float>();
         
-        if (_directionData.Values != null) //check if the board was used, if it's just cursor, the vales will be null
+        if (_directionData.Values != null) //check if the board was used, if it's just cursor, the values will be null
         {
             foreach (var direction in _directionData)
             {

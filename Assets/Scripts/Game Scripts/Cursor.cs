@@ -5,11 +5,15 @@ using FilterManager;
 
 public class Cursor : MonoBehaviour
 {
+    [Tooltip("The minimum x or the left side edge of the camera")]
     [SerializeField] private float _minX = 0f;
+    [Tooltip("The maximum x or the right side edge of the camera")]
     [SerializeField] private float _maxX = 2f*5f*16f/9f; //2*height*aspect ratio
+    [Tooltip("The minimum y or the bottom edge of the camera")]
     [SerializeField] private float _minY = 0f;
+    [Tooltip("The maximum y or the top edge of the camera")]
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
-    [Tooltip("Get this value from the difference between the rectangles prefab vs the camera")]
+    [Tooltip("The shift in the centre of the LOS rectangles wrt. centre of the camera. Get this value from the difference between the rectangles prefab vs the camera")]
     [SerializeField] private float _rectanglesShift = 0.3f; //can be adjusted if the position of rectangles changes in the future.
 
     private string _sceneName;

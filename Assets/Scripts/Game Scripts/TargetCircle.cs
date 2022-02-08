@@ -4,13 +4,21 @@ using UnityEngine;
 public class TargetCircle : MonoBehaviour
 {
     // normally delta time would be in this class, but because circles are interrelated, the variable is in GameSession
+    [Tooltip("Score that the player has received for staying in the various circles in the target, individual to each circle")]
     [SerializeField] private float _score;
+    [Tooltip("How quickly the score increases over time, the delta time for this is handled in GameSession")]
     [SerializeField] private float _scoreIncreaseRate = 1f;
+    [Tooltip("Score multiplier for being able to stay in the centre of the target for a set amount of time")]
     [SerializeField] private float _scoreMultiplier = 1.5f;
+    [Tooltip("The time needed to stay in the centre of the target to get the score multiplier")]
     [SerializeField] private float _timeNeededForMultiplier = 5f;
+    [Tooltip("For debugging purposes only, shows whether or not the cursor is in each individual circle")]
     [SerializeField] private bool _isInCircle;
+    [Tooltip("For debugging purposes only, shows whether or not the player has achieved the time needed to get the score multiplier")]
     [SerializeField] private bool _multiplyScore;
+    [Tooltip("Stores what the \"next\" circle is in the layers of circles that compose the target")]
     [SerializeField] private TargetCircle _nextCircle;
+    [Tooltip("GameSession object for the game")]
     [SerializeField] private GameSession _gameSession;
     
     private Coroutine _increaseScore;

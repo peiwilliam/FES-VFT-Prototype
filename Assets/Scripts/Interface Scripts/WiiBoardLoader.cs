@@ -4,6 +4,7 @@ using InTheHand.Net.Bluetooth;
 
 public class WiiBoardLoader : MonoBehaviour
 {
+    [Tooltip("For storing the wii board object")]
     [SerializeField] private WiiBoard _wiiboard;
 
     private BluetoothClient _btClient;

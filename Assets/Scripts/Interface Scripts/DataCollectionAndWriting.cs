@@ -4,6 +4,7 @@ using CSV;
 
 public class DataCollectionAndWriting : MonoBehaviour //separate object for writing data, set in unity to execute later than other classes
 {
+    [Tooltip("Store the game session object associated with the game")]
     [SerializeField] private GameSession _gameSession;
 
     private string _sceneName;
