@@ -246,13 +246,13 @@ public class GameSession : MonoBehaviour
 
                 if (_totalGameTime <= 0) //reset for eyes open condition
                 {
-                    if (_ecDone && !_eoDone) //change the instructions and reset timer for next condition
+                    if (ecDone && !eoDone) //change the instructions and reset timer for next condition
                     {
                         _timer = null;
                         _assessInstructionsBox.text = _assessInstructions[1];
                         _totalGameTime = _assessmentTime;
                     }
-                    else if (_ecDone && _eoDone) //set length offset when assessment is done
+                    else if (ecDone && eoDone) //set length offset when assessment is done
                         ComputeLengthOffset();
                 }
 
