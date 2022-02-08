@@ -21,9 +21,6 @@ PluginImporter:
     second:
       enabled: 0
       settings:
-<<<<<<< HEAD
-        DefaultValueInitialized: true
-=======
         CPU: x86_64
         DefaultValueInitialized: true
   - first:
@@ -50,7 +47,6 @@ PluginImporter:
       enabled: 1
       settings:
         CPU: AnyCPU
->>>>>>> arduino-connection
   userData: 
   assetBundleName: 
   assetBundleVariant: 

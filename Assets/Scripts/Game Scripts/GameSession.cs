@@ -248,20 +248,9 @@ public class GameSession : MonoBehaviour
                 {
                     if (_ecDone && !_eoDone) //change the instructions and reset timer for next condition
                     {
-<<<<<<< HEAD
-                        if (ecDone && !eoDone) //change the instructions and reset timer for next condition
-                        {
-                            _timer = null;
-                            _assessInstructionsBox.text = _assessInstructions[1];
-                            _totalGameTime = 100;
-                        }
-                        else if (ecDone && eoDone) //set length offset when assessment is done
-                            ComputeLengthOffset();
-=======
                         _timer = null;
                         _assessInstructionsBox.text = _assessInstructions[1];
                         _totalGameTime = _assessmentTime;
->>>>>>> arduino-connection
                     }
                     else if (_ecDone && _eoDone) //set length offset when assessment is done
                         ComputeLengthOffset();
