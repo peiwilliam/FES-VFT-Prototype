@@ -19,25 +19,25 @@ using Ardity;
 public class SerialControllerCustomDelimiter : MonoBehaviour
 {
     [Tooltip("Port name with which the SerialPort object will be created.")]
-    public string portName = "COM3";
+    [SerializeField] private string _portName = "COM3";
 
     [Tooltip("Baud rate that the serial device is using to transmit data.")]
-    public int baudRate = 9600;
+    [SerializeField] private int _baudRate = 9600;
 
     [Tooltip("Reference to an scene object that will receive the events of connection, " +
              "disconnection and the messages from the serial device.")]
-    public GameObject messageListener;
+    [SerializeField] private GameObject _messageListener;
 
     [Tooltip("After an error in the serial communication, or an unsuccessful " +
              "connect, how many milliseconds we should wait.")]
-    public int reconnectionDelay = 1000;
+    [SerializeField] private int _reconnectionDelay = 1000;
 
     [Tooltip("Maximum number of unread data messages in the queue. " +
              "New messages will be discarded.")]
-    public int maxUnreadMessages = 1;
+    [SerializeField] private int _maxUnreadMessages = 1;
 
-    [Tooltip(" SCII character that will be used as the delimiter")]
-    public byte separator = 90;
+    [Tooltip("ASCII character that will be used as the delimiter")]
+    [SerializeField] private byte _separator = 90;
 
     // Internal reference to the Thread and the object that runs in it.
     protected Thread thread;
@@ -51,11 +51,11 @@ public class SerialControllerCustomDelimiter : MonoBehaviour
     // ------------------------------------------------------------------------
     void OnEnable()
     {
-        serialThread = new SerialThreadBinaryDelimited(portName,
-                                                       baudRate,
-                                                       reconnectionDelay,
-                                                       maxUnreadMessages,
-                                                       separator);
+        serialThread = new SerialThreadBinaryDelimited(_portName,
+                                                       _baudRate,
+                                                       _reconnectionDelay,
+                                                       _maxUnreadMessages,
+                                                       _separator);
         thread = new Thread(new ThreadStart(serialThread.RunForever));
         thread.Start();
     }
@@ -98,7 +98,7 @@ public class SerialControllerCustomDelimiter : MonoBehaviour
     {
         // If the user prefers to poll the messages instead of receiving them
         // via SendMessage, then the message listener should be null.
-        if (messageListener == null)
+        if (_messageListener == null)
             return;
 
         // Read the next message from the queue
@@ -107,7 +107,7 @@ public class SerialControllerCustomDelimiter : MonoBehaviour
             return;
 
         // Check if the message is plain data or a connect/disconnect event.
-        messageListener.SendMessage("OnMessageArrived", message);
+        _messageListener.SendMessage("OnMessageArrived", message);
     }
 
     // ------------------------------------------------------------------------
