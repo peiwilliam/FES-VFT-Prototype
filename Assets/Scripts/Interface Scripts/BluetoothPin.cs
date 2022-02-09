@@ -2,17 +2,15 @@
 using UnityEngine;
 using UnityEngine.UI;
 using InTheHand.Net.Bluetooth;
+using InTheHand;
 using InTheHand.Net.Sockets;
 
 public class BluetoothPin : MonoBehaviour
 {
-    private BluetoothClient _btClient;
-    
     public string BTPin { get; set; }
     
     private void Start()
     {
-        _btClient = new BluetoothClient();
         SetPin();
     }
 

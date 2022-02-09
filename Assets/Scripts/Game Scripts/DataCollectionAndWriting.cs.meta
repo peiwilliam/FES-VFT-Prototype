@@ -4,11 +4,7 @@ MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences: []
-<<<<<<< HEAD:Assets/Scripts/Game Scripts/DataCollectionAndWriting.cs.meta
-  executionOrder: 0
-=======
-  executionOrder: 8
->>>>>>> arduino-connection:Assets/Scripts/Interface Scripts/DataCollectionAndWriting.cs.meta
+  executionOrder: 7
   icon: {instanceID: 0}
   userData: 
   assetBundleName: 
