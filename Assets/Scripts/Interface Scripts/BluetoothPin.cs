@@ -2,8 +2,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using InTheHand.Net.Bluetooth;
-using InTheHand;
-using InTheHand.Net.Sockets;
 
 public class BluetoothPin : MonoBehaviour
 {
@@ -16,10 +14,17 @@ public class BluetoothPin : MonoBehaviour
 
     private void SetPin()
     {
-        var BTPin = AddressToWiiPin(BluetoothRadio.Default.LocalAddress.ToString());
-        var text = gameObject.GetComponent<InputField>();
-        text.SetTextWithoutNotify(BTPin);
-        text.readOnly = true;
+        try
+        {
+            var BTPin = AddressToWiiPin(BluetoothRadio.Default.LocalAddress.ToString());
+            var text = gameObject.GetComponent<InputField>();
+            text.SetTextWithoutNotify(BTPin);
+            text.readOnly = true;
+        }
+        catch (NullReferenceException exception)
+        {
+            Debug.Log("Object is null, did you turn on the bluetooth? " + exception.StackTrace);
+        }
     }
 
     private string AddressToWiiPin(string btAddress)
