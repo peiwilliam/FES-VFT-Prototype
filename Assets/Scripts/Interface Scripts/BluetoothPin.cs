@@ -23,7 +23,7 @@ public class BluetoothPin : MonoBehaviour
         }
         catch (NullReferenceException exception)
         {
-            Debug.Log("Object is null, did you turn on the bluetooth? " + exception.StackTrace);
+            Debug.LogWarning("Object is null, did you turn on the bluetooth? " + exception.StackTrace);
         }
     }
 
