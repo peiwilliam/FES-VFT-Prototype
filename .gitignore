@@ -74,7 +74,7 @@ crashlytics-build.properties
 *.csv
 
 # WiiBuddy things
-/[Aa]ssets/WiiBuddy/*
+/[Aa]ssets/WiiBuddy/
 /[Aa]ssets/Editor/
 
 # VSCode cache directory
