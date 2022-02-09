@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Management;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,7 +9,8 @@ using UnityEngine.SceneManagement;
 public class SettingsManager : MonoBehaviour
 {
     // dictionaries for iterating through values easier
-    // default values
+    private Dictionary<string, InputField> _fields = new Dictionary<string, InputField>();
+    // default values, static so that this doesn't get instantiated per object, not really necessary but saves memory
     private static Dictionary<string, object> _defaultValues = new Dictionary<string, object>()
     {
         ["Controller Frequency"] = 50, // this is the same frequency as the default physics update speed in unity
@@ -17,6 +19,7 @@ public class SettingsManager : MonoBehaviour
         ["Max A/P Fraction"] = 18.0926f, // can be removed, unnecessary
         ["Ankle Fraction"] = 2.0f, // percentage of total height that corresponds to the distance between heel to ankle
         ["Number of Trials"] = 2, // how many times the experiment will be run
+        ["Arduino COM Port"] = "", // the COM port for the arduino or serial device
         ["Filter Order"] = 2, // order of the moving average/butterworth filter
         ["Length Offset"] = 0.0f, // measure of how far the quiet standing centre of pressure is from the 0,0 of the board (ie. the centre)
         ["Star Multiplier"] = 120, // used for the unimplemented star game
@@ -41,14 +44,15 @@ public class SettingsManager : MonoBehaviour
         ["Limit of Stability Left"] = 1f,
         ["Limit of Stability Right"] = 1f,
     };
-    private static Dictionary<string, InputField> _fields = new Dictionary<string, InputField>();
-    public static Dictionary<string, string> _fieldNamesAndTypes = new Dictionary<string, string>() 
+
+    public static Dictionary<string, string> fieldNamesAndTypes = new Dictionary<string, string>() 
     {
         ["Controller Frequency"] = "int",
         ["Trial Duration"] = "int",
         ["Ramp Duration"] = "float",
         ["Ankle Fraction"] = "float",
         ["Number of Trials"] = "int",
+        ["Arduino COM Port"] = "string",
         ["Filter Order"] = "int",
         ["Length Offset"] = "float",
         ["Star Multiplier"] = "int",
@@ -74,11 +78,11 @@ public class SettingsManager : MonoBehaviour
         ["Limit of Stability Right"] = "float"
     };
 
-    private void Awake() 
+    private void Start() 
     {
         if (SceneManager.GetActiveScene().buildIndex == 0) //only do this at the start screen
         {
-            foreach (var nameAndType in _fieldNamesAndTypes)
+            foreach (var nameAndType in fieldNamesAndTypes)
             {
                 if (!PlayerPrefs.HasKey(nameAndType.Key)) //if opening up game for first time, set all values to default, missing values also set to default
                 {
@@ -107,7 +111,7 @@ public class SettingsManager : MonoBehaviour
 
     public void SaveSettings()
     {
-        foreach (var nameAndType in _fieldNamesAndTypes) //saves new set values
+        foreach (var nameAndType in fieldNamesAndTypes) //saves new set values
         {
             if (nameAndType.Value == "int")
                 PlayerPrefs.SetInt(nameAndType.Key, Convert.ToInt32(_fields[nameAndType.Key].text));
@@ -164,7 +168,7 @@ public class SettingsManager : MonoBehaviour
 
     private void SetInputs()
     {
-        foreach (var nameAndType in _fieldNamesAndTypes)
+        foreach (var nameAndType in fieldNamesAndTypes)
         {
             if (nameAndType.Value == "int")
                 _fields[nameAndType.Key].text = PlayerPrefs.GetInt(nameAndType.Key, (int)_defaultValues[nameAndType.Key]).ToString();

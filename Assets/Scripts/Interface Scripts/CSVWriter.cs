@@ -52,10 +52,10 @@ namespace CSV
             else
             {
                 //extracts the keys as a list and joins it with commas, utlizes linq methods
-                header += String.Join<string>(", ", SettingsManager._fieldNamesAndTypes.Keys.ToList());
+                header += String.Join<string>(", ", SettingsManager.fieldNamesAndTypes.Keys.ToList());
                 header += "\n"; //need to add this so that the values of the parameters are added on the next line
 
-                foreach (var field in SettingsManager._fieldNamesAndTypes)
+                foreach (var field in SettingsManager.fieldNamesAndTypes)
                 {
                     if (field.Value == "int")
                         header += PlayerPrefs.GetInt(field.Key, 123).ToString() + ", "; //123 means that the value wasn't stored on the computer
