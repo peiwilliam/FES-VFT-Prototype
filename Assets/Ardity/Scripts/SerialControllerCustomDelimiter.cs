@@ -18,9 +18,6 @@ using Ardity;
  */
 public class SerialControllerCustomDelimiter : MonoBehaviour
 {
-    [Tooltip("Port name with which the SerialPort object will be created.")]
-    [SerializeField] private string _portName = "COM3";
-
     [Tooltip("Baud rate that the serial device is using to transmit data.")]
     [SerializeField] private int _baudRate = 9600;
 
@@ -39,6 +36,8 @@ public class SerialControllerCustomDelimiter : MonoBehaviour
     [Tooltip("ASCII character that will be used as the delimiter")]
     [SerializeField] private byte _separator = 90;
 
+    private string _portName;
+
     // Internal reference to the Thread and the object that runs in it.
     protected Thread thread;
     protected SerialThreadBinaryDelimited serialThread;
@@ -51,6 +50,7 @@ public class SerialControllerCustomDelimiter : MonoBehaviour
     // ------------------------------------------------------------------------
     void OnEnable()
     {
+        _portName = PlayerPrefs.GetString("Arduino COM Port");
         serialThread = new SerialThreadBinaryDelimited(_portName,
                                                        _baudRate,
                                                        _reconnectionDelay,

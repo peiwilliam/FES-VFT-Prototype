@@ -97,13 +97,4 @@ public class SceneLoader : MonoBehaviour
     public static bool GetExperimentation() => _beginExperimentation;
 
     public static int GetGameIndicesIndex() => _gameIndicesIndex;
-
-    private void OnEnable() 
-    {
-        if (SceneManager.GetActiveScene().name == "Settings")
-        {
-            var settingsManager = FindObjectOfType<SettingsManager>();
-            settingsManager.SetInputFields();
-        }
-    }
 }

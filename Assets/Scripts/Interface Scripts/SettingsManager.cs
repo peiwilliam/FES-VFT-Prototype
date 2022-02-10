@@ -1,15 +1,20 @@
 ﻿using System;
 using System.IO;
-using System.Management;
+using System.Text;
+using System.Linq;
+using System.IO.Ports;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class SettingsManager : MonoBehaviour
 {
-    // dictionaries for iterating through values easier
+    // dictionary for iterating through values easier
     private Dictionary<string, InputField> _fields = new Dictionary<string, InputField>();
+    private TMP_Dropdown _comPortsDropDown;
+
     // default values, static so that this doesn't get instantiated per object, not really necessary but saves memory
     private static Dictionary<string, object> _defaultValues = new Dictionary<string, object>()
     {
@@ -19,7 +24,7 @@ public class SettingsManager : MonoBehaviour
         ["Max A/P Fraction"] = 18.0926f, // can be removed, unnecessary
         ["Ankle Fraction"] = 2.0f, // percentage of total height that corresponds to the distance between heel to ankle
         ["Number of Trials"] = 2, // how many times the experiment will be run
-        ["Arduino COM Port"] = "", // the COM port for the arduino or serial device
+        ["Arduino COM Port"] = "No COM Ports found", //how many arduinos and/or serival devices found
         ["Filter Order"] = 2, // order of the moving average/butterworth filter
         ["Length Offset"] = 0.0f, // measure of how far the quiet standing centre of pressure is from the 0,0 of the board (ie. the centre)
         ["Star Multiplier"] = 120, // used for the unimplemented star game
@@ -78,6 +83,12 @@ public class SettingsManager : MonoBehaviour
         ["Limit of Stability Right"] = "float"
     };
 
+    private void Awake() 
+    {
+        if (SceneManager.GetActiveScene().buildIndex == 1) //buildIndex 1 should be settings
+            SetInputFields();
+    }
+
     private void Start() 
     {
         if (SceneManager.GetActiveScene().buildIndex == 0) //only do this at the start screen
@@ -97,14 +108,16 @@ public class SettingsManager : MonoBehaviour
         }
     }
 
-    public void SetInputFields() 
+    private void SetInputFields() //this is called by sceneloader when the settings page is loaded
     {
         _fields.Clear(); //because objects get refreshed every time scene is reloaded, need to add "new" fields to dictionary
 
-        var fields = FindObjectsOfType<InputField>(); //array form, want to conver to dictionary instead - easier to work with
+        var fields = FindObjectsOfType<InputField>(); //array form, want to convert to dictionary instead - easier to work with
 
         foreach (var field in fields)
-            _fields.Add(field.name, field);
+            _fields[field.name] = field;
+        
+        _comPortsDropDown = FindObjectOfType<TMP_Dropdown>(); //need to find dropdown for arduino com port
 
         SetInputs();
     }
@@ -113,6 +126,22 @@ public class SettingsManager : MonoBehaviour
     {
         foreach (var nameAndType in fieldNamesAndTypes) //saves new set values
         {
+            if (nameAndType.Key == "Arduino COM Port")
+            {
+                //check if a com port was even found, if not skip saving any values
+                if (_comPortsDropDown.options[_comPortsDropDown.value].text == (string)_defaultValues[nameAndType.Key])
+                    continue;
+
+                //check if the com port selected is even an arduino device, if not don't save and output a message
+                if (!CheckIfArduino())
+                    continue;
+
+                //finally if all above conditions are good, we can save the com port
+                PlayerPrefs.SetString(nameAndType.Key, _comPortsDropDown.options[_comPortsDropDown.value].text);
+
+                continue;
+            }
+
             if (nameAndType.Value == "int")
                 PlayerPrefs.SetInt(nameAndType.Key, Convert.ToInt32(_fields[nameAndType.Key].text));
             else if (nameAndType.Value == "float")
@@ -122,11 +151,60 @@ public class SettingsManager : MonoBehaviour
                 if (Directory.Exists(_fields[nameAndType.Key].text))
                     PlayerPrefs.SetString(nameAndType.Key, _fields[nameAndType.Key].text);
                 else
-                    _fields["Info"].text = "Config path doesn't exist. Please provide a valid path";
+                    _fields["Info"].text += "Config path doesn't exist. Please provide a valid path\n";
             }
         }
 
         PlayerPrefs.Save();
+    }
+
+    private bool CheckIfArduino()
+    {
+        var serialPort = new SerialPort(_comPortsDropDown.options[_comPortsDropDown.value].text, 115200);
+        serialPort.ReadTimeout = 100;
+        serialPort.Open();
+        serialPort.Write("s64"); //unique string to send to arduino, if the device returns 64, then it's an arduino
+        serialPort.BaseStream.Flush();
+
+        try
+        {
+            var buffer = new byte[5];
+            var bufferUsed = 0;
+            var separator = 44; //ascii code for comma, which is our separator, will need to be manually changed if separator changes
+
+            // Try to fill the internal buffer, have to do this twice because it sometimes doesn't read the whole thing for some reason
+            bufferUsed += serialPort.Read(buffer, bufferUsed, buffer.Length - bufferUsed);
+            bufferUsed += serialPort.Read(buffer, bufferUsed, buffer.Length - bufferUsed);
+
+            // Search for the separator in the buffer
+            var index = Array.FindIndex<byte>(buffer, 0, bufferUsed, item => item == separator);
+
+            if (index == -1) //if -1 is returned, that means separator wasn't found and we should return false
+            {
+                serialPort.Close(); //we have to close the port once we're done, otherwise it might cause problems later
+                return false;
+            }  
+            
+            var returnBuffer = new byte[index];
+            Array.Copy(buffer, returnBuffer, index);
+            var returnString = Encoding.ASCII.GetString(returnBuffer); //convert byte[] to string with ascii encoding
+
+            if (returnString[0] == '6' && returnString[1] == '4')
+            {
+                serialPort.Close();
+                return true;
+            }
+                
+            serialPort.Close();
+            return false;
+        }
+        catch (TimeoutException)
+        {
+            _fields["Info"].text += "Connection timed out. Check that you selected the right port and that the Arduino is " +
+                                    "connected properly to the computer\n";
+            serialPort.Close();
+            return false;
+        }
     }
 
     public void ResetToDefaults()
@@ -170,6 +248,39 @@ public class SettingsManager : MonoBehaviour
     {
         foreach (var nameAndType in fieldNamesAndTypes)
         {
+            if (nameAndType.Key == "Arduino COM Port")
+            {
+                var ports = SerialPort.GetPortNames().ToList(); //get all serial device names
+
+                if (ports.Count == 0) //give default message in dropdown if no arduino was found
+                {
+                    _comPortsDropDown.AddOptions(new List<string>() {(string)_defaultValues[nameAndType.Key]});
+                    continue;
+                }
+
+                _comPortsDropDown.AddOptions(ports); //if serial device or arduino exists, put the com port name in dropdown
+                var storedValue = PlayerPrefs.GetString(nameAndType.Key, "");
+
+                //if COM port has not been saved, just pick the first value in the list by default
+                if (String.IsNullOrEmpty(storedValue))
+                    _comPortsDropDown.value = 0;
+                else
+                {
+                    try //try to find the stored com port in list and set it to that, if it isn't there, just it to the first item
+                    {
+                        var index = _comPortsDropDown.options.FindIndex(0, option => option.text == storedValue);
+                        _comPortsDropDown.value = index;
+                    }
+                    catch (Exception exception)
+                    {
+                        _comPortsDropDown.value = 0;
+                        Debug.Log("Setting dropdown to first option by default " + exception.Message);
+                    }
+                }
+
+                continue; //skip the rest of the code below and go onto the next iteration
+            }
+
             if (nameAndType.Value == "int")
                 _fields[nameAndType.Key].text = PlayerPrefs.GetInt(nameAndType.Key, (int)_defaultValues[nameAndType.Key]).ToString();
             else if (nameAndType.Value == "float")
