@@ -95,7 +95,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate class for writi
 
     private void ChangeFileAssessment(string condition) //activates when starting or changing condition in assessment
     {
-        _writer = new CSVWriter(condition);
+        _writer = new CSVWriter(_sceneName, condition);
         _writer.WriteHeader(_cursor.Data);
 
         if (!GameSession.ecDone && !GameSession.eoDone) //check which condition it is and ensure that the correct files are created
@@ -106,7 +106,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate class for writi
 
     private void ChangeFileLOS(string direction) //activates when direction changes in los
     {
-        _writer = new CSVWriter(direction);
+        _writer = new CSVWriter(_sceneName, direction);
         _writer.WriteHeader(_cursor.Data);
         _losStarted = true;
     }

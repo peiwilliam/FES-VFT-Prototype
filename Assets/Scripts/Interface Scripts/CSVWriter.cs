@@ -36,7 +36,15 @@ namespace CSV
             var header = GetHeader(data, stimulation);
             var di = new DirectoryInfo(_path);
             var files = di.GetFiles(_fileName + _condition + "*"); //only find the relevant csv files
-            
+            // Debug.Log(_fileName);
+            // Debug.Log(_condition);
+            // Debug.Log((_fileName + _condition).Length);
+            // foreach (var file in files)
+            // {
+            //     Debug.Log(file.Name.IndexOf('.'));
+            //     Debug.Log(file.Name.Substring((_fileName + _condition).Length, file.Name.IndexOf('.') - (_fileName + _condition).Length));
+            // }
+
             SetIndex(files);
 
             using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true))
@@ -93,27 +101,47 @@ namespace CSV
                 _index = 1;
             else // go through the files that exist and find the highest index, new file will be highest index + 1
             {
-                List<int> indices;
+                var indices = new List<int>();
 
                 try
                 {
-                    indices = new List<int>(
-                    from file in files
-                    select Convert.ToInt32(file.Name.Substring((_fileName + _condition).Length, file.Name.IndexOf('.') - (_fileName + _condition).Length)));
+                    //need this here because of the way los files are named, it screws up the index counter
+                    foreach (var file in files) 
+                    {
+                        // Debug.Log(file.Name);
+                        // Debug.Log(Convert.ToInt32(new String(file.Name.Where(Char.IsDigit).ToArray())));
+                        indices.Add(Convert.ToInt32(new String(file.Name.Where(Char.IsDigit).ToArray())));
+
+                        // Debug.Log(file.Name);
+                        // //meeting this condition means we can ignore this file when deciding what the index should be
+                        // if (!int.TryParse(file.Name.Substring((_fileName + _condition).Length, file.Name.IndexOf('.') - (_fileName + _condition).Length), out int result))
+                        // {
+                            
+                        // }
+                        // else
+                        // {
+                        //     indices.Add(Convert.ToInt32(file.Name.Substring((_fileName + _condition).Length, 
+                        //                 file.Name.IndexOf('.') - (_fileName + _condition).Length)));
+                        // }
+                    }
+
                     indices.Sort();
                 }
                 catch (Exception ex)
                 {
                     Debug.Log("File with illegal naming convention in game directory");
-                    Debug.Log(ex.Message);
+                    Debug.Log(ex.Message + ex.StackTrace);
                     SceneManager.LoadScene(0); //go back to the start screen if there is a file with an illegal name
                     throw;
                 }
 
-                if (indices.Max() != indices.Count) //this means that there's a smaller number that's missing, use that number instead
-                    _index = indices.Where(index => index - 1 == indices.IndexOf(index)).Max() + 1;
-                else
-                    _index = indices.Max() + 1;
+                if (indices.Count != 0) //throws an error if we don't do this, since indices is instantiated but not used
+                {
+                    if (indices.Max() != indices.Count) //this means that there's a smaller number that's missing, use that number instead
+                        _index = indices.Where(index => index - 1 == indices.IndexOf(index)).Max() + 1;
+                    else
+                        _index = indices.Max() + 1;
+                }
             }
         }
 
