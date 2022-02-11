@@ -9,9 +9,9 @@
 using UnityEngine;
 using System;
 using System.IO;
+using System.Linq;
 using System.IO.Ports;
 using System.Collections;
-using System.Threading;
 
 /**
  * This class contains methods that must be run from inside a thread and others
@@ -138,6 +138,8 @@ namespace Ardity
                     {
                         AttemptConnection();
 
+                        if (serialPort == null) //if the serial port wasn't instantiated for some reason or another, request stop
+                            RequestStop();
                         // Enter the semi-infinite loop of reading/writing to the
                         // device.
                         while (!IsStopRequested())
@@ -190,13 +192,16 @@ namespace Ardity
         // ------------------------------------------------------------------------
         private void AttemptConnection()
         {
-            serialPort = new SerialPort(portName, baudRate);
-            serialPort.ReadTimeout = readTimeout;
-            serialPort.WriteTimeout = writeTimeout;
-            serialPort.Open();
+            if (portName.Contains("COM"))
+            {
+                serialPort = new SerialPort(portName, baudRate);
+                serialPort.ReadTimeout = readTimeout;
+                serialPort.WriteTimeout = writeTimeout;
+                serialPort.Open();
 
-            if (enqueueStatusMessages)
-                inputQueue.Enqueue(SerialController.SERIAL_DEVICE_CONNECTED);
+                if (enqueueStatusMessages)
+                    inputQueue.Enqueue(SerialController.SERIAL_DEVICE_CONNECTED);
+            }
         }
 
         // ------------------------------------------------------------------------

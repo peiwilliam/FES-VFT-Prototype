@@ -7,6 +7,8 @@
  */
 
 using UnityEngine;
+using System.Linq;
+using System.IO.Ports;
 using System.Threading;
 using Ardity;
 
@@ -50,7 +52,8 @@ public class SerialControllerCustomDelimiter : MonoBehaviour
     // ------------------------------------------------------------------------
     void OnEnable()
     {
-        _portName = PlayerPrefs.GetString("Arduino COM Port");
+        var portNames = SerialPort.GetPortNames();
+        _portName = portNames.Contains(PlayerPrefs.GetString("Arduino COM Port")) ? PlayerPrefs.GetString("Arduino COM Port") : "No Arduino";
         serialThread = new SerialThreadBinaryDelimited(_portName,
                                                        _baudRate,
                                                        _reconnectionDelay,

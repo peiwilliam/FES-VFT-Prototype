@@ -106,24 +106,8 @@ namespace CSV
                 try
                 {
                     //need this here because of the way los files are named, it screws up the index counter
-                    foreach (var file in files) 
-                    {
-                        // Debug.Log(file.Name);
-                        // Debug.Log(Convert.ToInt32(new String(file.Name.Where(Char.IsDigit).ToArray())));
+                    foreach (var file in files)
                         indices.Add(Convert.ToInt32(new String(file.Name.Where(Char.IsDigit).ToArray())));
-
-                        // Debug.Log(file.Name);
-                        // //meeting this condition means we can ignore this file when deciding what the index should be
-                        // if (!int.TryParse(file.Name.Substring((_fileName + _condition).Length, file.Name.IndexOf('.') - (_fileName + _condition).Length), out int result))
-                        // {
-                            
-                        // }
-                        // else
-                        // {
-                        //     indices.Add(Convert.ToInt32(file.Name.Substring((_fileName + _condition).Length, 
-                        //                 file.Name.IndexOf('.') - (_fileName + _condition).Length)));
-                        // }
-                    }
 
                     indices.Sort();
                 }
