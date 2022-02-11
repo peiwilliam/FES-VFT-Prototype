@@ -165,6 +165,10 @@ PrefabInstance:
       propertyPath: _maxUnreadMessages
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 2225239732450067497, guid: a3817fece2099d648ace6b29f111c10f, type: 3}
+      propertyPath: _reconnectionDelay
+      value: 1000
+      objectReference: {fileID: 0}
     - target: {fileID: 7460285253836950816, guid: a3817fece2099d648ace6b29f111c10f, type: 3}
       propertyPath: _stimulation
       value: 

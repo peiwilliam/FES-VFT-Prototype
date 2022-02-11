@@ -148,7 +148,7 @@ namespace Ardity
                         // A disconnection happened, or there was a problem
                         // reading/writing to the device. Log the detailed message
                         // to the console and notify the listener.
-                        Debug.LogWarning("Exception: " + ioe.Message + " StackTrace: " + ioe.StackTrace);
+                        Debug.Log("Exception: " + ioe.Message + " StackTrace: " + ioe.StackTrace);
                         if (enqueueStatusMessages)
                             inputQueue.Enqueue(SerialController.SERIAL_DEVICE_DISCONNECTED);
 
@@ -156,18 +156,21 @@ namespace Ardity
                         // exception I call this method that is very safe in
                         // disregard of the port's status
                         CloseDevice();
+                        RequestStop(); //added, request stop so that this thread doesn't continuously run
 
                         // Don't attempt to reconnect just yet, wait some
                         // user-defined time. It is OK to sleep here as this is not
                         // Unity's thread, this doesn't affect frame-rate
                         // throughput.
-                        Thread.Sleep(delayBeforeReconnecting);
+                        //commented out the following line since we don't want to reattempt connection in our case
+                        //Thread.Sleep(delayBeforeReconnecting);
                     }
                 }
 
                 // Before closing the COM port, give the opportunity for all messages
                 // from the output queue to reach the other endpoint.
-                while (outputQueue.Count != 0)
+
+                while (outputQueue.Count != 0 && serialPort != null)
                 {
                     SendToWire(outputQueue.Dequeue(), serialPort);
                 }
