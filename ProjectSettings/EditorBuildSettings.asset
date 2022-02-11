@@ -21,21 +21,21 @@ EditorBuildSettings:
     path: Assets/Scenes/Setup/Assessment.unity
     guid: 969d1390a83aa07468ad1aad1f141f65
   - enabled: 1
+    path: Assets/Scenes/Game Transitions/Experimentation Transition.unity
+    guid: bef626d78971c6c41bce1977c4b23eb1
+  - enabled: 1
+    path: Assets/Scenes/Game Transitions/Familiarization Transition.unity
+    guid: 1a8e7f680246cd347a15579ea8681e3c
+  - enabled: 1
     path: Assets/Scenes/Games/Colour Matching.unity
     guid: a56998babb0d097479eb9cf7b40554bf
   - enabled: 1
     path: Assets/Scenes/Games/Ellipse.unity
     guid: 1aab7a337da5ffd4d9709a64feedb072
   - enabled: 1
-    path: Assets/Scenes/Games/Hunting.unity
-    guid: c0603e1f3ecf99d4084d3f51fda27cf8
-  - enabled: 1
     path: Assets/Scenes/Games/Target.unity
     guid: 4693467ece777c34a8c21fb626941fad
   - enabled: 1
-    path: Assets/Scenes/Game Transitions/Experimentation Transition.unity
-    guid: bef626d78971c6c41bce1977c4b23eb1
-  - enabled: 1
-    path: Assets/Scenes/Game Transitions/Familiarization Transition.unity
-    guid: 1a8e7f680246cd347a15579ea8681e3c
+    path: Assets/Scenes/Games/Hunting.unity
+    guid: c0603e1f3ecf99d4084d3f51fda27cf8
   m_configObjects: {}

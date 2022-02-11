@@ -329,6 +329,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 082d4707194eafa4580b5cdb311e3da9, type: 3}
+--- !u!114 &2000394133 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4014040992644144350, guid: 082d4707194eafa4580b5cdb311e3da9, type: 3}
+  m_PrefabInstance: {fileID: 2000394132}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af65ef215dac92f46849188c5f9fbb87, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &7334898862681719331
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -336,6 +347,18 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 7334898862282085040, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 2000394133}
+    - target: {fileID: 7334898862282085040, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: LoadStartScene
+      objectReference: {fileID: 0}
+    - target: {fileID: 7334898862282085040, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: SceneLoader, Assembly-CSharp
+      objectReference: {fileID: 0}
     - target: {fileID: 7334898862451437865, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
       propertyPath: m_Name
       value: Transition Canvas
@@ -423,6 +446,28 @@ PrefabInstance:
     - target: {fileID: 7334898862451437869, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7334898862549320019, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 2000394133}
+    - target: {fileID: 7334898862549320019, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: LoadNextGame
+      objectReference: {fileID: 0}
+    - target: {fileID: 7334898862549320019, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: SceneLoader, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7334898862681719335, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+      propertyPath: _infoText.Array.data[0]
+      value: The experiment will begin once you click Next. The order of the games
+        has been randomized.
+      objectReference: {fileID: 0}
+    - target: {fileID: 7334898862681719335, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+      propertyPath: _infoText.Array.data[1]
+      value: Click Next to start the next game. Otherwise click Exit to exit the
+        experiment.
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
