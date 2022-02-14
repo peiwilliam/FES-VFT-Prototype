@@ -6,6 +6,7 @@
  * https://creativecommons.org/licenses/by/2.0/
  */
 
+using UnityEngine;
 using System.IO.Ports;
 
 /**
@@ -49,6 +50,7 @@ namespace Ardity
 
         protected override object ReadFromWire(SerialPort serialPort)
         {
+            Debug.Log("in reading");
             // Try to fill the internal buffer
             bufferUsed += serialPort.Read(buffer, bufferUsed, buffer.Length - bufferUsed);
 
@@ -56,6 +58,7 @@ namespace Ardity
             int index = System.Array.FindIndex<byte>(buffer, 0, bufferUsed, IsSeparator);
             if (index == -1)
                 return null;
+               
 
             byte[] returnBuffer = new byte[index];
             System.Array.Copy(buffer, returnBuffer, index);

@@ -138,9 +138,8 @@ public class SerialControllerCustomDelimiter : MonoBehaviour
     // ------------------------------------------------------------------------
     public delegate void TearDownFunction();
     private TearDownFunction userDefinedTearDownFunction;
-    public void SetTearDownFunction(TearDownFunction userFunction)
-    {
-        this.userDefinedTearDownFunction = userFunction;
-    }
+    public void SetTearDownFunction(TearDownFunction userFunction) => this.userDefinedTearDownFunction = userFunction;
+
+    public void ReadArdino(bool readArduino) => serialThread.ReadArduino = readArduino;
 
 }

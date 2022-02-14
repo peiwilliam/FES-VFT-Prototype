@@ -5,11 +5,15 @@ public class CommunicationManager : MonoBehaviour
 {
     [Tooltip("For storing the stimulation object associated with the game")]
     [SerializeField] private Stimulation _stimulation;
+    
+    private bool _readArduino;
     private SerialControllerCustomDelimiter _serialController;
 
     private void Start()
     {
         _serialController = GetComponent<SerialControllerCustomDelimiter>();
+        _readArduino = false;
+        _serialController.ReadArdino(_readArduino); //setting this to false so the abstract serial thread won't try to read from arduino
     }
 
     private void FixedUpdate()
@@ -22,11 +26,15 @@ public class CommunicationManager : MonoBehaviour
         foreach (var stim in stimulation)
         {
             _serialController.SendSerialMessage(Encoding.ASCII.GetBytes(stim));
-            // Debug.Log(stim + " send"); //used for debugging the arduino
-            // var message = _serialController.ReadSerialMessage();
-            // if (message == null)
-            //     continue;
-            // Debug.Log(Encoding.ASCII.GetString(message) + " receive");
+
+            if (_readArduino)
+            {
+                Debug.Log(stim + " send"); //used for debugging the arduino
+                var message = _serialController.ReadSerialMessage();
+                if (message == null)
+                    continue;
+                Debug.Log(Encoding.ASCII.GetString(message) + " receive");
+            }
         }
     }
 }

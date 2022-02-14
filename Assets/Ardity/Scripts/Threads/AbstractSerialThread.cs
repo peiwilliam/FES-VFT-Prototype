@@ -9,9 +9,8 @@
 using UnityEngine;
 using System;
 using System.IO;
-using System.Linq;
 using System.IO.Ports;
-using System.Collections;
+using System.Collections.Concurrent;
 
 /**
  * This class contains methods that must be run from inside a thread and others
@@ -47,13 +46,18 @@ namespace Ardity
         // Internal synchronized queues used to send and receive messages from the
         // serial device. They serve as the point of communication between the
         // Unity thread and the SerialComm thread.
-        private Queue inputQueue, outputQueue;
+        // private Queue inputQueue, outputQueue;
+        private ConcurrentQueue<byte[]> _inputQueue, _outputQueue;
 
         // Indicates when this thread should stop executing. When SerialController
         // invokes 'RequestStop()' this variable is set.
         private bool stopRequested = false;
 
         private bool enqueueStatusMessages = false;
+        
+        // Property for indicating whether or not we should read from the arduino
+        // We read if it's true, and we don't if it's false
+        public bool ReadArduino { get; set; }
 
 
         /**************************************************************************
@@ -76,8 +80,10 @@ namespace Ardity
             this.maxUnreadMessages = maxUnreadMessages;
             this.enqueueStatusMessages = enqueueStatusMessages;
 
-            inputQueue = Queue.Synchronized(new Queue());
-            outputQueue = Queue.Synchronized(new Queue());
+            // inputQueue = Queue.Synchronized(new Queue());
+            // outputQueue = Queue.Synchronized(new Queue());
+            _inputQueue = new ConcurrentQueue<byte[]>();
+            _outputQueue = new ConcurrentQueue<byte[]>();
         }
 
         // ------------------------------------------------------------------------
@@ -99,10 +105,16 @@ namespace Ardity
         // ------------------------------------------------------------------------
         public object ReadMessage()
         {
-            if (inputQueue.Count == 0)
+            // if (inputQueue.Count == 0)
+            //     return null;
+
+            if (_inputQueue.Count == 0)
                 return null;
 
-            return inputQueue.Dequeue();
+            _inputQueue.TryDequeue(out byte[] data);
+
+            // return inputQueue.Dequeue();
+            return data;
         }
 
         // ------------------------------------------------------------------------
@@ -112,7 +124,8 @@ namespace Ardity
         // ------------------------------------------------------------------------
         public void SendMessage(object message)
         {
-            outputQueue.Enqueue(message);
+            // outputQueue.Enqueue(message);
+            _outputQueue.Enqueue((byte[])message);
         }
 
 
@@ -144,6 +157,8 @@ namespace Ardity
                         // device.
                         while (!IsStopRequested())
                             RunOnce();
+                            
+                            
                     }
                     catch (Exception ioe)
                     {
@@ -151,8 +166,8 @@ namespace Ardity
                         // reading/writing to the device. Log the detailed message
                         // to the console and notify the listener.
                         Debug.Log("Exception: " + ioe.Message + " StackTrace: " + ioe.StackTrace);
-                        if (enqueueStatusMessages)
-                            inputQueue.Enqueue(SerialController.SERIAL_DEVICE_DISCONNECTED);
+                        // if (enqueueStatusMessages) //commented out because it doesn't really work with concurrent queue
+                        //     inputQueue.Enqueue(SerialController.SERIAL_DEVICE_DISCONNECTED);
 
                         // As I don't know in which stage the SerialPort threw the
                         // exception I call this method that is very safe in
@@ -172,9 +187,14 @@ namespace Ardity
                 // Before closing the COM port, give the opportunity for all messages
                 // from the output queue to reach the other endpoint.
 
-                while (outputQueue.Count != 0 && serialPort != null)
+                // while (outputQueue.Count != 0 && serialPort != null)
+                // {
+                //     SendToWire(outputQueue.Dequeue(), serialPort);
+                // }
+                while (_outputQueue.Count != 0 && serialPort != null)
                 {
-                    SendToWire(outputQueue.Dequeue(), serialPort);
+                    _outputQueue.TryDequeue(out byte[] data);
+                    SendToWire(data, serialPort);
                 }
 
                 // Attempt to do a final cleanup. This method doesn't fail even if
@@ -199,8 +219,8 @@ namespace Ardity
                 serialPort.WriteTimeout = writeTimeout;
                 serialPort.Open();
 
-                if (enqueueStatusMessages)
-                    inputQueue.Enqueue(SerialController.SERIAL_DEVICE_CONNECTED);
+                // if (enqueueStatusMessages) //commented out because it doesn't really work with concurrent queue
+                //     inputQueue.Enqueue(SerialController.SERIAL_DEVICE_CONNECTED);
             }
         }
 
@@ -247,21 +267,35 @@ namespace Ardity
             try
             {
                 // Send a message.
-                if (outputQueue.Count != 0)
+                // if (outputQueue.Count != 0)
+                // {
+                //     SendToWire(outputQueue.Dequeue(), serialPort);
+                // }
+                if (_outputQueue.Count != 0)
                 {
-                    SendToWire(outputQueue.Dequeue(), serialPort);
+                    _outputQueue.TryDequeue(out byte[] data);
+                    SendToWire(data, serialPort);
                 }
 
                 // Read a message.
                 // If a line was read, and we have not filled our queue, enqueue
                 // this line so it eventually reaches the Message Listener.
                 // Otherwise, discard the line.
-                object inputMessage = ReadFromWire(serialPort);
+
+                object inputMessage = null;
+
+                if (ReadArduino)
+                    inputMessage = ReadFromWire(serialPort);
+
                 if (inputMessage != null)
                 {
-                    if (inputQueue.Count < maxUnreadMessages)
+                    // if (inputQueue.Count < maxUnreadMessages)
+                    // {
+                    //     inputQueue.Enqueue(inputMessage);
+                    // }
+                    if (_inputQueue.Count < maxUnreadMessages)
                     {
-                        inputQueue.Enqueue(inputMessage);
+                        _inputQueue.Enqueue((byte[])inputMessage);
                     }
                     else
                     {
