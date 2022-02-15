@@ -59,7 +59,6 @@ namespace Ardity
         // We read if it's true, and we don't if it's false
         public bool ReadArduino { get; set; }
 
-
         /**************************************************************************
         * Methods intended to be invoked from the Unity thread.
         *************************************************************************/
@@ -82,7 +81,8 @@ namespace Ardity
 
             // inputQueue = Queue.Synchronized(new Queue());
             // outputQueue = Queue.Synchronized(new Queue());
-            _inputQueue = new ConcurrentQueue<byte[]>();
+            //converted all of the queue objects in this file to concurrent queue objects for better efficiency
+            _inputQueue = new ConcurrentQueue<byte[]>(); 
             _outputQueue = new ConcurrentQueue<byte[]>();
         }
 

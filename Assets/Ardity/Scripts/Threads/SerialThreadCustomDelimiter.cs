@@ -6,7 +6,6 @@
  * https://creativecommons.org/licenses/by/2.0/
  */
 
-using UnityEngine;
 using System.IO.Ports;
 
 /**
@@ -50,15 +49,14 @@ namespace Ardity
 
         protected override object ReadFromWire(SerialPort serialPort)
         {
-            Debug.Log("in reading");
             // Try to fill the internal buffer
             bufferUsed += serialPort.Read(buffer, bufferUsed, buffer.Length - bufferUsed);
 
             // Search for the separator in the buffer
-            int index = System.Array.FindIndex<byte>(buffer, 0, bufferUsed, IsSeparator);
+            int index = System.Array.FindIndex<byte>(buffer, 0, bufferUsed, aByte => aByte == separator);
+
             if (index == -1)
                 return null;
-               
 
             byte[] returnBuffer = new byte[index];
             System.Array.Copy(buffer, returnBuffer, index);
@@ -69,11 +67,6 @@ namespace Ardity
             bufferUsed -= index + 1;
 
             return returnBuffer;
-        }
-
-        private bool IsSeparator(byte aByte)
-        {
-            return aByte == separator;
         }
     }
 }

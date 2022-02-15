@@ -12,7 +12,7 @@ using TMPro;
 public class SettingsManager : MonoBehaviour
 {
     // dictionary for iterating through values easier
-    private Dictionary<string, InputField> _fields = new Dictionary<string, InputField>();
+    private Dictionary<string, InputField> _fields;
     private TMP_Dropdown _comPortsDropDown;
 
     // default values, static so that this doesn't get instantiated per object, not really necessary but saves memory
@@ -83,13 +83,7 @@ public class SettingsManager : MonoBehaviour
         ["Limit of Stability Right"] = "float"
     };
 
-    private void Awake() 
-    {
-        if (SceneManager.GetActiveScene().buildIndex == 1) //buildIndex 1 should be settings
-            SetInputFields();
-    }
-
-    private void Start() 
+    private void Start()
     {
         if (SceneManager.GetActiveScene().buildIndex == 0) //only do this at the start screen
         {
@@ -106,18 +100,22 @@ public class SettingsManager : MonoBehaviour
                 }
             }
         }
+        else if (SceneManager.GetActiveScene().buildIndex == 1) //buildIndex 1 should be settings
+        {
+            _fields = new Dictionary<string, InputField>();
+
+            SetInputFields();
+        }
     }
 
     private void SetInputFields() //this is called by sceneloader when the settings page is loaded
     {
-        _fields.Clear(); //because objects get refreshed every time scene is reloaded, need to add "new" fields to dictionary
+        var fields = FindObjectsOfType<InputField>();
+        _comPortsDropDown = FindObjectOfType<TMP_Dropdown>(); //need to find dropdown for arduino com port
 
-        var fields = FindObjectsOfType<InputField>(); //array form, want to convert to dictionary instead - easier to work with
-
+        //array form, want to convert to dictionary instead - easier to work with
         foreach (var field in fields)
             _fields[field.name] = field;
-        
-        _comPortsDropDown = FindObjectOfType<TMP_Dropdown>(); //need to find dropdown for arduino com port
 
         SetInputs();
     }
@@ -161,7 +159,7 @@ public class SettingsManager : MonoBehaviour
     private bool CheckIfArduino()
     {
         var serialPort = new SerialPort(_comPortsDropDown.options[_comPortsDropDown.value].text, 115200);
-        serialPort.ReadTimeout = 100;
+        serialPort.ReadTimeout = 200;
         serialPort.Open();
         serialPort.Write("s64"); //unique string to send to arduino, if the device returns 64, then it's an arduino
         serialPort.BaseStream.Flush();
@@ -189,7 +187,7 @@ public class SettingsManager : MonoBehaviour
             Array.Copy(buffer, returnBuffer, index);
             var returnString = Encoding.ASCII.GetString(returnBuffer); //convert byte[] to string with ascii encoding
 
-            if (returnString[0] == '6' && returnString[1] == '4')
+            if (returnString == "64")
             {
                 serialPort.Close();
                 return true;
@@ -214,35 +212,13 @@ public class SettingsManager : MonoBehaviour
     }
 
     //toggles are saved separately
-    public void ZeroBoard() 
-    {
-        var isChecked = GameObject.Find("Zero Board").GetComponent<Toggle>().isOn;
+    public void ZeroBoard() => CheckBoxDelegate("Zero Board");
 
-        if (isChecked)
-            PlayerPrefs.SetInt("Zero Board", 1);
-        else
-            PlayerPrefs.SetInt("Zero Board", 0);
-    }
+    public void FilterData() => CheckBoxDelegate("Filter Data");
 
-    public void FilterData()
-    {
-        var isChecked = GameObject.Find("Filter Data").GetComponent<Toggle>().isOn;
+    public void ECOrEO() => CheckBoxDelegate("Eyes Condition");
 
-        if (isChecked)
-            PlayerPrefs.SetInt("Filter Data", 1);
-        else
-            PlayerPrefs.SetInt("Filter Data", 0);
-    }
-
-    public void ECOrEO()
-    {
-        var isChecked = GameObject.Find("Eyes Condition").GetComponent<Toggle>().isOn;
-
-        if (isChecked)
-            PlayerPrefs.SetInt("EC or EO", 1);
-        else
-            PlayerPrefs.SetInt("EC or EO", 0);
-    }
+    public void ReadArduino() => CheckBoxDelegate("Read From Arduino");
 
     private void SetInputs()
     {
@@ -252,13 +228,20 @@ public class SettingsManager : MonoBehaviour
             {
                 var ports = SerialPort.GetPortNames().ToList(); //get all serial device names
 
-                if (ports.Count == 0) //give default message in dropdown if no arduino was found
+                if (ports.Count ==  0) //give default message in dropdown if no arduino was found
                 {
+                    if (_comPortsDropDown.options.Count != 0)
+                        _comPortsDropDown.ClearOptions(); 
                     _comPortsDropDown.AddOptions(new List<string>() {(string)_defaultValues[nameAndType.Key]});
                     continue;
                 }
+                else //if serial device or arduino exists, put the com port name in dropdown
+                {
+                    if (_comPortsDropDown.options.Count != 0)
+                        _comPortsDropDown.ClearOptions();
+                    _comPortsDropDown.AddOptions(ports);
+                }
 
-                _comPortsDropDown.AddOptions(ports); //if serial device or arduino exists, put the com port name in dropdown
                 var storedValue = PlayerPrefs.GetString(nameAndType.Key, "");
 
                 //if COM port has not been saved, just pick the first value in the list by default
@@ -281,34 +264,35 @@ public class SettingsManager : MonoBehaviour
                 continue; //skip the rest of the code below and go onto the next iteration
             }
 
-            if (nameAndType.Value == "int")
+            if (nameAndType.Value == "int") //try to get the value stored on computer, if it doens't exist, use default values
                 _fields[nameAndType.Key].text = PlayerPrefs.GetInt(nameAndType.Key, (int)_defaultValues[nameAndType.Key]).ToString();
             else if (nameAndType.Value == "float")
                 _fields[nameAndType.Key].text = PlayerPrefs.GetFloat(nameAndType.Key, (float)_defaultValues[nameAndType.Key]).ToString();
             else
                 _fields[nameAndType.Key].text = PlayerPrefs.GetString(nameAndType.Key, (string)_defaultValues[nameAndType.Key]).ToString();
-
-            if (!PlayerPrefs.HasKey(nameAndType.Key)) //sets to default values if the keys don't current exist
-            {
-                if (nameAndType.Value == "int")
-                    PlayerPrefs.SetInt(nameAndType.Key, (int)_defaultValues[nameAndType.Key]);
-                else if (nameAndType.Value == "float")
-                    PlayerPrefs.SetFloat(nameAndType.Key, (float)_defaultValues[nameAndType.Key]);
-                else
-                    PlayerPrefs.SetString(nameAndType.Key, (string)_defaultValues[nameAndType.Key]);
-            }
         }
 
         var toggles = FindObjectsOfType<Toggle>();
 
-        foreach (var toggle in toggles)
+        foreach (var toggle in toggles) //set toggle setting
         {
-            if (toggle.name == "Zero Board")
-                toggle.GetComponent<Toggle>().isOn = Convert.ToBoolean(PlayerPrefs.GetInt("Zero Board"));
-            else if (toggle.name == "Filter Data")
-                toggle.GetComponent<Toggle>().isOn = Convert.ToBoolean(PlayerPrefs.GetInt("Filter Data"));
-            else if (toggle.name == "Eyes Condition")
-                toggle.GetComponent<Toggle>().isOn = Convert.ToBoolean(PlayerPrefs.GetInt("EC or EO"));
+            var toggleName = toggle.name;
+            var defaultValue = 0;
+            
+            if (toggleName == "Eyes Condition") //default is true or checked for eyes condition
+                defaultValue = 1;
+            
+            toggle.GetComponent<Toggle>().isOn = Convert.ToBoolean(PlayerPrefs.GetInt(toggleName, defaultValue));
         }
+    }
+
+    private void CheckBoxDelegate(string checkBoxName)
+    {
+        var isChecked = GameObject.Find(checkBoxName).GetComponent<Toggle>().isOn;
+
+        if (isChecked)
+            PlayerPrefs.SetInt(checkBoxName, 1);
+        else
+            PlayerPrefs.SetInt(checkBoxName, 0);
     }
 }

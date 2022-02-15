@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using UnityEngine;
 
 public class CommunicationManager : MonoBehaviour
@@ -12,7 +13,7 @@ public class CommunicationManager : MonoBehaviour
     private void Start()
     {
         _serialController = GetComponent<SerialControllerCustomDelimiter>();
-        _readArduino = false;
+        _readArduino = Convert.ToBoolean(PlayerPrefs.GetInt("Read From Arduino", 0));
         _serialController.ReadArdino(_readArduino); //setting this to false so the abstract serial thread won't try to read from arduino
     }
 
@@ -31,8 +32,10 @@ public class CommunicationManager : MonoBehaviour
             {
                 Debug.Log(stim + " send"); //used for debugging the arduino
                 var message = _serialController.ReadSerialMessage();
+
                 if (message == null)
                     continue;
+                    
                 Debug.Log(Encoding.ASCII.GetString(message) + " receive");
             }
         }

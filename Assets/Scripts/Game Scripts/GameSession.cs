@@ -301,7 +301,7 @@ public class GameSession : MonoBehaviour
     {
         var yValues = new List<float>();
 
-        if (Convert.ToBoolean(PlayerPrefs.GetInt("EC or EO", 1))) //default to eyes open if for some reason this key doesn't exist
+        if (Convert.ToBoolean(PlayerPrefs.GetInt("Eyes Condition", 1))) //default to eyes open if for some reason this key doesn't exist
             yValues = new List<float>(from value in _qsAssessment["EO"] select value.copY); //linq syntax
         else
             yValues = new List<float>(from value in _qsAssessment["EC"] select value.copY); //linq syntax
