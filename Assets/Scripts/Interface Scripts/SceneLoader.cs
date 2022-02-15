@@ -73,9 +73,10 @@ public class SceneLoader : MonoBehaviour
 
     public void Familiarization()
     {
+        //mark that experimentation has begun
         if (!_beginFamiliarization)
             _beginFamiliarization = true;
-        else if (_gameIndex <= 4)
+        else if (_gameIndex <= 4) //increase the game index while we haven't gone through all the games yet
             _gameIndex++;
 
         SceneManager.LoadScene("Familiarization Transition");
@@ -83,26 +84,31 @@ public class SceneLoader : MonoBehaviour
 
     public void Experimentation() 
     {
+        //mark that experimentation as begun
         if (!_beginExperimentation)
             _beginExperimentation = true;
 
+        //increase trial index and prepare to shuffle if number of trials hasn't been reached yet
         if (_gameIndicesIndex == _gameIndices.Count)
         {
             _indicesRandomized = false;
-            _trialIndex++;
+
+            if (_trialIndex < PlayerPrefs.GetInt("Number of Trials", 2))
+                _trialIndex++;
         } 
 
-        if (!_indicesRandomized && _trialIndex < PlayerPrefs.GetInt("Number of Trials", 2)) //check if unshuffled
+        //check if unshuffled and the trial number, no need to shuffle if last trial
+        if (!_indicesRandomized && _trialIndex < PlayerPrefs.GetInt("Number of Trials", 2)) 
         {
             _gameIndices = KnuthShuffler.Shuffle(_gameIndices);
             _indicesRandomized = true;
         }    
 
+        //when we have reached the number of trials and have finished the last trial, go back to the start
         if (_trialIndex == PlayerPrefs.GetInt("Number of Trials", 2) && _gameIndicesIndex == _gameIndices.Count)
             LoadStartScene();
         else
             SceneManager.LoadScene("Experimentation Transition");
-            
     }
 
     public static bool GetFamiliarization() => _beginFamiliarization;

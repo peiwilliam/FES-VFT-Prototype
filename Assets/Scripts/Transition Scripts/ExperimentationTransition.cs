@@ -17,7 +17,7 @@ public class ExperimentationTransition : MonoBehaviour
             gameObject.GetComponent<Text>().text = _infoText[0]; //only show this when experimentation has started
         else if (experimentationStarted && gameIndicesIndex < 4)
             gameObject.GetComponent<Text>().text = _infoText[1];
-        else
+        else //once a trial is complete, indicate to the player that the trial is complete if there are any more trials
         {
             var numberIndex = _infoText[2].IndexOf("__numberhere__");
             var instructionText = _infoText[2].Substring(0, numberIndex) + trialIndex.ToString() + _infoText[2].Substring(numberIndex + "__numberhere__".Length);

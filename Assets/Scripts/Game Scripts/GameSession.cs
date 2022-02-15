@@ -228,7 +228,8 @@ public class GameSession : MonoBehaviour
         {
             if (SceneLoader.GetFamiliarization() && SceneLoader.GetGameIndex() < 4)
                 _sceneLoader.Familiarization();
-            else if (SceneLoader.GetExperimentation() && SceneLoader.GetGameIndicesIndex() <= 4 && SceneLoader.GetTrialIndex() <= PlayerPrefs.GetInt("Number of Trials"))
+            else if (SceneLoader.GetExperimentation() && SceneLoader.GetGameIndicesIndex() <= 4 
+                     && SceneLoader.GetTrialIndex() <= PlayerPrefs.GetInt("Number of Trials"))
                 _sceneLoader.Experimentation();
             else   
                 _sceneLoader.LoadStartScene();
@@ -302,7 +303,8 @@ public class GameSession : MonoBehaviour
     {
         var yValues = new List<float>();
 
-        if (Convert.ToBoolean(PlayerPrefs.GetInt("Eyes Condition", 1))) //default to eyes open if for some reason this key doesn't exist
+        //default to eyes open if for some reason this key doesn't exist
+        if (Convert.ToBoolean(PlayerPrefs.GetInt("Eyes Condition", 1)))
             yValues = new List<float>(from value in _qsAssessment["EO"] select value.copY); //linq syntax
         else
             yValues = new List<float>(from value in _qsAssessment["EC"] select value.copY); //linq syntax
@@ -332,7 +334,7 @@ public class GameSession : MonoBehaviour
     public void StartLOS() //initiated from button click
     {
         if (FindObjectOfType<Cursor>() == null) // make sure only one cursor is spawned
-            Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //instantiate at button click instead of at beginning
+            Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //instantiate at button click
 
         if (GameObject.FindGameObjectWithTag("Target") != null) //once we press the button, we want to switch to a new target
             GameObject.FindGameObjectWithTag("Target").tag = "Untagged";
@@ -378,7 +380,9 @@ public class GameSession : MonoBehaviour
                         for (var i = 0; i <= direction.Value.Count - windowLength; i++)
                         {
                             // Makes each value absolute value because we only care about the magnitude
-                            var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copY));
+                            var rangeOfValues = new List<float>(from value 
+                                                                in direction.Value.GetRange(i, windowLength) 
+                                                                select Mathf.Abs(value.copY));
                             averages.Add(rangeOfValues.Average());
                         }
 
@@ -388,14 +392,17 @@ public class GameSession : MonoBehaviour
                         for (var i = 0; i <= direction.Value.Count - windowLength; i++)
                         {
                             // Makes each value absolute value because we only care about the magnitude
-                            var rangeOfValues = new List<float>(from value in direction.Value.GetRange(i, windowLength) select Mathf.Abs(value.copX));
+                            var rangeOfValues = new List<float>(from value 
+                                                                in direction.Value.GetRange(i, windowLength) 
+                                                                select Mathf.Abs(value.copX));
                             averages.Add(rangeOfValues.Average());
                         }
 
                         break;
                 }
 
-                if (averages.Count != 0) //since the list for the diagonal directions is currently not coded in, it throws an error, so just want to account for that
+                //since the list for the diagonal directions is currently not coded in, it throws an error, so just want to account for that
+                if (averages.Count != 0)
                     _limits.Add(direction.Key, averages.Max()*100f);
 
                 averages.Clear(); //clear the list so that it's a new one next loop
@@ -450,7 +457,8 @@ public class GameSession : MonoBehaviour
             oldCircle = TargetColourCircle;
             ColourGameScore();
 
-            _colourDuration = 10f; //reset values to loop again, += to account for when the time is negative and to subtract form 10f
+            //reset values to loop again, += to account for when the time is negative and to subtract form 10f
+            _colourDuration = 10f; 
             _conditionColourMet = false;
         }
     }
@@ -552,7 +560,8 @@ public class GameSession : MonoBehaviour
                 quads.Remove(quad);
             }
 
-            _huntingDuration += 10f; //reset values to loop again, += to account for when the time is negative and to subtract form 10f
+            //reset values to loop again, += to account for when the time is negative and to subtract form 10f
+            _huntingDuration += 10f; 
             _conditionHuntingMet = false;
         }   
     }
