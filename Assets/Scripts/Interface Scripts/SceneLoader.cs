@@ -13,6 +13,7 @@ public class SceneLoader : MonoBehaviour
     private static bool _indicesRandomized;
     private static int _gameIndex = 1; //starting value
     private static int _gameIndicesIndex;
+    private static int _trialIndex;
     private static List<int> _gameIndices = new List<int> {2, 3, 4, 5}; //starting values +1 from 1,2,3,4 because of build index
 
     public void LoadNextScene()
@@ -27,6 +28,9 @@ public class SceneLoader : MonoBehaviour
 
         if (SceneManager.GetActiveScene().name == "Experimentation Transition")
         {
+            if (_gameIndicesIndex == _gameIndices.Count)
+                _gameIndicesIndex = 0;
+
             _gameIndex = _gameIndices[_gameIndicesIndex++]; //current value then increment
             SceneManager.LoadScene(currentSceneIndex + _gameIndex);
         }
@@ -42,6 +46,7 @@ public class SceneLoader : MonoBehaviour
         _beginFamiliarization = false;
         _beginExperimentation = false;
         _indicesRandomized = false;
+        _trialIndex = 0;
         _gameIndex = 1;
         _gameIndicesIndex = 0;
     }
@@ -80,14 +85,24 @@ public class SceneLoader : MonoBehaviour
     {
         if (!_beginExperimentation)
             _beginExperimentation = true;
-        
-        if (!_indicesRandomized) //check if unshuffled
+
+        if (_gameIndicesIndex == _gameIndices.Count)
+        {
+            _indicesRandomized = false;
+            _trialIndex++;
+        } 
+
+        if (!_indicesRandomized && _trialIndex < PlayerPrefs.GetInt("Number of Trials", 2)) //check if unshuffled
         {
             _gameIndices = KnuthShuffler.Shuffle(_gameIndices);
             _indicesRandomized = true;
-        }
+        }    
 
-        SceneManager.LoadScene("Experimentation Transition");
+        if (_trialIndex == PlayerPrefs.GetInt("Number of Trials", 2) && _gameIndicesIndex == _gameIndices.Count)
+            LoadStartScene();
+        else
+            SceneManager.LoadScene("Experimentation Transition");
+            
     }
 
     public static bool GetFamiliarization() => _beginFamiliarization;
@@ -97,4 +112,6 @@ public class SceneLoader : MonoBehaviour
     public static bool GetExperimentation() => _beginExperimentation;
 
     public static int GetGameIndicesIndex() => _gameIndicesIndex;
+
+    public static int GetTrialIndex() => _trialIndex;
 }

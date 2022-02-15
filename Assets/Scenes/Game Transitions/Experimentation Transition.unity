@@ -469,5 +469,29 @@ PrefabInstance:
       value: Click Next to start the next game. Otherwise click Exit to exit the
         experiment.
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7334898862681719335, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+--- !u!1 &7334898862681719332 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7334898862004869619, guid: 0b10ccd94a7bcd540aac0804606059c9, type: 3}
+  m_PrefabInstance: {fileID: 7334898862681719331}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7334898862681719333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7334898862681719332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29f8fd9a00f04664bacf81e80445426e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _infoText:
+  - The experiment will begin once you click Next. The order of the games has been
+    randomized.
+  - Click Next to start the next game. Otherwise click Exit to exit the experiment.
+  - Trial __numberhere__ completed. The next trial and set of games will begin once
+    you click Next. The order of games has been randomized.

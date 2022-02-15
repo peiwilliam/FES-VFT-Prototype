@@ -7,8 +7,6 @@ public class HuntingCircle : MonoBehaviour
     [SerializeField] private float _deltaTimeScore = 0.25f;
     [Tooltip("How much time is given to the player to go from circle to circle before the maximum score starts to decrease")]
     [SerializeField] private float _gettingToCircleBuffer = 5f;
-    [Tooltip("How much time the player needs to stay in the circle to get points")]
-    [SerializeField] private float _timeToGetScore = 3f;
     [Tooltip("The maximum score per circle")]
     [SerializeField] private int _score = 250;
     [Tooltip("For debugging purposes only, shows when the maximum score is decreasing")]
@@ -16,6 +14,7 @@ public class HuntingCircle : MonoBehaviour
     [Tooltip("For debugging purposes only, shows when the cursor has entered the circle")]
     [SerializeField] private bool _hasEntered;
 
+    private float _timeToGetScore;
     private Color _oldColour;
     private Coroutine _enterCircle;
     private Coroutine _exitCircle;
@@ -24,6 +23,7 @@ public class HuntingCircle : MonoBehaviour
     
     private void Start()
     {
+        _timeToGetScore = PlayerPrefs.GetInt("Duration to Get Points", 3);
         _gameSession = FindObjectOfType<GameSession>();
 
         if (!_hasEntered)

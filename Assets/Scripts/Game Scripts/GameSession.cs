@@ -51,12 +51,11 @@ public class GameSession : MonoBehaviour
     [Header("All Games")]
     [Tooltip("Place to put the cursor prefab so that it is instantiated for all games")]
     [SerializeField] private GameObject _cursorPrefab;
-    [Tooltip("The amount of time that each game and quiet standing assessment is played")]
-    [SerializeField] private float _totalGameTime = 100f;
     [Tooltip("The object that holds how much time is left in the game")]
     [SerializeField] private Text _timeText;
 
     private float _totalGameDeltaTime = 1f; //incrementing timer by 1 sec each time, doesn't need to be changed
+    private float _totalGameTime;
     private Coroutine _timer;
     private SceneLoader _sceneLoader;
     
@@ -79,8 +78,6 @@ public class GameSession : MonoBehaviour
     public int EllipseScore { get; private set; }
 
     [Header("Colour Matching Game")]
-    [Tooltip("How long each target should last before switching")]
-    [SerializeField] private float _colourDuration = 10f;
     [Tooltip("For determining if the player has stayed in the target circle long enough")]
     [SerializeField] private bool _conditionColourMet;
     [Tooltip("For storing the colour circle objects")]
@@ -90,6 +87,7 @@ public class GameSession : MonoBehaviour
     [Tooltip("For handling target changing when the target circle changes")]
     [SerializeField] private UnityEvent _colourChangeEvent;
 
+    private float _colourDuration;
     private TextMeshProUGUI _colourText;
     private Coroutine _changeColour;
 
@@ -113,11 +111,10 @@ public class GameSession : MonoBehaviour
     [SerializeField] private float _minY = 0f;
     [Tooltip("The maximum y or the top side edge of the camera")]
     [SerializeField] private float _maxY = 5f*2f; //2*camera size
-    [Tooltip("How long the target lasts before switching to another target")]
-    [SerializeField] private float _huntingDuration = 10f;
     [Tooltip("For determining if the player has met the condition to switch targets")]
     [SerializeField] private bool _conditionHuntingMet;
     
+    private float _huntingDuration;
     private HuntingCircle _huntingCircle;
 
     public int HuntingScore { get; private set; }
@@ -150,6 +147,7 @@ public class GameSession : MonoBehaviour
 
         var sceneName = SceneManager.GetActiveScene().name;
         _sceneLoader = FindObjectOfType<SceneLoader>();
+        _totalGameTime = PlayerPrefs.GetInt("Game Duration", 100);
 
         switch (sceneName)
         {
@@ -160,7 +158,7 @@ public class GameSession : MonoBehaviour
                     ["EO"] = new List<WiiBoardData>()
                 };
 
-                _assessmentTime = _totalGameTime; //set this so that when time is reset, it can be set back to set value
+                _assessmentTime = PlayerPrefs.GetInt("Assessment Duration", 100);
 
                 SetupAssessment();
                 
@@ -177,6 +175,7 @@ public class GameSession : MonoBehaviour
             case "Colour Matching":
                 _colourCircles = FindObjectsOfType<ColourCircle>().ToList();
                 _colourTexts = new List<string>(from circle in _colourCircles select circle.name); //linq syntax
+                _colourDuration = PlayerPrefs.GetInt("Duration of Target", 10);
                 
                 if (_colourChangeEvent == null)
                     _colourChangeEvent = new UnityEvent();
@@ -190,6 +189,8 @@ public class GameSession : MonoBehaviour
 
                 break;
             case "Hunting":
+                _huntingDuration = PlayerPrefs.GetInt("Duration of Target", 10);
+
                 HuntingGame();
 
                 break;
@@ -227,7 +228,7 @@ public class GameSession : MonoBehaviour
         {
             if (SceneLoader.GetFamiliarization() && SceneLoader.GetGameIndex() < 4)
                 _sceneLoader.Familiarization();
-            else if (SceneLoader.GetExperimentation() && SceneLoader.GetGameIndicesIndex() < 4)
+            else if (SceneLoader.GetExperimentation() && SceneLoader.GetGameIndicesIndex() <= 4 && SceneLoader.GetTrialIndex() <= PlayerPrefs.GetInt("Number of Trials"))
                 _sceneLoader.Experimentation();
             else   
                 _sceneLoader.LoadStartScene();
@@ -244,13 +245,13 @@ public class GameSession : MonoBehaviour
 
                 Assessment();
 
-                if (_totalGameTime <= 0) //reset for eyes open condition
+                if (_assessmentTime <= 0) //reset for eyes open condition
                 {
                     if (ecDone && !eoDone) //change the instructions and reset timer for next condition
                     {
                         _timer = null;
                         _assessInstructionsBox.text = _assessInstructions[1];
-                        _totalGameTime = _assessmentTime;
+                        _assessmentTime = PlayerPrefs.GetInt("Assessment Duration", 100);
                     }
                     else if (ecDone && eoDone) //set length offset when assessment is done
                         ComputeLengthOffset();

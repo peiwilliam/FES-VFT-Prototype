@@ -7,8 +7,6 @@ public class ColourCircle : MonoBehaviour
     [SerializeField] private float _deltaTimeScore = 0.25f;
     [Tooltip("The amount of time allowed to get to a circle before the highest possible score starts to decrease")]
     [SerializeField] private float _gettingToCircleBuffer = 5f;
-    [Tooltip("The amount of time required to stay inside a circle to get the points")]
-    [SerializeField] private float _timeToGetScore = 3f;
     [Tooltip("The highest possible score")]
     [SerializeField] private int _score = 250;
     [Tooltip("For debugging purposes only: Shows when the score is decreasing")]
@@ -16,6 +14,7 @@ public class ColourCircle : MonoBehaviour
     [Tooltip("For debugging purposes only: Shows when the cursor has entered the target circle")]
     [SerializeField] private bool _hasEntered;
 
+    private float _timeToGetScore;
     private Color _oldColour;
     private Coroutine _enterCircle;
     private Coroutine _exitCircle;
@@ -24,6 +23,7 @@ public class ColourCircle : MonoBehaviour
 
     private void Start()
     {
+        _timeToGetScore = PlayerPrefs.GetInt("Duration to Get Points", 3);
         _gameSession = FindObjectOfType<GameSession>();
     }
 
