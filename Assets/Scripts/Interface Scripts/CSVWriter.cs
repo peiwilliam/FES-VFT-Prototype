@@ -14,6 +14,7 @@ namespace CSV
         private string _extension;
         private string _path;
         private string _condition;
+        private string _csvFolder;
         private int _index;
 
         public CSVWriter(string activeSceneName, string condition = "")
@@ -26,7 +27,10 @@ namespace CSV
                 _extension = ".csv";
             
             if(String.IsNullOrEmpty(_path))
-                _path = Directory.GetCurrentDirectory();
+                _path = PlayerPrefs.GetString("Root Path", Directory.GetCurrentDirectory());
+
+            if (String.IsNullOrEmpty(_csvFolder))
+                _csvFolder = @"\Game Outputs";
             
             _condition = condition;
         }
@@ -34,20 +38,16 @@ namespace CSV
         public void WriteHeader(WiiBoardData data, Stimulation stimulation = null) //writes the header but also creates the csv file, stimulation optional
         {
             var header = GetHeader(data, stimulation);
-            var di = new DirectoryInfo(_path);
+            
+            if (!Directory.Exists(_path + _csvFolder))
+                Directory.CreateDirectory(_path + _csvFolder);
+
+            var di = new DirectoryInfo(_path + _csvFolder);
             var files = di.GetFiles(_fileName + _condition + "*"); //only find the relevant csv files
-            // Debug.Log(_fileName);
-            // Debug.Log(_condition);
-            // Debug.Log((_fileName + _condition).Length);
-            // foreach (var file in files)
-            // {
-            //     Debug.Log(file.Name.IndexOf('.'));
-            //     Debug.Log(file.Name.Substring((_fileName + _condition).Length, file.Name.IndexOf('.') - (_fileName + _condition).Length));
-            // }
 
             SetIndex(files);
 
-            using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true))
+            using (var w = new StreamWriter(_path + _csvFolder + @"\" + _fileName + _condition + _index + _extension, true))
                 w.WriteLine(header);
         }
 
@@ -131,7 +131,7 @@ namespace CSV
 
         public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords) //make this async so it doesn't potentially slow down the game, for LOS and assessment
         {
-            using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true)) // true to append and not overwrite
+            using (var w = new StreamWriter(_path + _csvFolder + @"\" + _fileName + _condition + _index + _extension, true)) // true to append and not overwrite
             {
                 var line = data.GetParameterValues() + $", {targetCoords.x}, {targetCoords.y}";
                 await w.WriteLineAsync(line);
@@ -140,7 +140,7 @@ namespace CSV
 
         public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords, Vector2 targetCoordsFiltered, ControllerData controllerData, GameSession gameSession) //make this async so it doesn't potentially slow down the game, for games
         {
-            using (var w = new StreamWriter(_path + @"\" + _fileName + _condition + _index + _extension, true)) // true to append and not overwrite
+            using (var w = new StreamWriter(_path + _csvFolder + @"\" + _fileName + _condition + _index + _extension, true)) // true to append and not overwrite
             {
                 var score = 0f;
 

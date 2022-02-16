@@ -47,7 +47,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate class for writi
 
     private void PrepWriter()
     {
-        if (_sceneName == "LOS" && _sceneName == "Assessment") //LOS and assessment handled differently from games
+        if (_sceneName == "LOS" || _sceneName == "Assessment") //LOS and assessment handled differently from games
             return;
 
         _writer = new CSVWriter(_sceneName);

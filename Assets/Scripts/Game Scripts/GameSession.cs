@@ -11,6 +11,18 @@ using TMPro;
 
 public class GameSession : MonoBehaviour
 {
+    [Header("All Games")]
+    [Tooltip("Place to put the cursor prefab so that it is instantiated for all games")]
+    [SerializeField] private GameObject _cursorPrefab;
+    [Tooltip("The object that holds how much time is left in the game")]
+    [SerializeField] private Text _timeText;
+
+    private float _totalGameDeltaTime = 1f; //incrementing timer by 1 sec each time, doesn't need to be changed
+    private float _totalGameTime;
+    private string _sceneName;
+    private Coroutine _timer;
+    private SceneLoader _sceneLoader;
+
     [Header("Assessment")]
     [Tooltip("Instructions to the player when doing the quiet standing assessment")]
     [SerializeField] private List<string> _assessInstructions;
@@ -47,17 +59,6 @@ public class GameSession : MonoBehaviour
     private Dictionary<string, string> _losInstructions; //dictionary of instructions text for each direction
     private Dictionary<string, List<WiiBoardData>> _directionData; //dictionary to store data from each direction
     private Dictionary<string, float> _limits; //dictionary to store the limits
-
-    [Header("All Games")]
-    [Tooltip("Place to put the cursor prefab so that it is instantiated for all games")]
-    [SerializeField] private GameObject _cursorPrefab;
-    [Tooltip("The object that holds how much time is left in the game")]
-    [SerializeField] private Text _timeText;
-
-    private float _totalGameDeltaTime = 1f; //incrementing timer by 1 sec each time, doesn't need to be changed
-    private float _totalGameTime;
-    private Coroutine _timer;
-    private SceneLoader _sceneLoader;
     
     [Header("Ellipse Game")]
     [Tooltip("Place to put the moving circle prefab so that it's instantiated for the ellipse game")]
@@ -145,11 +146,11 @@ public class GameSession : MonoBehaviour
     {
         Instantiate(_cursorPrefab, new Vector3(0, 0, 0), Quaternion.identity); //the first thing we want to do is instantiate the cursor
 
-        var sceneName = SceneManager.GetActiveScene().name;
+        _sceneName = SceneManager.GetActiveScene().name;
         _sceneLoader = FindObjectOfType<SceneLoader>();
         _totalGameTime = PlayerPrefs.GetInt("Game Duration", 100);
 
-        switch (sceneName)
+        switch (_sceneName)
         {
             case "Assessment":
                 _qsAssessment = new Dictionary<string, List<WiiBoardData>>() 
@@ -169,7 +170,7 @@ public class GameSession : MonoBehaviour
                 //first lambda is for the keys, the second lambda is for the values
                 _directionData = _directionNames.ToDictionary(v => v, v => new List<WiiBoardData>());
                 _losInstructions = _directionNames.ToDictionary(v => v, v => "Please lean " + v.ToLower() + " as far as you can and hold for 3 seconds.");
-                _losInstructionsBox.text = "Press Start to start the Limits of Stability Assessment. Be prepared to lean in one of the 8 directions.";
+                _losInstructionsBox.text = "Press Go! to start the Limits of Stability Assessment. Be prepared to lean in one of the 8 directions.";
 
                 break;
             case "Colour Matching":
@@ -200,14 +201,14 @@ public class GameSession : MonoBehaviour
                 break;
         }
 
-        if (sceneName != "Assessment" && sceneName != "LOS") //timer for assessment started manually and los doesn't have timer
+        if (_sceneName != "Assessment" && _sceneName != "LOS") //timer for assessment started manually and los doesn't have timer
             StartCoroutine(StartTimer());
     }
 
     private void Update() //probably use update, though case can be made for fixedupdate
     {
         // with these two games, the scores are not dependent on getting to targets, so it's just one cumulative score
-        switch (SceneManager.GetActiveScene().name)
+        switch (_sceneName)
         {
             case "LOS":
                 LOS();
@@ -221,10 +222,15 @@ public class GameSession : MonoBehaviour
         }
 
         if (_timeText != null) //LOS doesn't have this so don't want to create null exception
-            _timeText.text = _totalGameTime.ToString();
+        {
+            if (_sceneName != "Assessment")
+                _timeText.text = _totalGameTime.ToString();
+            else
+                _timeText.text = _assessmentTime.ToString();
+        }
 
         //how to handle transitions for all scenes other than assessment
-        if ((_totalGameTime <= 0 && SceneManager.GetActiveScene().name != "Assessment"))
+        if ((_totalGameTime <= 0 && _sceneName != "Assessment"))
         {
             if (SceneLoader.GetFamiliarization() && SceneLoader.GetGameIndex() < 4)
                 _sceneLoader.Familiarization();
@@ -238,7 +244,7 @@ public class GameSession : MonoBehaviour
 
     private void FixedUpdate() //fixed update to keep it in sync with cursor data
     {
-        switch (SceneManager.GetActiveScene().name)
+        switch (_sceneName)
         {
             case "Assessment":
                 if (_timer == null) //timer for the assessment hasn't started, don't go past this point
@@ -369,7 +375,7 @@ public class GameSession : MonoBehaviour
         _limits = new Dictionary<string, float>();
         var averages = new List<float>();
         
-        if (_directionData.Values != null) //check if the board was used, if it's just cursor, the values will be null
+        if (_directionData.Values != null) // if this is null, something weird happened
         {
             foreach (var direction in _directionData)
             {
@@ -414,7 +420,7 @@ public class GameSession : MonoBehaviour
             PlayerPrefs.SetFloat("Limit of Stability Right", _limits["Right"] * 0.9f);
         }
         else
-            Debug.Log("Cursor was used, no limit data colleccted.");
+            Debug.LogWarning("Something weird happened, no limit data colleccted.");
         
         return;
     }
@@ -587,14 +593,22 @@ public class GameSession : MonoBehaviour
 
     private IEnumerator StartTimer()
     {
-        while (_totalGameTime > 0)
+        if (_sceneName != "Assessment")
         {
-            yield return new WaitForSecondsRealtime(_totalGameDeltaTime);
-            _totalGameTime -= _totalGameDeltaTime;
+            while (_totalGameTime > 0)
+            {
+                yield return new WaitForSecondsRealtime(_totalGameDeltaTime);
+                _totalGameTime -= _totalGameDeltaTime;
+            }
         }
-
-        if (SceneManager.GetActiveScene().name == "Assessment")
+        else
         {
+            while (_assessmentTime > 0)
+            {
+                yield return new WaitForSecondsRealtime(_totalGameDeltaTime);
+                _assessmentTime -= _totalGameDeltaTime;
+            }
+
             if (!ecDone)
                 ecDone = true;
             else if (!eoDone)
