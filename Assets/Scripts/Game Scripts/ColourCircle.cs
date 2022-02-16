@@ -29,45 +29,47 @@ public class ColourCircle : MonoBehaviour
 
     private void Update() //need this for colour circle since the circles always exist in the game
     {
-        if (gameObject.tag == "Untagged") 
-        {
-            if (_gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
-                StopAllCoroutines();
-            if (gameObject.GetComponent<SpriteRenderer>().color == Color.green)
-                DetectCursor.ChangeColourBack(gameObject, _oldColour);
-        }
+        if (gameObject.tag != "Untagged")
+            return;
+
+        if (_gettingToCircle != null) //_gettingToCircle is always not null, so perfect for resets
+            StopAllCoroutines();
+        if (gameObject.GetComponent<SpriteRenderer>().color == Color.green)
+            DetectCursor.ChangeColourBack(gameObject, _oldColour);
     }
 
     private void OnTriggerEnter2D(Collider2D collider) 
     {
-        if (gameObject.GetComponent<ColourCircle>() == _gameSession.TargetColourCircle)
+        if (gameObject.GetComponent<ColourCircle>() != _gameSession.TargetColourCircle)
+            return;
+
+        DetectCursor.ChangeColourOnDetection(gameObject, out _oldColour);
+
+        _hasEntered = true; // tells the game that the player has entered at least once.
+
+        if (_gettingToCircle != null) //need to add this account for when cursor is on a target when game starts
+            StopCoroutine(_gettingToCircle);
+
+        if (_isDecreasing)
         {
-            DetectCursor.ChangeColourOnDetection(gameObject, out _oldColour);
-
-            _hasEntered = true; // tells the game that the player has entered at least once.
-
-            if (_gettingToCircle != null) //need to add this account for when cursor is on a target when game starts
-                StopCoroutine(_gettingToCircle);
-
-            if (_isDecreasing)
-            {
-                StopCoroutine(_exitCircle);
-                _isDecreasing = false;
-            }
-
-            _enterCircle = StartCoroutine(EnterCircle());
+            StopCoroutine(_exitCircle);
+            _isDecreasing = false;
         }
+
+        _enterCircle = StartCoroutine(EnterCircle());
+
     }
 
     private void OnTriggerExit2D(Collider2D collider) 
     {
-        if (_enterCircle != null)
-        {
-            DetectCursor.ChangeColourBack(gameObject, _oldColour);
+        if (_enterCircle == null)
+            return;
+        
+        DetectCursor.ChangeColourBack(gameObject, _oldColour);
 
-            StopCoroutine(_enterCircle);
-            _exitCircle = StartCoroutine(ExitCircle());
-        }
+        StopCoroutine(_enterCircle);
+        _exitCircle = StartCoroutine(ExitCircle());
+
     }
 
     private IEnumerator EnterCircle()

@@ -89,14 +89,14 @@ public class Cursor : MonoBehaviour
 
     private void SetInitialConditions()
     {
-        if (PlayerPrefs.GetInt("Filter Data", 0) == 1) //set 0 as default in case it isn't set
-        {
-            _filterX = new Filter(PlayerPrefs.GetInt("Filter Order")); //moving average, doesn't work with wii balance board right now
-            _filterY = new Filter(PlayerPrefs.GetInt("Filter Order"));
+        if (PlayerPrefs.GetInt("Filter Data", 0) != 1) //set 0 as default in case it isn't set
+            return;
 
-            _filterX = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order")); //bw temporary for now
-            _filterY = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order"));
-        }
+        _filterX = new Filter(PlayerPrefs.GetInt("Filter Order")); //moving average, doesn't work with wii balance board right now
+        _filterY = new Filter(PlayerPrefs.GetInt("Filter Order"));
+
+        _filterX = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order")); //bw temporary for now
+        _filterY = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order"));
     }
 
     private void Move()
