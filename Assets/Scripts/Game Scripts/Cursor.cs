@@ -126,8 +126,13 @@ public class Cursor : MonoBehaviour
             else
                 yLimit = _limits[1];
 
-            pos.x = Mathf.Clamp((com.x / xLimit) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
-            pos.y = Mathf.Clamp((com.y / yLimit) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
+            var multiplier = 1;
+
+            if (_sceneName == "Target") //the cursor is twice as sensitive in target game
+                multiplier = 2;
+
+            pos.x = Mathf.Clamp(multiplier*(com.x / xLimit) * (_maxX / 2) + Camera.main.transform.position.x, _minX, _maxX);
+            pos.y = Mathf.Clamp(multiplier*(com.y / yLimit) * (_maxY / 2) + Camera.main.transform.position.y, _minY, _maxY);
 
             transform.position = pos;
         }

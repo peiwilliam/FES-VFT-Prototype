@@ -67,7 +67,7 @@ public class SerialControllerCustomDelimiter : MonoBehaviour
     // Invoked whenever the SerialController gameobject is deactivated.
     // It stops and destroys the thread that was reading from the serial device.
     // ------------------------------------------------------------------------
-    void OnDisable()
+    void OnDestroy() //has to be on destroy because of communicationManager's ondisable command to it.
     {
         // If there is a user-defined tear-down function, execute it before
         // closing the underlying COM port.

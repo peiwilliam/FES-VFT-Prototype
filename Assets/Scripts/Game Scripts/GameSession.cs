@@ -347,10 +347,10 @@ public class GameSession : MonoBehaviour
 
         if (_counter == _directionNames.Count) //check when _counter is greater than the max index
         {
-            _sceneLoader.LoadStartScene();
             var windowLength = Mathf.FloorToInt(PlayerPrefs.GetInt("Rolling Average Window")*1/Time.fixedDeltaTime);
             
             GetLimits(windowLength);
+            _sceneLoader.LoadStartScene();
         }
         else
         {
@@ -409,7 +409,12 @@ public class GameSession : MonoBehaviour
 
                 //since the list for the diagonal directions is currently not coded in, it throws an error, so just want to account for that
                 if (averages.Count != 0)
+                {
+                    Debug.Log(direction.Key);
+                    Debug.Log("here3");
                     _limits.Add(direction.Key, averages.Max()*100f);
+                }
+                    
 
                 averages.Clear(); //clear the list so that it's a new one next loop
             }
