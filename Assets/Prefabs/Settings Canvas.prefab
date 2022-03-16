@@ -7370,7 +7370,7 @@ GameObject:
   - component: {fileID: 2482801487701386944}
   - component: {fileID: 2482801487701386945}
   m_Layer: 5
-  m_Name: Trial Duration
+  m_Name: Zeroing Time
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7592,7 +7592,7 @@ GameObject:
   - component: {fileID: 2482801487761920668}
   - component: {fileID: 2482801487761920669}
   m_Layer: 5
-  m_Name: Trial Duration Text
+  m_Name: Zeroing Time text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7658,7 +7658,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Trial Duration (s)
+  m_Text: Zeroing Time (s)
 --- !u!1 &2482801487768000858
 GameObject:
   m_ObjectHideFlags: 0

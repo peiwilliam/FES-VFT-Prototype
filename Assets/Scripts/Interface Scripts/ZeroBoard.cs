@@ -2,66 +2,53 @@
 using System.Linq;
 using UnityEngine;
 
-public class ZeroBoard : MonoBehaviour //do not use, not actually that helpful for the use of the wiiboard.
+public class ZeroBoard : MonoBehaviour
 {
-    private float _topLeft;
-    private float _topRight;
-    private float _bottomLeft;
-    private float _bottomRight;
     private float _timeLeft;
-
+    private bool _foundWiiBoard;
     private List<Vector4> _values;
 
     private void Start() 
     {
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
         {
-            _timeLeft = 5; //5 seconds
+            _timeLeft = PlayerPrefs.GetInt("Zeroing Time", 3); //3 seconds is default
             _values = new List<Vector4>();
+            _foundWiiBoard = true;
         }
         else
         {
-            Debug.Log("No Wii Balance Board found");
+            Debug.Log("No Wii Balance Board found, no zeroing will be done");
         }
     }
     
     private void FixedUpdate() 
     {
-        _timeLeft -= Time.fixedDeltaTime;
-
-        if (_timeLeft > 0)
+        if (_foundWiiBoard)
         {
-            var boardValues = Wii.GetBalanceBoard(0); //assume wii board only wii device
+            _timeLeft -= Time.fixedDeltaTime;
 
-            _values.Add(boardValues);
-        }
-        else
-        {
-            var topLeftValues = new List<float>();
-            var topRightValues = new List<float>();
-            var bottomLeftValues = new List<float>();
-            var bottomRightValues = new List<float>();
-
-            foreach (var value in _values)
+            if (_timeLeft > 0)
             {
-                topLeftValues.Add(value.y);
-                topRightValues.Add(value.x);
-                bottomLeftValues.Add(value.w);
-                bottomRightValues.Add(value.z);
+                var boardValues = Wii.GetBalanceBoard(0); //assume wii board only wii device
+
+                _values.Add(boardValues);
             }
+            else
+            {
+                var topLeft = _values.Select(value => value.y).Average();
+                var topRight = _values.Select(value => value.x).Average();
+                var bottomLeft = _values.Select(value => value.w).Average();
+                var bottomRight = _values.Select(value => value.z).Average();
 
-            _topLeft = topLeftValues.Average();
-            _topRight = topRightValues.Average();
-            _bottomLeft = bottomLeftValues.Average();
-            _bottomRight = bottomRightValues.Average();
-
-            PlayerPrefs.SetFloat("Top Left Sensor", _topLeft);
-            PlayerPrefs.SetFloat("Top Right Sensor", _topRight);
-            PlayerPrefs.SetFloat("Bottom Left Sensor", _bottomLeft);
-            PlayerPrefs.SetFloat("Bottom Right Sensor", _bottomRight);
-
-            Destroy(gameObject);
+                PlayerPrefs.SetFloat("Top Left Sensor", topLeft);
+                PlayerPrefs.SetFloat("Top Right Sensor", topRight);
+                PlayerPrefs.SetFloat("Bottom Left Sensor", bottomLeft);
+                PlayerPrefs.SetFloat("Bottom Right Sensor", bottomRight);
+            }
         }
+
+        Destroy(gameObject);
     }
 
     private void OnEnable() 

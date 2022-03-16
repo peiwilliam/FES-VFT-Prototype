@@ -19,7 +19,7 @@ public class SettingsManager : MonoBehaviour
     private static Dictionary<string, object> _defaultValues = new Dictionary<string, object>()
     {
         ["Controller Frequency"] = 50, // this is the same frequency as the default physics update speed in unity
-        ["Trial Duration"] = 100, // how long each game will last
+        ["Zeroing Time"] = 3, // how long it records the board to get the zero values
         ["Ramp Duration"] = 1.0f, // how long it takes to ramp up to 100% stimulation when the target changes
         ["Max A/P Fraction"] = 18.0926f, // can be removed, unnecessary
         ["Ankle Fraction"] = 2.0f, // percentage of total height that corresponds to the distance between heel to ankle
@@ -57,7 +57,7 @@ public class SettingsManager : MonoBehaviour
     public static Dictionary<string, string> fieldNamesAndTypes = new Dictionary<string, string>() 
     {
         ["Controller Frequency"] = "int",
-        ["Trial Duration"] = "int",
+        ["Zeroing Time"] = "int",
         ["Ramp Duration"] = "float",
         ["Ankle Fraction"] = "float",
         ["Number of Trials"] = "int",
@@ -162,6 +162,7 @@ public class SettingsManager : MonoBehaviour
         }
 
         PlayerPrefs.Save();
+        Time.fixedDeltaTime = 1f/PlayerPrefs.GetInt("Controller Frequency", 50); //set physics loop speed to the speed set in the settings
     }
 
     private bool CheckIfArduino()

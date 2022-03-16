@@ -27,6 +27,7 @@ public class Cursor : MonoBehaviour
     private float _ankleDisplacement; //to shift everything to the reference point of the ankle (ie. ankle is at y = 0)
     private List<float> _limits;
     private GameObject _rectangles;
+    private Vector4 _zero;
     private Filter _filterX;
     private Filter _filterY;
 
@@ -50,6 +51,7 @@ public class Cursor : MonoBehaviour
         _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
         _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);
         _ankleDisplacement = _HeelLocation/1000f - _ankleLength;
+        _zero = new Vector4(PlayerPrefs.GetFloat("Top Right Sensor", 0f), PlayerPrefs.GetFloat("Top Left Sensor", 0f), PlayerPrefs.GetFloat("Bottom Right Sensor", 0f), PlayerPrefs.GetFloat("Bottom Left Sensor", 0f));
 
         if (_sceneName == "LOS")
             _rectangles = GameObject.Find("Rectangles"); //find the rectangles for los to get shifted y coord
@@ -168,8 +170,12 @@ public class Cursor : MonoBehaviour
 
     private WiiBoardData GetBoardValues()
     {
-        var boardSensorValues = Wii.GetBalanceBoard(0);
-        var cop = Wii.GetCenterOfBalance(0);
+        // Zero out the sensor values if possible, if no zeroing, then zero vector is just all zeros by default
+        var boardSensorValues = Wii.GetBalanceBoard(0) - _zero;
+        var totalVertical = boardSensorValues.x + boardSensorValues.y + boardSensorValues.z + boardSensorValues.w;
+        var copX = (boardSensorValues.x + boardSensorValues.z - boardSensorValues.y - boardSensorValues.w) / totalVertical;
+        var copY = (boardSensorValues.x + boardSensorValues.y - boardSensorValues.z - boardSensorValues.w) / totalVertical;
+        var cop = new Vector2(copX, copY);
 
         if (_sceneName != "LOS")
             cop.y -= _lengthOffset; //subtract AP offset to centre QS to 0,0, subtracting a negative
@@ -186,9 +192,6 @@ public class Cursor : MonoBehaviour
         //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && _sceneName != "Assessment" && _sceneName != "LOS") 
         {
-            // comX = taredCOP.x - _i/(_m*_G*_h); //incomplete, need to figure out a way to get COM from wii balance board
-            // comY = taredCOP.y - _i/(_m*_G*_h);
-
             fCopX = _filterX.ComputeBW(cop.x);
             fCopY = _filterY.ComputeBW(cop.y);
         }
