@@ -34,6 +34,7 @@ namespace ControllerManager
         private float _losFTorque;
         private float _losBTorque;
         private float _qsVertAng;
+        private float _heelPosition; // m, measured manually from centre of board to bottom of indicated feet area
         private Vector2 _previousTarget;
         private float[] _limits;
         private List<float> _comAngles;
@@ -47,7 +48,6 @@ namespace ControllerManager
         private const float _YLength = 238f; // mm
         private const float _MaxX = 2f*5f*16f/9f; //2*height*aspect ratio
         private const float _MaxY = 5f*2f; //2*camera size
-        private const float _HeelLocation = 90; //mm, measured manually from centre of board to bottom of indicated feet area
         private const float _MaxPFStim = 1.117056035082781f; // maximum of PF bias scaling, need to divide this to get range to 0-1
         private const float _MaxDFStim = 1.170727435896939f; // maximum of DF bias scaling, need to divide this to get range to 0-1
 
@@ -79,7 +79,8 @@ namespace ControllerManager
             _m = mass*ankleMassFraction; //mass without foot
             _hCOM = height*comFraction; //height of COM
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset")/100f; //keep in fraction form since it's used in different contexts, is also negative!!!
-            _ankleDisplacement = _HeelLocation/1000f - ankleLength; //to change everything to ankle reference frame
+            _heelPosition = PlayerPrefs.GetFloat("Heel Position");
+            _ankleDisplacement = _heelPosition - ankleLength; //to change everything to ankle reference frame
             //if true, we use the board, if false, we use cursor.
             _foundWiiBoard = foundWiiBoard;
             _sceneName = SceneManager.GetActiveScene().name;

@@ -43,6 +43,7 @@ public class SettingsManager : MonoBehaviour
         ["Ankle Mass Fraction"] = 0.971f, // mass of body without feet
         ["CoM Height"] = 0.547f, // height of com relative to total height
         ["Inertia Coefficient"] = 0.319f, // coefficient to calculate the inertia
+        ["Heel Position"] = 0.09f, // position of the heels in the ap direction relative to the centre of the board
         ["Kp Coefficient"] = 0.24432f, // coefficient of mgh_com to calculate Kp
         ["Kd Coefficient"] = 0.22418f, // coefficient of mgh_com to calculate Kd
         ["K Coefficient"] = 0.75024f, // coefficient of mgh_com to calculate K for mechnical controller
@@ -80,6 +81,7 @@ public class SettingsManager : MonoBehaviour
         ["Ankle Mass Fraction"] = "float",
         ["CoM Height"] = "float",
         ["Inertia Coefficient"] = "float",
+        ["Heel Position"] = "float",
         ["Kp Coefficient"] = "float",
         ["Kd Coefficient"] = "float",
         ["K Coefficient"] = "float",

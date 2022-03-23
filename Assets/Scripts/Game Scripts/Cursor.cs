@@ -25,6 +25,7 @@ public class Cursor : MonoBehaviour
     private float _lengthOffset;
     private float _ankleLength;
     private float _ankleDisplacement; //to shift everything to the reference point of the ankle (ie. ankle is at y = 0)
+    private float _heelPosition; //m, measured manually from centre of board to bottom of indicated feet area
     private List<float> _limits;
     private GameObject _rectangles;
     private Vector4 _zero;
@@ -33,7 +34,6 @@ public class Cursor : MonoBehaviour
 
     private const float _XWidth = 433f; // mm
     private const float _YLength = 238f; // mm
-    private const float _HeelLocation = 90; //mm, measured manually from centre of board to bottom of indicated feet area
 
     public WiiBoardData Data { get; private set; }
     public float LOSShift
@@ -47,10 +47,11 @@ public class Cursor : MonoBehaviour
         _mass = PlayerPrefs.GetFloat("Mass");
         _height = PlayerPrefs.GetInt("Height")/100f; //convert to m
         _ankleLength = PlayerPrefs.GetFloat("Ankle Fraction")*_height/100f; //convert percent to fraction, cm to m
+        _heelPosition = PlayerPrefs.GetFloat("Heel Position");
         _m = PlayerPrefs.GetFloat("Ankle Mass Fraction")*_mass;
         _h = PlayerPrefs.GetFloat("CoM Fraction")*_height;
         _i = PlayerPrefs.GetFloat("Inertia Coefficient")*_mass*Mathf.Pow(_height, 2);
-        _ankleDisplacement = _HeelLocation/1000f - _ankleLength;
+        _ankleDisplacement = _heelPosition - _ankleLength;
         _zero = new Vector4(PlayerPrefs.GetFloat("Top Right Sensor", 0f), PlayerPrefs.GetFloat("Top Left Sensor", 0f), PlayerPrefs.GetFloat("Bottom Right Sensor", 0f), PlayerPrefs.GetFloat("Bottom Left Sensor", 0f));
 
         if (_sceneName == "LOS")

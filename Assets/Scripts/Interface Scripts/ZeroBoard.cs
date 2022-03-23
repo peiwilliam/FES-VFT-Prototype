@@ -45,10 +45,12 @@ public class ZeroBoard : MonoBehaviour
                 PlayerPrefs.SetFloat("Top Right Sensor", topRight);
                 PlayerPrefs.SetFloat("Bottom Left Sensor", bottomLeft);
                 PlayerPrefs.SetFloat("Bottom Right Sensor", bottomRight);
+
+                Destroy(gameObject);
             }
         }
-
-        Destroy(gameObject);
+        else
+            Destroy(gameObject);
     }
 
     private void OnEnable() 
