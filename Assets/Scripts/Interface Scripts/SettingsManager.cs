@@ -223,8 +223,6 @@ public class SettingsManager : MonoBehaviour
     }
 
     //toggles are saved separately
-    public void ZeroBoard() => CheckBoxDelegate("Zero Board");
-
     public void FilterData() => CheckBoxDelegate("Filter Data");
 
     public void ECOrEO() => CheckBoxDelegate("Eyes Condition");

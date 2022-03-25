@@ -94,12 +94,10 @@ public class Cursor : MonoBehaviour
     {
         if (PlayerPrefs.GetInt("Filter Data", 0) != 1) //set 0 as default in case it isn't set
             return;
-
-        _filterX = new Filter(PlayerPrefs.GetInt("Filter Order")); //moving average, doesn't work with wii balance board right now
+        
+        // moving average filter
+        _filterX = new Filter(PlayerPrefs.GetInt("Filter Order"));
         _filterY = new Filter(PlayerPrefs.GetInt("Filter Order"));
-
-        _filterX = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order")); //bw temporary for now
-        _filterY = new Filter(0.4615f, 1.0f / Time.fixedDeltaTime, PlayerPrefs.GetInt("Filter Order"));
     }
 
     private void Move()
@@ -193,8 +191,8 @@ public class Cursor : MonoBehaviour
         //set 0 to default in case it isn't set, also don't want filtering in LOS or assessment
         if (PlayerPrefs.GetInt("Filter Data", 0) == 1 && _sceneName != "Assessment" && _sceneName != "LOS") 
         {
-            fCopX = _filterX.ComputeBW(cop.x);
-            fCopY = _filterY.ComputeBW(cop.y);
+            fCopX = _filterX.ComputeMA(cop.x);
+            fCopY = _filterY.ComputeMA(cop.y);
         }
         else
         {

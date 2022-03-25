@@ -27,7 +27,7 @@ namespace ControllerManager
         private float _kp;
         private float _kd;
         private float _k;
-        //counter for keeping track of when the derivative should be turned on for the controller
+        //counter for keeping track of when the derivative should be turned on for the controller, always 0 for ellipse
         private int _neuralCounter;
         //controller parameters
         private float _qsTorque;
@@ -379,7 +379,7 @@ namespace ControllerManager
                         if (0.5f*mechanicalTorque > 0 && stim.Key.Contains("PF")) //only calculate stim for pf if 0.5*mechanicalTorque > 0
                             stimulation[control.Key][stim.Key] = Slopes[control.Key][stim.Key]*mechanicalTorque;
                         else if (0.5f*_qsTorque > 0.5f*mechanicalTorque && stim.Key.Contains("DF")) //only calculate stim for df if 0.5f*qsTorque > 0.5f*mechanicalTorque > 0
-                           stimulation[control.Key][stim.Key] = Slopes[control.Key][stim.Key]*mechanicalTorque + Intercepts[stim.Key];
+                            stimulation[control.Key][stim.Key] = Slopes[control.Key][stim.Key]*mechanicalTorque + Intercepts[stim.Key];
                     }
                     else
                     {
