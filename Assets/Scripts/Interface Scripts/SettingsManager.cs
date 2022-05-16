@@ -21,7 +21,6 @@ public class SettingsManager : MonoBehaviour
         ["Controller Frequency"] = 50, // this is the same frequency as the default physics update speed in unity
         ["Zeroing Time"] = 3, // how long it records the board to get the zero values
         ["Ramp Duration"] = 1.0f, // how long it takes to ramp up to 100% stimulation when the target changes
-        ["Max A/P Fraction"] = 18.0926f, // can be removed, unnecessary
         ["Ankle Fraction"] = 2.0f, // percentage of total height that corresponds to the distance between heel to ankle
         ["Number of Trials"] = 2, // how many times the experiment will be run
         ["Arduino COM Port"] = "No COM Ports found", //how many arduinos and/or serival devices found
@@ -170,13 +169,14 @@ public class SettingsManager : MonoBehaviour
     private bool CheckIfArduino()
     {
         var serialPort = new SerialPort(_comPortsDropDown.options[_comPortsDropDown.value].text, 115200);
-        serialPort.ReadTimeout = 200;
-        serialPort.Open();
-        serialPort.Write("s64"); //unique string to send to arduino, if the device returns 64, then it's an arduino
-        serialPort.BaseStream.Flush();
 
         try
         {
+            serialPort.ReadTimeout = 200;
+            serialPort.Open();
+            serialPort.Write("s64"); //unique string to send to arduino, if the device returns 64, then it's an arduino
+            serialPort.BaseStream.Flush();
+            
             var buffer = new byte[5];
             var bufferUsed = 0;
             var separator = 44; //ascii code for comma, which is our separator, will need to be manually changed if separator changes
