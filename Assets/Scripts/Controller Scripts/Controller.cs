@@ -177,9 +177,8 @@ namespace ControllerManager
         public Dictionary<string, Dictionary<string, float>> Stimulate(WiiBoardData data, Vector2 targetCoords)
         {
             //Shift target and com then calculate the respective vertical angles
-            //initialization of variables done with the "out float" and "out Vector2" seen here
-            ShiftComAndTarget(data, targetCoords, out float shiftedComY, out float comX, out Vector2 targetCoordsShifted);
-            GetAngles(shiftedComY, targetCoordsShifted, out float targetVertAng, out float comVertAng);
+            var (shiftedComY, comX, targetCoordsShifted) = ShiftComAndTarget(data, targetCoords);
+            var (targetVertAng, comVertAng) = GetAngles(shiftedComY, targetCoordsShifted);
             IncrementNeuralCounter(targetCoordsShifted);
 
             //controller calculations
@@ -207,10 +206,11 @@ namespace ControllerManager
             return new Dictionary<string, Dictionary<string, float>>() { ["Unbiased"] = unbiasedStimOutput, ["Actual"] = actualStimOutput };
         }
 
-        private void ShiftComAndTarget(WiiBoardData data, Vector2 targetCoords, out float shiftedComY, out float comX, out Vector2 targetCoordsShifted)
+        private (float, float, Vector2) ShiftComAndTarget(WiiBoardData data, Vector2 targetCoords)
         {
-            shiftedComY = 0.0f;
-            comX = 0.0f;
+            var shiftedComY = 0.0f;
+            var comX = 0.0f;
+
             if (!_foundWiiBoard) //if we're using the cursor to debug
             {
                 shiftedComY = data.fCopY; //conversion to ankle reference frame done in cursor.cs
@@ -225,7 +225,8 @@ namespace ControllerManager
             }
 
             //conversion of target game coords to board coords
-            targetCoordsShifted = new Vector2();
+            var targetCoordsShifted = new Vector2();
+
             if (_sceneName != "Target")
             {
                 var yLimit = 0f;
@@ -252,13 +253,15 @@ namespace ControllerManager
                 //need to add length offset so that we get the proper shift to the target wrt ankle position
                 targetCoordsShifted.y = _ankleDisplacement + _lengthOffset * _YLength / 1000f / 2f;
             }
+
+            return (shiftedComY, comX, targetCoordsShifted);
         }
 
-        private void GetAngles(float shiftedComY, Vector2 targetCoordsShifted, out float targetVertAng, out float comVertAng)
+        private (float, float) GetAngles(float shiftedComY, Vector2 targetCoordsShifted)
         {
             //angle calculations
-            targetVertAng = Mathf.Atan2(targetCoordsShifted.y, _hCOM);
-            comVertAng = Mathf.Atan2(shiftedComY, _hCOM);
+            var targetVertAng = Mathf.Atan2(targetCoordsShifted.y, _hCOM);
+            var comVertAng = Mathf.Atan2(shiftedComY, _hCOM);
             var angErr = targetVertAng - comVertAng;
 
             //first need to adjust the stored COM values as new values are added from cursor, max is count - 2 so that we don't get index error
@@ -277,6 +280,8 @@ namespace ControllerManager
                 else
                     _comAngleErrors[i] = _comAngleErrors[i - 1];
             }
+
+            return (targetVertAng, comVertAng);
         }
 
         private void IncrementNeuralCounter(Vector2 targetCoordsShifted)
