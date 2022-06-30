@@ -362,38 +362,14 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1573870604}
-    - target: {fileID: 2067974859, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
-      propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 1573870604}
-    - target: {fileID: 2067974859, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
-      propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: ZeroBoard
-      objectReference: {fileID: 0}
     - target: {fileID: 2106043690, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
       propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1573870604}
-    - target: {fileID: 2106043690, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
-      propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: FilterData
-      objectReference: {fileID: 0}
-    - target: {fileID: 2482801486344269064, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
-      propertyPath: m_Name
-      value: Root Path
-      objectReference: {fileID: 0}
     - target: {fileID: 2482801487325356148, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1081334298}
-    - target: {fileID: 2482801487643181351, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
-      propertyPath: m_Text
-      value: Root Path
-      objectReference: {fileID: 0}
-    - target: {fileID: 2482801487643181369, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
-      propertyPath: m_Name
-      value: Root Path Text
-      objectReference: {fileID: 0}
     - target: {fileID: 2482801487843221984, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -486,22 +462,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1573870604}
-    - target: {fileID: 3432641069709852500, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: ResetToDefaults
-      objectReference: {fileID: 0}
-    - target: {fileID: 3432641069709852500, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: SettingsManager, Assembly-CSharp
-      objectReference: {fileID: 0}
     - target: {fileID: 6046989895735488393, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
       propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1573870604}
-    - target: {fileID: 6046989895735488393, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
-      propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: ECOrEO
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 661f19b32875ba24b9ca09791b5ef495, type: 3}
 --- !u!1001 &4014040991565268676

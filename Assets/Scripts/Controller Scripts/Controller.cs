@@ -35,11 +35,13 @@ namespace ControllerManager
         private float _losBTorque;
         private float _qsVertAng;
         private float _heelPosition; // m, measured manually from centre of board to bottom of indicated feet area
+        private float _stimBaseline;
         private Vector2 _previousTarget;
         private float[] _limits;
         private List<float> _comAngles;
         private List<float> _comAngleErrors;
         private Dictionary<string, float> _stimMax;
+        private Dictionary<string, float> _motorThresh;
         private Dictionary<string, float[]> _biasCoeffs;
 
         //constants
@@ -48,8 +50,8 @@ namespace ControllerManager
         private const float _YLength = 238f; // mm
         private const float _MaxX = 2f*5f*16f/9f; //2*height*aspect ratio
         private const float _MaxY = 5f*2f; //2*camera size
-        private const float _MaxPFStim = 1.117056035082781f; // maximum of PF bias scaling, need to divide this to get range to 0-1
-        private const float _MaxDFStim = 1.170727435896939f; // maximum of DF bias scaling, need to divide this to get range to 0-1
+        private const float _MaxPFStim = 1.11705604625955f; // maximum of PF bias scaling, need to divide this to get range to 0-1, found from derivative
+        private const float _MaxDFStim = 1.17072759370805f; // maximum of DF bias scaling, need to divide this to get range to 0-1, found from derivative
 
         //properties
         public float RampPercentage { get; private set; }
@@ -81,6 +83,7 @@ namespace ControllerManager
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset")/100f; //keep in fraction form since it's used in different contexts, is also negative!!!
             _heelPosition = PlayerPrefs.GetFloat("Heel Position");
             _ankleDisplacement = _heelPosition - ankleLength; //to change everything to ankle reference frame
+            _stimBaseline = PlayerPrefs.GetInt("Baseline of Stimulation")/100f; //convert from percent to fraction
             //if true, we use the board, if false, we use cursor.
             _foundWiiBoard = foundWiiBoard;
             _sceneName = SceneManager.GetActiveScene().name;
@@ -101,7 +104,15 @@ namespace ControllerManager
                 PlayerPrefs.GetFloat("Limit of Stability Right")/100f
             };
 
-            _stimMax = new Dictionary<string, float>() //RPF, RDF, LPF, LDF
+            _motorThresh = new Dictionary<string, float>()
+            {
+                ["RPF"] = PlayerPrefs.GetInt("RPF Motor Threshold"),
+                ["RDF"] = PlayerPrefs.GetInt("RDF Motor Threshold"),
+                ["LPF"] = PlayerPrefs.GetInt("LPF Motor Threshold"),
+                ["LDF"] = PlayerPrefs.GetInt("LDF Motor Threshold")
+            };
+
+            _stimMax = new Dictionary<string, float>()
             {
                 ["RPF"] = PlayerPrefs.GetInt("RPF Max"),
                 ["RDF"] = PlayerPrefs.GetInt("RDF Max"),
@@ -149,7 +160,7 @@ namespace ControllerManager
 
             //shift los to ankle reference frame for calculating torque
             var losF = (_limits[0] + _lengthOffset)*_YLength/1000f/2f + _ankleDisplacement; //adjust front and back limits to ankle reference frame
-            var losB = _ankleDisplacement + (_lengthOffset - _limits[1])*_YLength/1000f/2f ; //since torque is negative, sign of losB should also be negative
+            var losB = _ankleDisplacement + (_lengthOffset - _limits[1])*_YLength/1000f/2f; //since torque is negative, sign of losB should also be negative
 
             // calculating mechanical torques
             _qsTorque = _m*_G*(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f);
@@ -187,7 +198,8 @@ namespace ControllerManager
             var rawStimOutput = UnbiasedStimulationOutput(NeuralTorque, MechanicalTorque, comVertAng); //calculate unbiased output
             var neuralBiases = CalculateNeuralBiases(comX, shiftedComY, targetCoordsShifted); //calculate neural biases
             var mechBiases = CalculateMechBiases(comX, shiftedComY); //calculate mech biases
-            var actualStimOutput = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
+            var limitedStim = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
+            var actualStimOutput = RescaleStimulation(limitedStim); //this was added because if stim starts from 0, most of stim is below MT, which we don't want
             var unbiasedStimOutput = new Dictionary<string, float>();
 
             //properties for store data and write to csv
@@ -264,7 +276,7 @@ namespace ControllerManager
             var comVertAng = Mathf.Atan2(shiftedComY, _hCOM);
             var angErr = targetVertAng - comVertAng;
 
-            //first need to adjust the stored COM values as new values are added from cursor, max is count - 2 so that we don't get index error
+            //store the angles in an array, most recent data point is index 0
             for (var i = _comAngles.Count - 1; i >= 0; i--)
             {
                 if (i == 0)
@@ -272,7 +284,8 @@ namespace ControllerManager
                 else
                     _comAngles[i] = _comAngles[i - 1];
             }
-
+            
+            //store the angle errors in an array, most recent data point is index 0
             for (var i = _comAngleErrors.Count - 1; i >= 0; i--)
             {
                 if (i == 0)
@@ -466,14 +479,11 @@ namespace ControllerManager
                 ["Mech"] = mechBiases
             };
 
-            if (RampPercentage < 100f)
-                RampPercentage = CalculateRamp();
-
             foreach (var control in rawStimOutput)
             {
                 foreach (var stim in control.Value)
                 {
-                    adjustedStimOutput[control.Key][stim.Key] = RampPercentage/100f*stim.Value*biasesCombined[control.Key][stim.Key]; //divide by 100 to convert to decimal
+                    adjustedStimOutput[control.Key][stim.Key] = stim.Value*biasesCombined[control.Key][stim.Key]; //apply lateral biases
                     
                     if (stim.Key.Contains("PF")) //divide the maximum possible stim for pf and df stim
                         adjustedStimOutput[control.Key][stim.Key] /= _MaxPFStim;
@@ -505,12 +515,29 @@ namespace ControllerManager
             return trueStimOutput;
         }
 
+        private Dictionary<string, float> RescaleStimulation(Dictionary<string, float> limitedStimOutput)
+        {
+            var actualStimOutput = new Dictionary<string, float>();
+
+            if (RampPercentage < 100f)
+                RampPercentage = CalculateRamp();
+
+            foreach (var stim in limitedStimOutput)
+            {
+                actualStimOutput[stim.Key] = stim.Value*(_stimMax[stim.Key] - _stimBaseline*_motorThresh[stim.Key]) / 
+                                             _stimMax[stim.Key] + _stimBaseline * _motorThresh[stim.Key]; //calculate scaled stim
+                actualStimOutput[stim.Key] = actualStimOutput[stim.Key] * RampPercentage / 100f; //apply ramping
+            }
+
+            return actualStimOutput;
+        }
+
         private float CalculateRamp()
         {
             if (_rampPercentage < 100f)
                 _rampPercentage += _rampIterations;
 
-            return _rampPercentage; //divide by 100 to convert from percent to decimal
+            return _rampPercentage;
         }
     }
 }
