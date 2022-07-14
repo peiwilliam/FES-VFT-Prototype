@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 476060799802261815}
   - component: {fileID: 5101397425328110843}
   m_Layer: 5
-  m_Name: Centre Target
+  m_Name: Target Game Circle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29,6 +29,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 0}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -49,6 +50,7 @@ SpriteRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -78,8 +80,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 4
-  m_Sprite: {fileID: -2413806693520163455, guid: b4317f535fc748b429af066f2c7d6b59,
-    type: 3}
+  m_Sprite: {fileID: -2413806693520163455, guid: b4317f535fc748b429af066f2c7d6b59, type: 3}
   m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -119,3 +120,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _score: 0
+  _scoreIncreaseRate: 1
+  _scoreMultiplier: 1.5
+  _timeNeededForMultiplier: 5
+  _isInCircle: 0
+  _multiplyScore: 0
+  _nextCircle: {fileID: 0}
+  _gameSession: {fileID: 0}
