@@ -35,13 +35,14 @@ namespace ControllerManager
         private float _losBTorque;
         private float _qsVertAng;
         private float _heelPosition; // m, measured manually from centre of board to bottom of indicated feet area
-        private float _stimBaseline;
         private Vector2 _previousTarget;
         private float[] _limits;
         private List<float> _comAngles;
         private List<float> _comAngleErrors;
         private Dictionary<string, float> _stimMax;
         private Dictionary<string, float> _motorThresh;
+        private Dictionary<string, float> _qsMechStim; //used to calculate the baseline for pf stimulation
+        private Dictionary<string, float> _stimBaseline; //baseline stim levels
         private Dictionary<string, float[]> _biasCoeffs;
 
         //constants
@@ -50,8 +51,6 @@ namespace ControllerManager
         private const float _YLength = 238f; // mm
         private const float _MaxX = 2f*5f*16f/9f; //2*height*aspect ratio
         private const float _MaxY = 5f*2f; //2*camera size
-        private const float _MaxPFStim = 1.11705604625955f; // maximum of PF bias scaling, need to divide this to get range to 0-1, found from derivative
-        private const float _MaxDFStim = 1.17072759370805f; // maximum of DF bias scaling, need to divide this to get range to 0-1, found from derivative
 
         //properties
         public float RampPercentage { get; private set; }
@@ -62,6 +61,7 @@ namespace ControllerManager
         public List<float> MlAngles { get; private set; }
         public Dictionary<string, float> CalculatedConstants { get; private set; }
         public Dictionary<string, float> Intercepts { get; private set; } // only need intercepts for mechanical controller stim calculation
+        public Dictionary<string, Dictionary<string, float>> CalculatedStimBaselines { get; private set; }
         public Dictionary<string, Dictionary<string, float>> Slopes { get; private set; }
         public Dictionary<string, Dictionary<string, float>> Biases { get; private set; }
 
@@ -83,7 +83,6 @@ namespace ControllerManager
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset")/100f; //keep in fraction form since it's used in different contexts, is also negative!!!
             _heelPosition = PlayerPrefs.GetFloat("Heel Position");
             _ankleDisplacement = _heelPosition - ankleLength; //to change everything to ankle reference frame
-            _stimBaseline = PlayerPrefs.GetInt("Baseline of Stimulation")/100f; //convert from percent to fraction
             //if true, we use the board, if false, we use cursor.
             _foundWiiBoard = foundWiiBoard;
             _sceneName = SceneManager.GetActiveScene().name;
@@ -155,14 +154,14 @@ namespace ControllerManager
             _kd = _kdc*_m*_G*_hCOM; 
             _k = _kc*_m*_G*_hCOM; //mechanical/passive controller
 
-            _comAngles = new List<float> {0f, 0f, 0f}; //for mechanical controller only
+            _comAngles = new List<float> {0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f}; //for mechanical controller only, mechanical uses 0-2 and absolute neural uses 5-7
             _comAngleErrors = new List<float> {0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f}; //neural controller requires 5-7 for derivative, delay of 100ms
 
             //shift los to ankle reference frame for calculating torque
             var losF = (_limits[0] + _lengthOffset)*_YLength/1000f/2f + _ankleDisplacement; //adjust front and back limits to ankle reference frame
             var losB = _ankleDisplacement + (_lengthOffset - _limits[1])*_YLength/1000f/2f; //since torque is negative, sign of losB should also be negative
 
-            // calculating mechanical torques
+            //calculating mechanical torques
             _qsTorque = _m*_G*(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f);
             _losFTorque = _m*_G*losF;
             _losBTorque = _m*_G*losB;
@@ -171,6 +170,19 @@ namespace ControllerManager
             Intercepts = new Dictionary<string, float> {["RDF"] = -Slopes["Mech"]["RDF"]*_qsTorque, 
                                                          ["LDF"] = -Slopes["Mech"]["LDF"]*_qsTorque};
             _qsVertAng = Mathf.Atan2(_ankleDisplacement + _lengthOffset*_YLength/1000f/2f, _hCOM);
+
+            //calculate the qs stim (no derivative) for pf rescaling
+            _qsMechStim = UnbiasedStimulationOutput(0, _qsTorque, 0)["Mech"];
+            //calculating the baseline stim level, pf is a special calculation for the baseline and df is from motor threshold
+            _stimBaseline = new Dictionary<string, float>();
+            foreach (var baseline in _qsMechStim)
+            {
+                if (baseline.Key.Contains("PF")) // baseline = (QS stim - MT stim)/(QS stim/max stim - 1)
+                    _stimBaseline[baseline.Key] = (_qsMechStim[baseline.Key] - _motorThresh[baseline.Key])
+                                                  /(_qsMechStim[baseline.Key]/_stimMax[baseline.Key] - 1);
+                else
+                    _stimBaseline[baseline.Key] = _motorThresh[baseline.Key]; //baseline is just motor threshold
+            }
 
             CalculatedConstants = new Dictionary<string, float>() //fill property
             {
@@ -183,6 +195,12 @@ namespace ControllerManager
                 ["LOSFTorque"] = _losFTorque, 
                 ["LOSBTorque"] = _losBTorque
             };
+
+            CalculatedStimBaselines = new Dictionary<string, Dictionary<string, float>>()
+            {
+                ["QS Stim"] = _qsMechStim,
+                ["Stim Baselines"] = _stimBaseline
+            };
         }
 
         public Dictionary<string, Dictionary<string, float>> Stimulate(WiiBoardData data, Vector2 targetCoords)
@@ -193,8 +211,8 @@ namespace ControllerManager
             IncrementNeuralCounter(targetCoordsShifted);
 
             //controller calculations
-            NeuralTorque = NeuralController(); //calculate neural torque from controller output
-            MechanicalTorque = MechanicalController(); //calculate passive torque from controller output
+            NeuralTorque = NeuralDifferentialController(); //calculate neural torque from controller output
+            MechanicalTorque = MechanicalController() + NeuralAbsoluteController(); //calculate passive torque from controller output
             var rawStimOutput = UnbiasedStimulationOutput(NeuralTorque, MechanicalTorque, comVertAng); //calculate unbiased output
             var neuralBiases = CalculateNeuralBiases(comX, shiftedComY, targetCoordsShifted); //calculate neural biases
             var mechBiases = CalculateMechBiases(comX, shiftedComY); //calculate mech biases
@@ -311,7 +329,7 @@ namespace ControllerManager
             }
         }
 
-        private float NeuralController() //calculate torque based on neural command
+        private float NeuralDifferentialController() //calculate torque based on neural command
         {
             var derivativeError = 0.0f;
             
@@ -321,12 +339,22 @@ namespace ControllerManager
             return _kp*_comAngleErrors.GetRange(5, 3)[0] + _kd*derivativeError; //only p portion when derivative error vec isn't filled
         }
 
+        private float NeuralAbsoluteController()
+        {
+            var derivativeError = 0.0f;
+
+            if ((_neuralCounter >= 7 || _isTargetGame) && !_comAngles.GetRange(5, 3).Any(v => v == 0.0f)) //7 correspond to delay of 140ms, original labview delay was 150ms  
+                derivativeError = CalculateDerivative(_comAngles.GetRange(5, 3));
+
+            return _kp*_comAngles.GetRange(5, 3)[0] + _kd*derivativeError;
+        }
+
         private float MechanicalController() //calculate torque based on mechanical properties
         {
             var velocity = 0.0f;
 
-            if (!_comAngles.Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero), only really initially
-                velocity = CalculateDerivative(_comAngles);
+            if (!_comAngles.GetRange(0, 3).Any(v => v == 0.0f)) //make sure that the vector of com is filled (ie. nothing is zero), only really initially
+                velocity = CalculateDerivative(_comAngles.GetRange(0, 3));
 
             return _k*_comAngles[0] + 5.0f*velocity;
         }
@@ -482,14 +510,7 @@ namespace ControllerManager
             foreach (var control in rawStimOutput)
             {
                 foreach (var stim in control.Value)
-                {
                     adjustedStimOutput[control.Key][stim.Key] = stim.Value*biasesCombined[control.Key][stim.Key]; //apply lateral biases
-                    
-                    if (stim.Key.Contains("PF")) //divide the maximum possible stim for pf and df stim
-                        adjustedStimOutput[control.Key][stim.Key] /= _MaxPFStim;
-                    else
-                        adjustedStimOutput[control.Key][stim.Key] /= _MaxDFStim;
-                }
             }
 
             foreach (var muscle in _stimMax) //this is just to add the total stimulation output
@@ -515,7 +536,7 @@ namespace ControllerManager
             return trueStimOutput;
         }
 
-        private Dictionary<string, float> RescaleStimulation(Dictionary<string, float> limitedStimOutput)
+        private Dictionary<string, float> RescaleStimulation(Dictionary<string, float> limitedStimOutput) //rescale the stimulation so that stimulation doesn't start from 0 and more of the stimulation is above the motor threshold
         {
             var actualStimOutput = new Dictionary<string, float>();
 
@@ -524,9 +545,10 @@ namespace ControllerManager
 
             foreach (var stim in limitedStimOutput)
             {
-                actualStimOutput[stim.Key] = stim.Value*(_stimMax[stim.Key] - _stimBaseline*_motorThresh[stim.Key]) / 
-                                             _stimMax[stim.Key] + _stimBaseline * _motorThresh[stim.Key]; //calculate scaled stim
-                actualStimOutput[stim.Key] = actualStimOutput[stim.Key] * RampPercentage / 100f; //apply ramping
+                // new stim = old stim*(max stim - baseline stim)/max stim + baseline stim
+                actualStimOutput[stim.Key] = stim.Value*(_stimMax[stim.Key] - _stimBaseline[stim.Key]) / _stimMax[stim.Key] 
+                                             + _stimBaseline[stim.Key]; //calculate rescaled stim, 
+                actualStimOutput[stim.Key] *= RampPercentage / 100f; //apply ramping
             }
 
             return actualStimOutput;

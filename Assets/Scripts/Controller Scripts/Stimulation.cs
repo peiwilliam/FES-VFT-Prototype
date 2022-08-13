@@ -14,6 +14,7 @@ public class Stimulation : MonoBehaviour
     private Filter _filterTargetY;
 
     public Dictionary<string, Dictionary<string, float>> ControllerConstants { get; private set; }
+    public Dictionary<string, Dictionary<string, float>> ControllerStimConstants { get; private set; } //this is just so that csvwrite can access this directly from the stimulation class
     public ControllerData ControllerData { get; private set; }
     public Vector2 TargetPositionFiltered { get; private set; }
 
@@ -39,6 +40,8 @@ public class Stimulation : MonoBehaviour
             ["Slopes"] = slopesCondensed,
             ["Intercepts"] = _controller.Intercepts
         };
+
+        ControllerStimConstants = _controller.CalculatedStimBaselines;
 
         if (_sceneName == "Ellipse") //since it's the same one circle in ellipse game, find it initially in start
             _targetCircle = FindObjectOfType<MovingCircle>().gameObject;

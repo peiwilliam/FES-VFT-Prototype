@@ -50,7 +50,6 @@ public class SettingsManager : MonoBehaviour
         ["Kp Coefficient"] = 0.24432f, // coefficient of mgh_com to calculate Kp
         ["Kd Coefficient"] = 0.22418f, // coefficient of mgh_com to calculate Kd
         ["K Coefficient"] = 0.75024f, // coefficient of mgh_com to calculate K for mechnical controller
-        ["Baseline of Stimulation"] = 90, // baseline percentage of motor threshold that the stimulation starts from
         ["Duration of Target"] = 10f, // how long the target lasts
         ["Duration to Get Points"] = 3f, // how long participants need to stay in the target to get the points
         ["Limit of Stability Front"] = 1f, // percentage of board, how far the participant can reach in the four directions, default needs to be one, if zero then it's a divide by zero error
@@ -93,7 +92,6 @@ public class SettingsManager : MonoBehaviour
         ["Kp Coefficient"] = "float",
         ["Kd Coefficient"] = "float",
         ["K Coefficient"] = "float",
-        ["Baseline of Stimulation"] = "int",
         ["Duration of Target"] = "float",
         ["Duration to Get Points"] = "float",
         ["Limit of Stability Front"] = "float",

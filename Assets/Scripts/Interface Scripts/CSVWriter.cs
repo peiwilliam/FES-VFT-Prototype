@@ -55,7 +55,7 @@ namespace CSV
         {
             var header = "";
 
-            if (_fileName == "LOS" || _fileName == "Assessment")
+            if (_fileName == "LOS" || _fileName == "Assessment") //this is essentially a null check for stimulation and avoids null exception
                 header += data.GetParameterNames() + ", targetX, targetY";
             else
             {
@@ -75,7 +75,7 @@ namespace CSV
 
                 header += "\n";
 
-                foreach (var constants in stimulation.ControllerConstants)
+                foreach (var constants in stimulation.ControllerConstants) //writes out the physical constants of the controller
                 {
                     if (constants.Key == "Constants")
                         header += "Calculated " + constants.Key;
@@ -87,6 +87,27 @@ namespace CSV
                     header += "\n";
                     header += String.Join<float>(", ", constants.Value.Values.ToList());
                     header += "\n";
+                }
+
+                foreach (var constants in stimulation.ControllerStimConstants) //writes out the stim constants of the controller
+                {
+                    header += constants.Key;
+                    header += "\n";
+                    
+                    if (constants.Key == "QS Stim")
+                    {
+                        header += String.Join<string>(", ", constants.Value.Keys.Where(value => value.Contains("PF")));
+                        header += "\n";
+                        header += String.Join<float>(", ", constants.Value.Values.Where(value => value != 0f));
+                        header += "\n";
+                    }
+                    else
+                    {
+                        header += String.Join<string>(", ", constants.Value.Keys);
+                        header += "\n";
+                        header += String.Join<float>(", ", constants.Value.Values);
+                        header += "\n";
+                    }
                 }
 
                 header += "\n" + data.GetParameterNames() + ", targetX, targetY, targetXFilterd, targetYFiltered, " + stimulation.ControllerData.GetParameterNames() + ", score";
