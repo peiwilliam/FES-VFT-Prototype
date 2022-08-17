@@ -415,15 +415,15 @@ public class GameSession : MonoBehaviour
                 averages.Clear(); //clear the list so that it's a new one next loop
             }
 
-            PlayerPrefs.SetFloat("Limit of Stability Front", _limits["Forward"] * 0.9f); //store values, want just 90% of max
-            PlayerPrefs.SetFloat("Limit of Stability Back", _limits["Back"] * 0.9f);
-            PlayerPrefs.SetFloat("Limit of Stability Left", _limits["Left"] * 0.9f);
-            PlayerPrefs.SetFloat("Limit of Stability Right", _limits["Right"] * 0.9f);
+            var factor = 1f; //factor to multiply the limits by to increase or decrease difficulty, use to be 0.9 but now just 1
+
+            PlayerPrefs.SetFloat("Limit of Stability Front", _limits["Forward"] * factor); //store values, want just 90% of max
+            PlayerPrefs.SetFloat("Limit of Stability Back", _limits["Back"] * factor);
+            PlayerPrefs.SetFloat("Limit of Stability Left", _limits["Left"] * factor);
+            PlayerPrefs.SetFloat("Limit of Stability Right", _limits["Right"] * factor);
         }
         else
             Debug.LogWarning("Something weird happened, no limit data colleccted.");
-        
-        return;
     }
 
     private void ColourMatchingGame()
@@ -436,8 +436,8 @@ public class GameSession : MonoBehaviour
             foreach (var otherCircle in _colourCircles)
                 averageDistance += Mathf.Sqrt(Mathf.Pow(circle.transform.position.x - otherCircle.transform.position.x, 2) + 
                                               Mathf.Pow(circle.transform.position.y - otherCircle.transform.position.y, 2));
-
-        averageDistance /= Mathf.Pow(_colourCircles.Count, 2);
+            
+        averageDistance /= Mathf.Pow(_colourCircles.Count, 2); //we're dividing by count^2 because there are count^2 of possible distances between circles in colour matching game
 
         _changeColour = StartCoroutine(ColourSelection(averageDistance));
     }

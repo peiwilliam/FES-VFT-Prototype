@@ -53,7 +53,7 @@ public class Stimulation : MonoBehaviour
             return;
 
         //finding circle for colour and hunting handled here since it changes constantly in game
-        //need the second condition since the targets don't despawn, only the circle with the "Target" tag changes
+        //need the second condition since the targets don't despawn in colour matching, only the circle with the "Target" tag changes
         if (_targetCircle == null || _targetCircle.tag != "Target")
         {
             switch (_sceneName)
