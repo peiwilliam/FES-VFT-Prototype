@@ -216,8 +216,8 @@ namespace ControllerManager
             var rawStimOutput = UnbiasedStimulationOutput(NeuralTorque, MechanicalTorque, comVertAng); //calculate unbiased output
             var neuralBiases = CalculateNeuralBiases(comX, shiftedComY, targetCoordsShifted); //calculate neural biases
             var mechBiases = CalculateMechBiases(comX, shiftedComY); //calculate mech biases
-            var limitedStim = CheckLimits(AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput));
-            var actualStimOutput = RescaleStimulation(limitedStim); //this was added because if stim starts from 0, most of stim is below MT, which we don't want
+            var limitedStim = AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput);
+            var actualStimOutput = CheckLimits(RescaleStimulation(limitedStim)); //this was added because if stim starts from 0, most of stim is below MT, which we don't want
             var unbiasedStimOutput = new Dictionary<string, float>();
 
             //properties for store data and write to csv
