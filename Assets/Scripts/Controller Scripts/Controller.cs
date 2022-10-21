@@ -105,18 +105,18 @@ namespace ControllerManager
 
             _motorThresh = new Dictionary<string, float>()
             {
-                ["RPF"] = PlayerPrefs.GetInt("RPF Motor Threshold"),
-                ["RDF"] = PlayerPrefs.GetInt("RDF Motor Threshold"),
-                ["LPF"] = PlayerPrefs.GetInt("LPF Motor Threshold"),
-                ["LDF"] = PlayerPrefs.GetInt("LDF Motor Threshold")
+                ["RPF"] = PlayerPrefs.GetFloat("RPF Motor Threshold"),
+                ["RDF"] = PlayerPrefs.GetFloat("RDF Motor Threshold"),
+                ["LPF"] = PlayerPrefs.GetFloat("LPF Motor Threshold"),
+                ["LDF"] = PlayerPrefs.GetFloat("LDF Motor Threshold")
             };
 
             _stimMax = new Dictionary<string, float>()
             {
-                ["RPF"] = PlayerPrefs.GetInt("RPF Max"),
-                ["RDF"] = PlayerPrefs.GetInt("RDF Max"),
-                ["LPF"] = PlayerPrefs.GetInt("LPF Max"),
-                ["LDF"] = PlayerPrefs.GetInt("LDF Max")
+                ["RPF"] = PlayerPrefs.GetFloat("RPF Max"),
+                ["RDF"] = PlayerPrefs.GetFloat("RDF Max"),
+                ["LPF"] = PlayerPrefs.GetFloat("LPF Max"),
+                ["LDF"] = PlayerPrefs.GetFloat("LDF Max")
             };
 
             _biasCoeffs = new Dictionary<string, float[]>() //obtained from fitting
@@ -523,15 +523,8 @@ namespace ControllerManager
         {
             var trueStimOutput = new Dictionary<string, float>();
 
-            foreach (var stim in adjustedStimOutput)
-            {
-                if (stim.Value > _stimMax[stim.Key]) //make sure stimulation never goes above max
-                    trueStimOutput[stim.Key] = _stimMax[stim.Key];
-                else if (stim.Value < 0) //if stim is for some reason negative, always set it back to zero
-                    trueStimOutput[stim.Key] = 0f;
-                else
-                    trueStimOutput[stim.Key] = stim.Value;
-            }
+            foreach (var stim in adjustedStimOutput) //make sure stimulation never goes above max and never goes below zero
+                trueStimOutput[stim.Key] = Mathf.Min(Mathf.Max(0f, stim.Value), _stimMax[stim.Key]);
 
             return trueStimOutput;
         }

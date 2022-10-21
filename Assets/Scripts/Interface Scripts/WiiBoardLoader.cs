@@ -9,10 +9,9 @@ public class WiiBoardLoader : MonoBehaviour
 
     private BluetoothClient _btClient;
     
-    public void LoadWiiBoard()
-    {
-        Instantiate(_wiiboard, new Vector3(0, 0, 0), Quaternion.identity);
-    }
+    public void LoadWiiBoard() => Instantiate(_wiiboard, new Vector3(0, 0, 0), Quaternion.identity);
+
+    public void CopyPIN() => GUIUtility.systemCopyBuffer = FindObjectOfType<BluetoothPin>().BTPin;
 
     public void DisconnectBoard() //doesn't work consistently, might be because of unity editor
     {

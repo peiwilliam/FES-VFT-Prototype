@@ -16,7 +16,7 @@ public class BluetoothPin : MonoBehaviour
     {
         try
         {
-            var BTPin = AddressToWiiPin(BluetoothRadio.Default.LocalAddress.ToString());
+            BTPin = AddressToWiiPin(BluetoothRadio.Default.LocalAddress.ToString());
             var text = gameObject.GetComponent<InputField>();
             text.SetTextWithoutNotify(BTPin);
             text.readOnly = true;

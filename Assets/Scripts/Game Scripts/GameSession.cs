@@ -201,8 +201,8 @@ public class GameSession : MonoBehaviour
                 break;
         }
 
-        if (_sceneName != "Assessment" && _sceneName != "LOS") //timer for assessment started manually and los doesn't have timer
-            StartCoroutine(StartTimer());
+        if (_sceneName != "Assessment" && _sceneName != "LOS" && _timer == null) //timer for assessment started manually and los doesn't have timer
+            _timer = StartCoroutine(StartTimer());
     }
 
     private void Update() //probably use update, though case can be made for fixedupdate
@@ -293,15 +293,18 @@ public class GameSession : MonoBehaviour
     }
 
     public void StartAssessmentTimer() // started on button click
-    {        
-        _timer = StartCoroutine(StartTimer());
-
-        if (ConditionChangeEvent != null)
+    {
+        if (_timer == null) //prevent double clicks with the start button causing a second timer to go
         {
-            if (!ecDone)
-                ConditionChangeEvent(_qsAssessment.Keys.ToList()[0]);
-            else if (!eoDone)
-                ConditionChangeEvent(_qsAssessment.Keys.ToList()[1]);
+            _timer = StartCoroutine(StartTimer());
+
+            if (ConditionChangeEvent != null)
+            {
+                if (!ecDone)
+                    ConditionChangeEvent(_qsAssessment.Keys.ToList()[0]);
+                else if (!eoDone)
+                    ConditionChangeEvent(_qsAssessment.Keys.ToList()[1]);
+            }
         }
     }
 
