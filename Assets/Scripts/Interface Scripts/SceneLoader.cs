@@ -19,33 +19,33 @@ public class SceneLoader : MonoBehaviour
     private static int _trialIndex;
     private static List<int> _gameIndices = new List<int> {2, 3, 4, 5}; //starting values +1 from 1,2,3,4 because of build index
 
-    // private void Awake() 
-    // {
-    //     if (!_firstOpen) //only run this part of the code once when the game is first opened
-    //     {
-    //         if (!PlayerPrefs.HasKey("Resolution") && !PlayerPrefs.HasKey("Fullscreen"))
-    //         {
-    //             //want to set the resolution to a 16:9 resolution upon starting the program
-    //             if (!Mathf.Approximately(Convert.ToSingle(Screen.currentResolution.width)/Convert.ToSingle(Screen.currentResolution.height), 16f/9f))
-    //             {
-    //                 //pick only the 16:9 resolutions from the available resolutions
-    //                 var validRes = Screen.resolutions.ToList().FindAll(res => Mathf.Approximately(Convert.ToSingle(res.width)/Convert.ToSingle(res.height), 16f/9f));
+    private void Awake() 
+    {
+        if (!_firstOpen) //only run this part of the code once when the game is first opened
+        {
+            if (!PlayerPrefs.HasKey("Resolution") && !PlayerPrefs.HasKey("Fullscreen"))
+            {
+                //want to set the resolution to a 16:9 resolution upon starting the program
+                if (!Mathf.Approximately(Convert.ToSingle(Screen.currentResolution.width)/Convert.ToSingle(Screen.currentResolution.height), 16f/9f))
+                {
+                    //pick only the 16:9 resolutions from the available resolutions
+                    var validRes = Screen.resolutions.ToList().FindAll(res => Mathf.Approximately(Convert.ToSingle(res.width)/Convert.ToSingle(res.height), 16f/9f));
 
-    //                 if (validRes.Count == 0)
-    //                     Debug.LogWarning("System doesn't allow for 16:9 resolutions. Please use a system that allows for 16:9 resolutions");
-    //                 else
-    //                     Screen.SetResolution(validRes[validRes.Count-1].width, validRes[validRes.Count-1].height, true);
-    //             }
-    //         }
-    //         else
-    //         {
-    //             var res = Array.ConvertAll(PlayerPrefs.GetString("Resolution").Split('x'), s => Convert.ToInt32(s));
-    //             Screen.SetResolution(res[0], res[1], Convert.ToBoolean(PlayerPrefs.GetInt("Fullscreen", 1)));
-    //         }
-    //     }
+                    if (validRes.Count == 0)
+                        Debug.LogWarning("System doesn't allow for 16:9 resolutions. Please use a system that allows for 16:9 resolutions");
+                    else
+                        Screen.SetResolution(validRes[validRes.Count-1].width, validRes[validRes.Count-1].height, true);
+                }
+            }
+            else
+            {
+                var res = Array.ConvertAll(PlayerPrefs.GetString("Resolution").Split('x'), s => Convert.ToInt32(s));
+                Screen.SetResolution(res[0], res[1], Convert.ToBoolean(PlayerPrefs.GetInt("Fullscreen", 1)));
+            }
+        }
 
-    //     _firstOpen = true;
-    // }
+        _firstOpen = true;
+    }
     
     public void LoadNextScene()
     {
