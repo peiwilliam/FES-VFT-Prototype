@@ -103,20 +103,28 @@ namespace ControllerManager
                 PlayerPrefs.GetFloat("Limit of Stability Right")/100f
             };
 
+            var myndSearchToStepsConv = 1f;
+            //if it's myndsearch, we want to convert the mA to the 0-63 steps that the controller expects
+            //don't need to do for compex because each step is 1 mA
+            if (PlayerPrefs.GetInt("MyndSearch", 1) == 1) 
+            {
+                myndSearchToStepsConv = 64f/40f;
+            }
+
             _motorThresh = new Dictionary<string, float>()
             {
-                ["RPF"] = PlayerPrefs.GetFloat("RPF Motor Threshold"),
-                ["RDF"] = PlayerPrefs.GetFloat("RDF Motor Threshold"),
-                ["LPF"] = PlayerPrefs.GetFloat("LPF Motor Threshold"),
-                ["LDF"] = PlayerPrefs.GetFloat("LDF Motor Threshold")
+                ["RPF"] = PlayerPrefs.GetFloat("RPF Motor Threshold")*myndSearchToStepsConv,
+                ["RDF"] = PlayerPrefs.GetFloat("RDF Motor Threshold")*myndSearchToStepsConv,
+                ["LPF"] = PlayerPrefs.GetFloat("LPF Motor Threshold")*myndSearchToStepsConv,
+                ["LDF"] = PlayerPrefs.GetFloat("LDF Motor Threshold")*myndSearchToStepsConv
             };
 
             _stimMax = new Dictionary<string, float>()
             {
-                ["RPF"] = PlayerPrefs.GetFloat("RPF Max"),
-                ["RDF"] = PlayerPrefs.GetFloat("RDF Max"),
-                ["LPF"] = PlayerPrefs.GetFloat("LPF Max"),
-                ["LDF"] = PlayerPrefs.GetFloat("LDF Max")
+                ["RPF"] = PlayerPrefs.GetFloat("RPF Max")*myndSearchToStepsConv,
+                ["RDF"] = PlayerPrefs.GetFloat("RDF Max")*myndSearchToStepsConv,
+                ["LPF"] = PlayerPrefs.GetFloat("LPF Max")*myndSearchToStepsConv,
+                ["LDF"] = PlayerPrefs.GetFloat("LDF Max")*myndSearchToStepsConv
             };
 
             _biasCoeffs = new Dictionary<string, float[]>() //obtained from fitting

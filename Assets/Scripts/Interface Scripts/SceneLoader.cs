@@ -23,7 +23,7 @@ public class SceneLoader : MonoBehaviour
     {
         if (!_firstOpen) //only run this part of the code once when the game is first opened
         {
-            if (!PlayerPrefs.HasKey("Resolution") && !PlayerPrefs.HasKey("Fullscreen"))
+            if (!PlayerPrefs.HasKey("Resolution") && !PlayerPrefs.HasKey("Fullscreen")) //if it's a fresh start, will need to get resolution manually
             {
                 //want to set the resolution to a 16:9 resolution upon starting the program
                 if (!Mathf.Approximately(Convert.ToSingle(Screen.currentResolution.width)/Convert.ToSingle(Screen.currentResolution.height), 16f/9f))
@@ -33,12 +33,12 @@ public class SceneLoader : MonoBehaviour
 
                     if (validRes.Count == 0)
                         Debug.LogWarning("System doesn't allow for 16:9 resolutions. Please use a system that allows for 16:9 resolutions");
-                    else
+                    else //resolution is listed from smallest to largest, so the largest 16:9 resolution is the last one in the list
                         Screen.SetResolution(validRes[validRes.Count-1].width, validRes[validRes.Count-1].height, true);
                 }
             }
             else
-            {
+            { //if already saved, just grab it form there
                 var res = Array.ConvertAll(PlayerPrefs.GetString("Resolution").Split('x'), s => Convert.ToInt32(s));
                 Screen.SetResolution(res[0], res[1], Convert.ToBoolean(PlayerPrefs.GetInt("Fullscreen", 1)));
             }

@@ -255,6 +255,8 @@ public class SettingsManager : MonoBehaviour
 
     public void ReadArduino() => CheckBoxDelegate("Read From Arduino");
 
+    public void MyndSearch() => CheckBoxDelegate("MyndSearch");
+
     private void SetInputs()
     {
         foreach (var nameAndType in fieldNamesAndTypes)
@@ -335,7 +337,7 @@ public class SettingsManager : MonoBehaviour
             var toggleName = toggle.name;
             var defaultValue = 0;
             
-            if (toggleName == "Eyes Condition" || toggleName == "Fullscreen") //default fullscreen and eo for qs assessment
+            if (toggleName == "Eyes Condition" || toggleName == "Fullscreen" || toggleName == "MyndSearch") //default fullscreen and eo for qs assessment
                 defaultValue = 1;
             
             toggle.GetComponent<Toggle>().isOn = Convert.ToBoolean(PlayerPrefs.GetInt(toggleName, defaultValue));
