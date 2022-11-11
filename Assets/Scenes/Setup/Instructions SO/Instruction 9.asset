@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _instructionsText: 8. Reopen the program and go to the "Connect to Board" menu
     and click "Connect." If a message saying "Connection sucessful" is shown, the
-    program is ready to use.
+    program is ready to use. If you skipped here from step 1.1, restart the progrm
+    and attempt the connection.
   _previousInstruction: {fileID: 11400000, guid: fa455ea764648b848b3e9a9dfebe75cb, type: 2}
   _nextInstruction: {fileID: 11400000, guid: 69dbc005a1ac6b34082a5f147f65f428, type: 2}
   _image: {fileID: 0}
