@@ -144,6 +144,6 @@ MonoBehaviour:
   _circleVelocity: 0.85
   _deltaTimeScore: 0.2
   _startingGracePeriod: 5
-  _gracePeriod: 1
+  _gracePeriod: 3
   _score: 0
   _isDecreasing: 0

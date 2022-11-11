@@ -10,11 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67d72db2ab9e0e6449b69ac77f83403d, type: 3}
-  m_Name: Instruction 1
+  m_Name: Instruction 5
   m_EditorClassIdentifier: 
-  _instructionsText: 'Note before starting: Portions of these instructions have to
-    be completed with the program completed closed in order for the Wii Balance Board
-    to properly connect to the program.'
-  _previousInstruction: {fileID: 0}
-  _nextInstruction: {fileID: 11400000, guid: e97a5f007f6be1e42b8bba426d739cc6, type: 2}
+  _instructionsText: 4. Be sure to have the Wii Balance Board ready at this point.
+    Click on "Add Bluetooth or other device" and then click on "Bluetooth."
+  _previousInstruction: {fileID: 11400000, guid: da8149a1aa9dd0d4587054e35ab46a0f, type: 2}
+  _nextInstruction: {fileID: 11400000, guid: 3047b547de438e646ade744f6e492cc9, type: 2}
   _image: {fileID: 0}

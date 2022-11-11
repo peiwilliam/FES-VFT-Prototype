@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67d72db2ab9e0e6449b69ac77f83403d, type: 3}
-  m_Name: Instruction 1
+  m_Name: Instruction 9
   m_EditorClassIdentifier: 
-  _instructionsText: 'Note before starting: Portions of these instructions have to
-    be completed with the program completed closed in order for the Wii Balance Board
-    to properly connect to the program.'
-  _previousInstruction: {fileID: 0}
-  _nextInstruction: {fileID: 11400000, guid: e97a5f007f6be1e42b8bba426d739cc6, type: 2}
+  _instructionsText: 8. Reopen the program and go to the "Connect to Board" menu
+    and click "Connect." If a message saying "Connection sucessful" is shown, the
+    program is ready to use.
+  _previousInstruction: {fileID: 11400000, guid: fa455ea764648b848b3e9a9dfebe75cb, type: 2}
+  _nextInstruction: {fileID: 11400000, guid: 69dbc005a1ac6b34082a5f147f65f428, type: 2}
   _image: {fileID: 0}

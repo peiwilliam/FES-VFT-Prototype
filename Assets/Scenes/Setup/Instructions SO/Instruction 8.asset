@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67d72db2ab9e0e6449b69ac77f83403d, type: 3}
+  m_Name: Instruction 8
+  m_EditorClassIdentifier: 
+  _instructionsText: 7. Close the bluetooth window. You should see that the Wii Balance
+    Board is connected. You can verify this by accessing the notification side bar
+    and seeing if the device name matches the picture above.
+  _previousInstruction: {fileID: 11400000, guid: 1d76c1f87e4c4f742ab7531e70db8bdd, type: 2}
+  _nextInstruction: {fileID: 11400000, guid: df718d4f62b9c9e4fb92756842bc1966, type: 2}
+  _image: {fileID: 21300000, guid: 45ee18db0fe56bd4fbe63dbf9b5ad568, type: 3}

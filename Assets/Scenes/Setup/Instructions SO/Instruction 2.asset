@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67d72db2ab9e0e6449b69ac77f83403d, type: 3}
+  m_Name: Instruction 2
+  m_EditorClassIdentifier: 
+  _instructionsText: 1. Ensure that bluetooth has been turned on. It can be turned
+    via the lower menu in the notifications side bar.
+  _previousInstruction: {fileID: 11400000, guid: 8ba4b42e2a37d22438c0408e7b8e68db, type: 2}
+  _nextInstruction: {fileID: 11400000, guid: 33d85be22fc512b458b4400fc4fdc65c, type: 2}
+  _image: {fileID: 21300000, guid: 72ff417b1c912b54f965c8318dfa2dfe, type: 3}

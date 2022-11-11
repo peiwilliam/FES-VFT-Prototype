@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67d72db2ab9e0e6449b69ac77f83403d, type: 3}
+  m_Name: Instruction 10
+  m_EditorClassIdentifier: 
+  _instructionsText: 9. In the event that all the instructions were followed, but
+    the board still doesn't work, check that the board is actually still connected.
+    If it's still connected, try closing the program and reconnecting. As last resort,
+    disconnect the Wii Balance Board from the computer fully and restart from the
+    beginning.
+  _previousInstruction: {fileID: 11400000, guid: df718d4f62b9c9e4fb92756842bc1966, type: 2}
+  _nextInstruction: {fileID: 0}
+  _image: {fileID: 0}

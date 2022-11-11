@@ -9,6 +9,10 @@ using UnityEngine.SceneManagement;
 using KnuthShuffle;
 using TMPro;
 
+/// <summary>
+/// This is the main class that handles the game logic and keeping track of the score. In here you can find private members for each
+/// game as well as methods that pertain to certain games. A more detailed description of the methods can be found before each method.
+/// </summary>
 public class GameSession : MonoBehaviour
 {
     [Header("All Games")]
