@@ -2,15 +2,25 @@
 
 namespace FilterManager
 {
+    /// <summary>
+    /// This class is responsible for storing the previous data points for the infinite impulse component of the filter and also
+    /// solving for the infinite impulse component of the filter.
+    /// </summary>
     public class IIRComponent
     {
         private float[] _y;
 
+        /// <summary>
+        /// Create the finite impulse response component object with a given size stord previous points.
+        /// </summary>
         public IIRComponent(int n)
         {
             _y = new float[n];
         }
 
+        /// <summary>
+        /// Compute the infinite impulse response component of the filter.
+        /// </summary>
         public float Solve(float input, float[] b)
         {
             var output = input; //if any values in array are 0, just directly set output as the input.

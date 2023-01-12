@@ -2,23 +2,30 @@
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// This class is responsible for determining the behaviour of the instructions page for connecting the Wii Balance Board to the
+/// program.
+/// </summary>
 public class Instructions : MonoBehaviour
 {
+    [Tooltip("Place to put the starting instruction scriptable object so that the program knows where to start")]
     [SerializeField] private InstructionsScriptableObject _startingInstruction;
+    [Tooltip("The text that is displayed at the current step. For debugging purposes only")]
     [SerializeField] private TMP_Text _instructionText;
+    [Tooltip("The image that is displayed at the current step. For debugging purposes only")]
     [SerializeField] private RawImage _image;
 
     private InstructionsScriptableObject _step; //stores the current step
     private float _defaultYLevelOfText; //keeps a default y level for the text when there is a picture
 
-    private void Start()
+    private void Start() //runs only at the beginning when the object is instantiated
     {
         // start off with the initial instruction
         ManageStep(_startingInstruction);
         _defaultYLevelOfText = -328f;
     }
 
-    private void ManageStep(InstructionsScriptableObject stepToGo)
+    private void ManageStep(InstructionsScriptableObject stepToGo) //manages the text and picture depending on the text and picture
     {
         _step = stepToGo;
         _instructionText.text = _step.InstructionText;
@@ -38,9 +45,12 @@ public class Instructions : MonoBehaviour
         _instructionText.rectTransform.localPosition = new Vector3(0f, _defaultYLevelOfText);
     }
 
+    /// <summary>
+    /// This method is attached to the next button on the instructions page and switches the instruction scriptable object being used.
+    /// </summary>
     public void NextStep()
     {
-        if (_step.NextInstruction == null)
+        if (_step.NextInstruction == null) //loop back to the beginning if we're at the end
         {
             ManageStep(_startingInstruction);
 
@@ -50,6 +60,9 @@ public class Instructions : MonoBehaviour
         ManageStep(_step.NextInstruction);
     }
     
+    /// <summary>
+    /// This method is attached to the previous button on the instructions page and switches the instruction scriptable object being used.
+    /// </summary>
     public void PreviousStep()
     {
         if (_step.PreviousInstruction != null)

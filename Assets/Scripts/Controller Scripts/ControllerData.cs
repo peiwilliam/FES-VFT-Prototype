@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace ControllerManager
 {
+    /// <summary>
+    /// This struct stores all of the data pertaining to the controller that changes from iteration to iteration
+    ///</summary>
     public struct ControllerData
     {
         public float comX;
@@ -67,6 +70,9 @@ namespace ControllerManager
             this.ramp = ramp;
         }
 
+        /// <summary>
+        /// Returns a comma separated list of the names of the variables tracked.
+        /// </summary>
         public string GetParameterNames()
         {
             var names = String.Join(", ", new string[] {nameof(comX), nameof(shiftedComY), nameof(shiftedTargetCoordsX), 
@@ -81,6 +87,9 @@ namespace ControllerManager
             return names;
         }
         
+        /// <summary>
+        /// Returns a comma separated list of the values of the variables tracked.
+        /// </summary>
         public string GetParameterValues() //don't really like this since it involves boxing here and unboxing when converting to string
         {
             var values = String.Join(", ", new float[] {comX, shiftedComY, shiftedTargetCoordsX, shiftedTargetCoordsY, targetVertAng,

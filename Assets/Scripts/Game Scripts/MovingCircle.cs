@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// This class is responsible for determing the behaviour of the moving circle seen in the Ellipse game.
+/// </summary>
 public class MovingCircle : MonoBehaviour
 {
     [Tooltip("How quickly the circle moves along the ellipse")]
@@ -16,17 +19,17 @@ public class MovingCircle : MonoBehaviour
     [Tooltip("For debugging purposes only, whether or not the score is decreasing")]
     [SerializeField] private bool _isDecreasing = false;
     
-    private int _positionIndex;
-    private int _direction;
-    private Ellipse _ellipse;
-    private Vector3[] _ellipsePositions;
-    private LineRenderer _lineRenderer;
-    private Color _oldColour;
-    private Coroutine _scoreIncreaseCoroutine;
-    private Coroutine _scoreDecreaseCoroutine;
-    private Coroutine _initialGracePeriod;
+    private int _positionIndex; //this is the starting index of the moving circle on the ellipse when the game starts
+    private int _direction; //determines the direction that the circle will be moving
+    private Ellipse _ellipse; //the ellipse object
+    private Vector3[] _ellipsePositions; //all of the positions of the vertices in the ellipse
+    private LineRenderer _lineRenderer; //the linerenderer object associated with the ellipse
+    private Color _oldColour; //for keeping track of the old colour when the colour of the circle changes
+    private Coroutine _scoreIncreaseCoroutine; //coroutine responsible for increaseing the score when the player is in the circle
+    private Coroutine _scoreDecreaseCoroutine; //coroutine responsible for decreasing the score when the player is outside the circle
+    private Coroutine _initialGracePeriod; //coroutine for the initial grace period at the start of the game to get to the circle
 
-    private void Start() 
+    private void Start() //run once at the beginning when the object is instantiated
     {
         var gameSession = FindObjectOfType<GameSession>();
         _ellipse = gameSession.Ellipse;
@@ -36,19 +39,19 @@ public class MovingCircle : MonoBehaviour
 
         _direction = Random.Range(0, 2); //0 is clockwise, 1 is counterclockwise
 
-        _initialGracePeriod = StartCoroutine(StartOfGame());
+        _initialGracePeriod = StartCoroutine(StartOfGame()); //start this coroutine immediately
     }
 
-    private void Update() 
+    private void Update() //runs at every frame update
     {
         MoveCircle();
     }
 
-    private void OnTriggerEnter2D(Collider2D collider) 
+    private void OnTriggerEnter2D(Collider2D collider) //handles what happens when another game obejct collides with the circle
     {
-        DetectCursor.ChangeColourOnDetection(gameObject, out _oldColour);
+        DetectCursor.ChangeColourOnDetection(gameObject, out _oldColour); //change the colour to green
 
-        if (_initialGracePeriod != null)
+        if (_initialGracePeriod != null) //stop the initial coroutine and set it to null, stopping a coroutine doesn't make it null automatically
         {
             StopCoroutine(_initialGracePeriod);
             _initialGracePeriod = null;
@@ -63,15 +66,15 @@ public class MovingCircle : MonoBehaviour
         _scoreIncreaseCoroutine = StartCoroutine(IncreaseScore());
     }
 
-    private void OnTriggerExit2D(Collider2D collider) 
+    private void OnTriggerExit2D(Collider2D collider) //handles what happens when another game obejct exits the circle
     {
-        DetectCursor.ChangeColourBack(gameObject, _oldColour);
+        DetectCursor.ChangeColourBack(gameObject, _oldColour); //change it back to the original colour
 
         StopCoroutine(_scoreIncreaseCoroutine);
         _scoreDecreaseCoroutine = StartCoroutine(DecreaseScore());
     }
     
-    private void MoveCircle()
+    private void MoveCircle() //this method is responsible for constantly moving the circle towards the next vertex
     { 
         if (_direction == 1)
         {
@@ -83,7 +86,7 @@ public class MovingCircle : MonoBehaviour
                     _positionIndex++;
             }
             else
-                _positionIndex = 0;
+                _positionIndex = 0; //start back at the beginning once we've gone to the end of the vertices
         }
         else
         {
@@ -95,19 +98,19 @@ public class MovingCircle : MonoBehaviour
                     _positionIndex--;
             }
             else
-                _positionIndex = _lineRenderer.positionCount - 1;
+                _positionIndex = _lineRenderer.positionCount - 1; //start back at the end once we've gone to the beginning of the vertices
         }
     }
 
-    private Vector3 NewPosition()
+    private Vector3 NewPosition() // gets the target vertex location and makes the circle move towards that location
     {
         var targetPosition = _ellipsePositions[_positionIndex];
-        var movementThisFrame = _circleVelocity * Time.deltaTime; //don't use realtime for this since it depend son the game frames
+        var movementThisFrame = _circleVelocity * Time.deltaTime; //don't use realtime for this since it depends on the game frames
         transform.position = Vector2.MoveTowards(transform.position, targetPosition, movementThisFrame);
         return targetPosition;
     }
 
-    private IEnumerator IncreaseScore()
+    private IEnumerator IncreaseScore() //coroutine for increasing the score while the player is in the circle
     {
         while (true)
         {
@@ -116,11 +119,11 @@ public class MovingCircle : MonoBehaviour
         }
     }
 
-    private IEnumerator DecreaseScore()
+    private IEnumerator DecreaseScore() //coroutine for decreasign the score while the player is outsid the circle
     {
         _isDecreasing = true;
 
-        yield return new WaitForSecondsRealtime(_gracePeriod);
+        yield return new WaitForSecondsRealtime(_gracePeriod); //there is an initial grace period before the score starts decreasing
 
         while (true)
         {
@@ -129,7 +132,7 @@ public class MovingCircle : MonoBehaviour
         }
     }
 
-    private IEnumerator StartOfGame()
+    private IEnumerator StartOfGame() //this coroutine is only active at the start of the game and then never runs again.
     {
         yield return new WaitForSeconds(_startingGracePeriod);
 
@@ -140,5 +143,8 @@ public class MovingCircle : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// This method is for getting what the current player score is in the game. Only used to get total score in GameSession.
+    /// </summary>
     public int GetScore() => _score;
 }

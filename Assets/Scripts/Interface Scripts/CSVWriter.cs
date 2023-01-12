@@ -8,18 +8,25 @@ using ControllerManager;
 
 namespace CSV
 {
+    /// <summary>
+    /// This class is resposnible for writing CSV files to record data from the games.
+    /// </summary>
     public class CSVWriter
     {
-        private string _fileName;
-        private string _extension;
-        private string _path;
-        private string _condition;
-        private string _csvFolder;
-        private int _index;
+        private string _fileName; //name of the file being written, it's just name of trial plus a number
+        private string _extension; //obviously .csv
+        private string _path; //path is defined in the settings
+        private string _condition; //condition only applies to LOS and QS assessment
+        private string _csvFolder; //name of the folder that the csvs are stored in
+        private int _index; //index is the number that goes after the filename
 
+        /// <summary>
+        /// Constructor to create an instance of the CSVWriter class. Has an optional string input of condition. This condition input
+        /// parameter is only used by LOS and QS assessment.
+        /// </summary>
         public CSVWriter(string activeSceneName, string condition = "")
         {
-            //want to check is null or empty so that on repeat calls of the writer, we don't keep settign the same thing.
+            //want to check is null or empty so that on repeat calls of the writer, we don't keep setting the same thing.
             if (String.IsNullOrEmpty(_fileName))
                 _fileName = activeSceneName;
             
@@ -35,7 +42,11 @@ namespace CSV
             _condition = condition;
         }
 
-        public void WriteHeader(WiiBoardData data, Stimulation stimulation = null) //writes the header but also creates the csv file, stimulation optional
+        /// <summary>
+        /// Creates the .csv file and writes the header. The stimulation input is optional since LOS and QS assessment don't use 
+        /// stimulation.
+        /// </summary>
+        public void WriteHeader(WiiBoardData data, Stimulation stimulation = null)
         {
             var header = GetHeader(data, stimulation);
             
@@ -45,13 +56,14 @@ namespace CSV
             var di = new DirectoryInfo(_path + _csvFolder);
             var files = di.GetFiles(_fileName + _condition + "*"); //only find the relevant csv files
 
-            SetIndex(files);
+            SetIndex(files); //set the index
 
+            //write header
             using (var w = new StreamWriter(_path + _csvFolder + @"\" + _fileName + _condition + _index + _extension, true))
                 w.WriteLine(header);
         }
 
-        private string GetHeader(WiiBoardData data, Stimulation stimulation)
+        private string GetHeader(WiiBoardData data, Stimulation stimulation) //get the header of the csv file
         {
             var header = "";
 
@@ -116,7 +128,7 @@ namespace CSV
             return header;
         }
 
-        private void SetIndex(FileInfo[] files)
+        private void SetIndex(FileInfo[] files) //this method gets the index that should be used in the file name
         {
             if (files.Length == 0) //if no files with the appropriate name exist, start from 1
                 _index = 1;
@@ -150,7 +162,11 @@ namespace CSV
             }
         }
 
-        public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords) //make this async so it doesn't potentially slow down the game, for LOS and assessment
+        /// <summary>
+        /// This method writes gets called every physics tick to write the data into the file. This version of the method is used by
+        /// LOS and QS assessment. This is async so that the file writing doesn't potentially slow down the game.
+        /// </summary>
+        public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords)
         {
             using (var w = new StreamWriter(_path + _csvFolder + @"\" + _fileName + _condition + _index + _extension, true)) // true to append and not overwrite
             {
@@ -159,6 +175,10 @@ namespace CSV
             }
         }
 
+        /// <summary>
+        /// This method writes gets called every physics tick to write the data into the file. This version of the method is used by
+        /// the games. This is async so that the file writing doesn't potentially slow down the game.
+        /// </summary>
         public async void WriteDataAsync(WiiBoardData data, Vector2 targetCoords, Vector2 targetCoordsFiltered, ControllerData controllerData, GameSession gameSession) //make this async so it doesn't potentially slow down the game, for games
         {
             using (var w = new StreamWriter(_path + _csvFolder + @"\" + _fileName + _condition + _index + _extension, true)) // true to append and not overwrite

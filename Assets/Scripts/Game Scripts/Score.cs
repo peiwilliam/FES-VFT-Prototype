@@ -2,12 +2,15 @@
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// This class is responsible for keeping track of the score in the games and displaying it.
+/// </summary>
 public class Score : MonoBehaviour
 {
     [Tooltip("GameSession object for the game")]
     [SerializeField] private GameSession _gameSession;
 
-    private void Update()
+    private void Update() //runs at every frame update
     {
         switch (SceneManager.GetActiveScene().name)
         {

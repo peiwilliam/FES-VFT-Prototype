@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// This is class is responsible for drawing the ellipse seen in the ellipse game.
+/// </summary>
 public class Ellipse : MonoBehaviour
 {
     [Tooltip("The number of vertices used to draw the ellipse")]
@@ -11,15 +14,15 @@ public class Ellipse : MonoBehaviour
     [Tooltip("Radius of the y axis of the ellipse")]
     [SerializeField] private float _yRadius = 4;
  
-    private LineRenderer _lineRenderer;
+    private LineRenderer _lineRenderer; //The linerenderer object that will be drawing out theellipse
 
-    private void Awake() //needs to be awake not start, game doesn't work in build if it's start even though it works in editor
+    private void Awake() //Runs at the instantiation of the object. This needs to be awake not start, game doesn't work in build if it's start even though it works in editor
     {
         _lineRenderer = GetComponent<LineRenderer>();
         SetupEllipse();
     }
     
-    private void SetupEllipse()
+    private void SetupEllipse() //draws the ellipse. The ellipse is approximated b using a set number of vertices.
     {
         _lineRenderer.widthMultiplier = _lineWidth;
         _lineRenderer.positionCount = _vertexCount;
@@ -37,20 +40,8 @@ public class Ellipse : MonoBehaviour
         }
     }
 
-    public float[] GetRadii()
-    {
-        var radii = new float[] {_xRadius, _yRadius};
-        return radii;
-    }
-
-    public float[] GetCentre()
-    {
-        var centre = new float[] {Camera.main.transform.position.x, Camera.main.transform.position.y};
-        return centre;
-    }
-
 #if UNITY_EDITOR
-    private void OnDrawGizmos()
+    private void OnDrawGizmos() //this method only runs at in editor so that we can see what the ellipse will look like in game.
     {
         var deltaTheta = (2f * Mathf.PI) / _vertexCount;
         var theta = 0f; //size/(2*size*aspect ratio)

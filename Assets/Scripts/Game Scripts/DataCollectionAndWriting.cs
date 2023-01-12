@@ -2,13 +2,17 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using CSV;
 
-public class DataCollectionAndWriting : MonoBehaviour //separate class for writing all game data, set in unity to execute later than other classes
+/// <summary>
+/// This class is responsible for writing all of the game data in the current physics tick. This object is set to execute later than
+/// all other objects in the Unity.
+/// </summary>
+public class DataCollectionAndWriting : MonoBehaviour
 {
     [Tooltip("Store the game session object associated with the game")]
     [SerializeField] private GameSession _gameSession;
 
     private string _sceneName;
-    private bool _ecAssessmentStarted;
+    private bool _ecAssessmentStarted; //these three bools keep track of the different conditions for QS assessment and LOS to make sure file writing is done correctly.
     private bool _eoAssessmentStarted;
     private bool _losStarted;
     private GameObject _targetCircle;
@@ -16,18 +20,18 @@ public class DataCollectionAndWriting : MonoBehaviour //separate class for writi
     private Cursor _cursor;
     private Stimulation _stimulation;
 
-    private void Awake() 
+    private void OnEnable() //runs at the very beginning before awake or start. Subscribing to event handled here
+    {
+        GameSession.DirectionChangeEvent += ChangeFileLOS; //writing for LOS and QS assessment handled via events
+        GameSession.ConditionChangeEvent += ChangeFileAssessment;
+    }
+
+    private void Awake() //runs at the very beginning before start at object instantiation
     {
         _sceneName = SceneManager.GetActiveScene().name;
     }
 
-    private void OnEnable() //subscribing to event handled here
-    {
-        GameSession.DirectionChangeEvent += ChangeFileLOS;
-        GameSession.ConditionChangeEvent += ChangeFileAssessment;
-    }
-
-    private void Start()
+    private void Start() //runs at the beginning at object instantiation
     {
         _cursor = FindObjectOfType<Cursor>();
 
@@ -40,12 +44,12 @@ public class DataCollectionAndWriting : MonoBehaviour //separate class for writi
         PrepWriter(); //create the writer object if it's not assessment or los. los and assessment handled differently
     }
 
-    private void FixedUpdate()
+    private void FixedUpdate() //runs at every physics tick. Set to 0.02s or 50 Hz by default
     {
         GetAndWriteData();
     }
 
-    private void PrepWriter()
+    private void PrepWriter() //creates the CSVWriter object and writes the header to the CSV file
     {
         if (_sceneName == "LOS" || _sceneName == "Assessment") //LOS and assessment handled differently from games
             return;
@@ -54,7 +58,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate class for writi
         _writer.WriteHeader(_cursor.Data, _stimulation);
     }
 
-    private void GetAndWriteData()
+    private void GetAndWriteData() //runs at every physics tick and sends the cursor and controller data to CSVWriter to be written in the cSV
     {
         var data = _cursor.Data;
         var targetCoords = GetTargetCoords();
@@ -70,7 +74,7 @@ public class DataCollectionAndWriting : MonoBehaviour //separate class for writi
         }
     }
 
-    private Vector2 GetTargetCoords()
+    private Vector2 GetTargetCoords() //gets the coordinates of the target circle, kept in the game perspective.
     {
         var targetCoords = new Vector2();
 

@@ -2,16 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GetNewColourCircle : MonoBehaviour //helper class to help make event system for colour game work, attached to circle cont.
+/// <summary>
+/// This class is a helperd class used to the event system work for the colour matching game. This is attached to the circle container
+/// object.
+/// </summary>
+public class GetNewColourCircle : MonoBehaviour
 {
     [Tooltip("Object that contains all of the colour circles")]
     [SerializeField] private List<ColourCircle> _colourCircles;
 
-    private void Start()
+    private void Start() //runs only at the instantiation of the object
     {
         _colourCircles = FindObjectsOfType<ColourCircle>().ToList();
     }
 
+    /// <summary>
+    /// This method is responsible for setting the new colour circle target. This method is called via an UnityEvent on GameSession.
+    /// </summary>
     public void NewCircle()
     {
         var targetCircle = _colourCircles.Find(n => n.tag == "Target");

@@ -9,12 +9,15 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 
+/// <summary>
+/// This class is repsonsible for controlling how the settings are displyaed, saved and stored in the computer.
+/// </summary>
 public class SettingsManager : MonoBehaviour
 {
     // dictionary for iterating through values easier
     private Dictionary<string, InputField> _fields;
-    private TMP_Dropdown _comPortsDropDown;
-    private TMP_Dropdown _resolutionDropDown;
+    private TMP_Dropdown _comPortsDropDown; //dropdown menu for the COM ports
+    private TMP_Dropdown _resolutionDropDown; //dropdown menu for the resolutions
 
     // default values, static so that this doesn't get instantiated per object, not really necessary but saves memory
     private static Dictionary<string, object> _defaultValues = new Dictionary<string, object>()
@@ -60,6 +63,10 @@ public class SettingsManager : MonoBehaviour
         ["Limit of Stability Right"] = 1f,
     };
 
+    /// <summary>
+    /// This dictionary is used to help determine which method of saving should be used. This is also used to label the controller
+    /// constants in the csv file.
+    /// </summary>
     public static Dictionary<string, string> fieldNamesAndTypes = new Dictionary<string, string>() 
     {
         ["Controller Frequency"] = "int",
@@ -103,11 +110,11 @@ public class SettingsManager : MonoBehaviour
         ["Limit of Stability Right"] = "float"
     };
 
-    private void Start()
+    private void Start() //only run once at the beginning when the object is instantiated
     {
         if (SceneManager.GetActiveScene().buildIndex == 0) //only do this at the start screen
         {
-            foreach (var nameAndType in fieldNamesAndTypes)
+            foreach (var nameAndType in fieldNamesAndTypes) //iterate through each field
             {
                 if (!PlayerPrefs.HasKey(nameAndType.Key)) //if opening up game for first time, set all values to default, missing values also set to default
                 {
@@ -124,11 +131,11 @@ public class SettingsManager : MonoBehaviour
         {
             _fields = new Dictionary<string, InputField>();
 
-            SetInputFields();
+            SetInputFields(); //set all of the fields in the settings page to their respective values
         }
     }
 
-    private void SetInputFields() //this is called by sceneloader when the settings page is loaded
+    private void SetInputFields() //this method is used to set the fields in the settings page to their respective values
     {
         var fields = FindObjectsOfType<InputField>();
         var dropDowns = FindObjectsOfType<TMP_Dropdown>().ToList(); //find all drop downs
@@ -142,6 +149,9 @@ public class SettingsManager : MonoBehaviour
         SetInputs();
     }
 
+    /// <summary>
+    /// This method is repsonsible for saving the current value son the settings page.
+    /// </summary>
     public void SaveSettings()
     {
         foreach (var nameAndType in fieldNamesAndTypes) //saves new set values
@@ -190,7 +200,7 @@ public class SettingsManager : MonoBehaviour
         Time.fixedDeltaTime = 1f/PlayerPrefs.GetInt("Controller Frequency", 50); //set physics loop speed to the speed set in the settings
     }
 
-    private bool CheckIfArduino()
+    private bool CheckIfArduino() //this method is solely reponsible for checking whether or not the deice in the COM port is an arduino
     {
         var serialPort = new SerialPort(_comPortsDropDown.options[_comPortsDropDown.value].text, 115200);
 
@@ -240,24 +250,44 @@ public class SettingsManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Resets all of the settings values to their default values.
+    /// </summary>
     public void ResetToDefaults()
     {
         PlayerPrefs.DeleteAll();
         SetInputs();
     }
 
-    //toggles are saved separately
+    
+    /// <summary>
+    /// Saves the whether or not fullscreen is checked.
+    /// </summary>
     public void FullScreen() => CheckBoxDelegate("Fullscreen");
 
+    /// <summary>
+    /// Saves the whether or not filtering data is checked.
+    /// </summary>
     public void FilterData() => CheckBoxDelegate("Filter Data");
 
+    /// <summary>
+    /// Saves the whether or not using EC or EO QS assessment is checked.
+    /// </summary>
     public void ECOrEO() => CheckBoxDelegate("Eyes Condition");
 
+    /// <summary>
+    /// Saves the whether or not reading arduino is checked.
+    /// </summary>
     public void ReadArduino() => CheckBoxDelegate("Read From Arduino");
 
+    /// <summary>
+    /// Saves the whether or not myndsearch is checked.
+    /// </summary>
     public void MyndSearch() => CheckBoxDelegate("MyndSearch");
 
-    private void SetInputs()
+    //this method is responsible for actually setting all of the field values and making sure that the dropdown, toggle and field values 
+    //are displayed correctly
+    private void SetInputs() 
     {
         foreach (var nameAndType in fieldNamesAndTypes)
         {
@@ -344,7 +374,7 @@ public class SettingsManager : MonoBehaviour
         }
     }
 
-    private void CheckBoxDelegate(string checkBoxName)
+    private void CheckBoxDelegate(string checkBoxName) //all of the checkboxes go through this method since they're all handled the same
     {
         var isChecked = GameObject.Find(checkBoxName).GetComponent<Toggle>().isOn;
 

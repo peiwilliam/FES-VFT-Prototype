@@ -2,13 +2,19 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// This class is responsible for handling the transitions for an experiment session. This works in tandem with GameSession and
+/// SceneLoader to handle randomization of the games and in between set displays.
+/// </summary>
 public class ExperimentationTransition : MonoBehaviour
 {
     [Tooltip("The text that is used to inform the player about what's coming in the familiarization")]
     [SerializeField] private List<string> _infoText; //0 is beginning experimentation, 1 is during experimentation
 
-    private void Start()
+    private void Start() //only runs at the instatiation of the object
     {
+        //SceneLoader has static variables stored for whether or not these games are part of experimentation and what trial and what
+        //game in the trial the experiment's at
         var experimentationStarted = SceneLoader.GetExperimentation();
         var gameIndicesIndex = SceneLoader.GetGameIndicesIndex();
         var trialIndex = SceneLoader.GetTrialIndex();

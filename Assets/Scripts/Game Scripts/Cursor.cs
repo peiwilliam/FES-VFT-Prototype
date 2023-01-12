@@ -3,6 +3,10 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using FilterManager;
 
+/// <summary>
+/// This class is responsible for handling the behaviour of the cursor object in the game and handling data collection from the Wii 
+/// Balance Board.
+/// </summary>
 public class Cursor : MonoBehaviour
 {
     [Tooltip("The minimum x or the left side edge of the camera")]
@@ -16,32 +20,39 @@ public class Cursor : MonoBehaviour
     [Tooltip("The shift in the centre of the LOS rectangles wrt. centre of the camera. Get this value from the difference between the rectangles prefab vs the camera")]
     [SerializeField] private float _rectanglesShift = 0.3f; //can be adjusted if the position of rectangles changes in the future.
 
-    private string _sceneName;
-    private float _mass;
-    private float _height;
+    private string _sceneName; //name of the scene
+    private float _mass; //total mass of the person
+    private float _height; //total height of the person
     private float _m; // kg
     private float _h; // m
-    private float _i; // kgm^2
-    private float _lengthOffset;
-    private float _ankleLength;
+    private float _i; // kgm^2, this is currently unused
+    private float _lengthOffset; //the approximate location of the player's natural standing posture eyes open
+    private float _ankleLength; //the distance from the heel to the ankle in the AP direction, set in the settings.
     private float _ankleDisplacement; //to shift everything to the reference point of the ankle (ie. ankle is at y = 0)
     private float _heelPosition; //m, measured manually from centre of board to bottom of indicated feet area
     private List<float> _limits;
     private GameObject _rectangles;
-    private Vector4 _zero;
+    private Vector4 _zero; //values from the board sensor with nothing on it
     private Filter _filterX;
     private Filter _filterY;
 
     private const float _XWidth = 433f; // mm
     private const float _YLength = 238f; // mm
 
+    /// <summary>
+    /// Property get get the current Wii Balance Board values and COP information.
+    /// </summary>
     public WiiBoardData Data { get; private set; }
+    /// <summary>
+    /// Property to get the manual shift that is applied in LOS to make sure that the person is centered for LOS. Only used by
+    /// the Controller class.
+    /// </summary>
     public float LOSShift
     {
         get => _rectanglesShift;
     }
 
-    private void Awake() //want to compute these values before anything starts
+    private void Awake() //Only runs once at the beginning when the object is instantiated. This runs before start.
     {
         _sceneName = SceneManager.GetActiveScene().name;
         _mass = PlayerPrefs.GetFloat("Mass");
@@ -80,17 +91,18 @@ public class Cursor : MonoBehaviour
         }
     }
 
-    private void Start() 
+    private void Start() //runs once after awake when the object is instantiated
     {
         SetInitialConditions();
     }
 
-    private void FixedUpdate()
+    private void FixedUpdate() //runs at a every physics tick, which is set to every 0.02s or 50 Hz by default
     {
         Move();
     }
 
-    private void SetInitialConditions()
+    //this method is run only at the beginning to determne whether or not the cursor (ie. COP) is filtered.
+    private void SetInitialConditions() 
     {
         if (PlayerPrefs.GetInt("Filter Data", 0) != 1) //set 0 as default in case it isn't set
             return;
@@ -100,7 +112,7 @@ public class Cursor : MonoBehaviour
         _filterY = new Filter(PlayerPrefs.GetInt("Filter Order"));
     }
 
-    private void Move()
+    private void Move() //run at at every physics update, calculates the next position of the cursor based on the player's COP
     {
         if ((bool)FindObjectOfType<WiiBoard>() && Wii.IsActive(0) && Wii.GetExpType(0) == 3)
         {
@@ -167,7 +179,9 @@ public class Cursor : MonoBehaviour
         }
     }
 
-    private WiiBoardData GetBoardValues()
+    //Gets the current board sensor values at every physics tick and calculates the COP from it. This is then converted to an
+    //in game cursor position by shifting from the board perspective to the game perspective.
+    private WiiBoardData GetBoardValues() 
     {
         // Zero out the sensor values if possible, if no zeroing, then zero vector is just all zeros by default
         var boardSensorValues = Wii.GetBalanceBoard(0) - _zero;
