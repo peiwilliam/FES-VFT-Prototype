@@ -38,12 +38,12 @@ public class WiiBoard : MonoBehaviour
     }
 
     //only runs at the beginning when the object is instantiated after awake. The Wii Balance Board connection starts here
-    //also triggers teh InvkeEvent method with a delay of 0.01s (this delay value doesn't seem to matter, it just needs to be
+    //also triggers the InvkeEvent method with a delay of 0.01s (this delay value doesn't seem to matter, it just needs to be
     //something >0)
     private void Start() 
     {
         Wii.StartSearch();
-        Invoke("InvokeEvent", 0.01f);
+        Invoke("InvokeEvent", 0.5f);
     }
 
     //this method is specially created so that the event can be invoked with a delay
