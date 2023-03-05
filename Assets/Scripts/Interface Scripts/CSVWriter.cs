@@ -54,7 +54,7 @@ namespace CSV
                 Directory.CreateDirectory(_path + _csvFolder);
 
             var di = new DirectoryInfo(_path + _csvFolder);
-            var files = di.GetFiles(_fileName + _condition + "*"); //only find the relevant csv files
+            var files = di.GetFiles(_fileName + _condition + "*").ToList(); //only find the relevant csv files
 
             SetIndex(files); //set the index
 
@@ -128,14 +128,17 @@ namespace CSV
             return header;
         }
 
-        private void SetIndex(FileInfo[] files) //this method gets the index that should be used in the file name
+        private void SetIndex(List<FileInfo> files) //this method gets the index that should be used in the file name
         {
-            if (files.Length == 0) //if no files with the appropriate name exist, start from 1
+            if (_condition == "Forward" || _condition == "Back") //filter through for forward and back because forward left and back left get included
+                files.RemoveAll(file => file.Name.Contains("Left") || file.Name.Contains("Right"));
+
+            if (files.Count == 0) //if no files with the appropriate name exist, start from 1
                 _index = 1;
             else // go through the files that exist and find the highest index, new file will be highest index + 1
             {
                 var indices = new List<int>();
-
+                    
                 try
                 {
                     //need this here because of the way los files are named, it screws up the index counter
