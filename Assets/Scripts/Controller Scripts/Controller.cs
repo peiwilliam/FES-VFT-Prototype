@@ -50,6 +50,11 @@ namespace ControllerManager
         private Dictionary<string, float> _qsMechStim; //used to calculate the baseline for pf stimulation
         private Dictionary<string, float> _stimBaseline; //stores the baseline stim values
         private Dictionary<string, float[]> _biasCoeffs; //stores the bias coefficients to calculate the bias of the stimulation
+        //stim filtering
+        private MedianFilter _lpfFilter;
+        private MedianFilter _ldfFilter;
+        private MedianFilter _rpfFilter;
+        private MedianFilter _rdfFilter;
 
         //constants
         private const float _G = 9.81f; //m/s^2
@@ -133,7 +138,11 @@ namespace ControllerManager
             _sceneName = SceneManager.GetActiveScene().name; //Get the name fo the current active scene for reference later
             _isTargetGame = _sceneName == "Target" ? true : false; //Boolean for determining if certain calculations are done in the controller
             _rampIterations = 100f/(PlayerPrefs.GetFloat("Ramp Duration")/Time.fixedDeltaTime); //How much to ramp per iteration to get to 100% stim output in 1 second
-            
+            _lpfFilter = new MedianFilter(21);
+            _ldfFilter = new MedianFilter(21);
+            _rpfFilter = new MedianFilter(21);
+            _rdfFilter = new MedianFilter(21);
+
             MlAngles = new List<float>() {0f, 0f}; //Initialize MlAngles property
 
             //Need to convert from percent to fraction
@@ -273,7 +282,7 @@ namespace ControllerManager
             var neuralBiases = CalculateNeuralBiases(comX, shiftedComY, targetCoordsShifted); //Calculate neural biases
             var mechBiases = CalculateMechBiases(comX, shiftedComY); //Calculate mechanical biases
             var limitedStim = AdjustedCombinedStimulation(neuralBiases, mechBiases, rawStimOutput);
-            var actualStimOutput = CheckLimits(RescaleStimulation(limitedStim)); //Rescale the stimulation so that stimulation is contained between the baseline and maximums
+            var actualStimOutput = RemoveStimOutliers(CheckLimits(RescaleStimulation(limitedStim))); //Rescale the stimulation so that stimulation is contained between the baseline and maximums, and then filter to remove outliers
             var unbiasedStimOutput = new Dictionary<string, float>(); //Want to get unbiased stimulation as well for documentation in data file
 
             //properties for store data and write to csv
@@ -464,7 +473,7 @@ namespace ControllerManager
             return slopes;
         }
 
-        //calcualtes teh derivative, uses the backward derivative formula
+        //calculates the derivative, uses the backward derivative formula
         private float CalculateDerivative(List<float> comsVector) => (3.0f*comsVector[0] - 4.0f*comsVector[1] + comsVector[2])/(2*Time.fixedDeltaTime);
 
         //calculate raw stimulation output based on calculated torques from the controller
@@ -611,6 +620,19 @@ namespace ControllerManager
             }
 
             return actualStimOutput;
+        }
+
+        //applies a moving median filter to the final calculated stimulation to remove any stim outliers caused by sudden velocity
+        //increases in the gravity compensation part of the controller
+        private Dictionary<string, float> RemoveStimOutliers(Dictionary<string, float> unFiltStim)
+        {
+            return new Dictionary<string, float>()
+            {
+                ["LPF"] = _lpfFilter.Solve(unFiltStim["LPF"]),
+                ["LDF"] = _ldfFilter.Solve(unFiltStim["LDF"]),
+                ["RPF"] = _rpfFilter.Solve(unFiltStim["RPF"]),
+                ["RDF"] = _rdfFilter.Solve(unFiltStim["RDF"])
+            };
         }
 
         //calculates the initial ramp of the stimulation, ensures that the stimulation isn't too sudden at the beginning
