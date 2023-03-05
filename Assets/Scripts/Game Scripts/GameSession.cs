@@ -204,9 +204,7 @@ public class GameSession : MonoBehaviour
 
         _sceneName = SceneManager.GetActiveScene().name;
         _sceneLoader = FindObjectOfType<SceneLoader>();
-
-        if (_sceneName != "LOS" && _sceneName != "Assessment")
-            _totalGameTime = PlayerPrefs.GetInt("Game Duration", 100); //if for some reason game duration isn't set, 100 is used by def
+        _totalGameTime = PlayerPrefs.GetInt("Game Duration", 100); //if for some reason game duration isn't set, 100 is used by default
 
         switch (_sceneName)
         {
@@ -265,7 +263,7 @@ public class GameSession : MonoBehaviour
         }
 
         //how to handle transitions for all scenes other than assessment
-        if ((_totalGameTime <= 0 && _sceneName != "Assessment"))
+        if (_totalGameTime <= 0 && _sceneName != "Assessment")
         {
             if (SceneLoader.GetFamiliarization() && SceneLoader.GetGameIndex() < 4) //checks if it's familiarization and how many games we've gone through
                 _sceneLoader.Familiarization();
@@ -303,7 +301,7 @@ public class GameSession : MonoBehaviour
             case "LOS":
                 if (!string.IsNullOrEmpty(_direction))
                     _directionData[_direction].Add(_cursor.Data);
-
+        
                 break;
         }
     }
@@ -463,11 +461,10 @@ public class GameSession : MonoBehaviour
 
                         break;
                 }
-
+                
                 //since the list for the diagonal directions is currently not coded in, it throws an error, so just want to account for that
                 if (averages.Count != 0)
-                    _limits.Add(direction.Key, averages.Max()*100f); //calculates the maximum value in the list of average window values. this will be the limit in that direction
-                    
+                    _limits[direction.Key] = averages.Max()*100f; //calculates the maximum value in the list of average window values. this will be the limit in that direction
 
                 averages.Clear(); //clear the list so that it's a new one next loop
             }
