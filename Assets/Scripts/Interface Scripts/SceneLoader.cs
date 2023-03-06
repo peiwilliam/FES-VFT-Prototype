@@ -184,7 +184,7 @@ public class SceneLoader : MonoBehaviour
         //check if unshuffled and the trial number, no need to shuffle if last trial
         if (!_indicesRandomized && _trialIndex < PlayerPrefs.GetInt("Number of Trials", 2)) 
         {
-            _gameIndices = KnuthShuffler.Shuffle(_gameIndices);
+            _gameIndices.Shuffle();
             _indicesRandomized = true;
         }    
 

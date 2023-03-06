@@ -409,7 +409,7 @@ public class GameSession : MonoBehaviour
         {
             if (!_shuffled)
             {
-                _directionNames = KnuthShuffler.Shuffle(_directionNames); //order of directions needs to be randomized, do only once
+                _directionNames.Shuffle(); //order of directions needs to be randomized, do only once
                 _shuffled = true;
             }
 
