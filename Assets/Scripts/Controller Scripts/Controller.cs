@@ -411,7 +411,7 @@ namespace ControllerManager
         {
             var derivativeError = 0.0f;
 
-            if ((_neuralCounter >= 7 || _isTargetGame) && !_comAngles.GetRange(5, 3).Any(v => v == 0.0f)) //7 correspond to delay of 140ms, original labview delay was 150ms  
+            if (!_comAngles.GetRange(5, 3).Any(v => v == 0.0f)) //7 correspond to delay of 140ms, original labview delay was 150ms  
                 derivativeError = CalculateDerivative(_comAngles.GetRange(5, 3));
 
             return _kp*_comAngles.GetRange(5, 3)[0] + _kd*derivativeError;
