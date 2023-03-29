@@ -77,15 +77,39 @@ public class Cursor : MonoBehaviour
         }
         else
         {
-            // need to convert from percent to fraction
-            // los is in qs frame of reference but need to remove shift that's inherent to los
-            _limits = new List<float>()
+            if (_sceneName == "Target") //limits of target are only with reference to whatever the largest limits are in ap and ml direction
             {
-                PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f)/100f - _rectanglesShift*2f/_maxY,
-                PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f)/100f - _rectanglesShift*2f/_maxY,
-                PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f)/100f,
-                PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f)/100f
-            };
+                // this should almost 100% front, if it's back something's probably wrong
+                var apLimit = PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f) >=
+                              PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f) ?
+                              PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f) :
+                              PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f);
+
+                var mlLimit = PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f) >= 
+                              PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f) ?
+                              PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f) :
+                              PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f);
+
+                _limits = new List<float>()
+                {
+                    apLimit/100f - _rectanglesShift*2f/_maxY,
+                    apLimit/100f - _rectanglesShift*2f/_maxY,
+                    mlLimit/100f,
+                    mlLimit/100f
+                };
+            }
+            else
+            {
+                // need to convert from percent to fraction
+                // los is in qs frame of reference but need to remove shift that's inherent to los
+                _limits = new List<float>()
+                {
+                    PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f)/100f - _rectanglesShift*2f/_maxY,
+                    PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f)/100f - _rectanglesShift*2f/_maxY,
+                    PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f)/100f,
+                    PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f)/100f
+                };
+            }
 
             _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f)/100f; //convert from percent to fraction
         }
