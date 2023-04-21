@@ -618,6 +618,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Start Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 6002298767968395658, guid: fc409bd79f93a6d4d80f0a78b6e3712f, type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 519420031}
+    - target: {fileID: 6002298767968395658, guid: fc409bd79f93a6d4d80f0a78b6e3712f, type: 3}
+      propertyPath: m_RenderMode
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6002298768238440809, guid: fc409bd79f93a6d4d80f0a78b6e3712f, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
       value: 1
@@ -666,5 +674,9 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 257574926}
+    - target: {fileID: 8474244311923498465, guid: fc409bd79f93a6d4d80f0a78b6e3712f, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fc409bd79f93a6d4d80f0a78b6e3712f, type: 3}

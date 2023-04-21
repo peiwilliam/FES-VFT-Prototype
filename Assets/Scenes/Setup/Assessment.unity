@@ -227,12 +227,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
       propertyPath: _assessInstructions.Array.data[0]
-      value: The eyes closed assessment will be first. Please cross your arms and
+      value: The eyes closed calibration will be first. Please cross your arms and
         close your eyes when the timer starts.
       objectReference: {fileID: 0}
     - target: {fileID: 1009612331, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
       propertyPath: _assessInstructions.Array.data[1]
-      value: Keep your eyes open for this assessment. Please cross your arms and
+      value: Keep your eyes open for this calibration. Please cross your arms and
         look at the target at the centre of the screen.
       objectReference: {fileID: 0}
     - target: {fileID: 6779056450887742546, guid: 80eff38156b517d47a986db4dfd768f1, type: 3}
@@ -315,6 +315,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_SendPointerHoverToParent: 1
   m_HorizontalAxis: Horizontal
   m_VerticalAxis: Vertical
   m_SubmitButton: Submit
@@ -347,6 +348,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
@@ -733,6 +735,18 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 446012763}
+    - target: {fileID: 932709346751120647, guid: a6f62c4ccb2f3984cb32a415c40fdf09, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 446012763}
+    - target: {fileID: 932709346751120647, guid: a6f62c4ccb2f3984cb32a415c40fdf09, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: SkipEyesClosedAssessment
+      objectReference: {fileID: 0}
+    - target: {fileID: 932709346751120647, guid: a6f62c4ccb2f3984cb32a415c40fdf09, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: GameSession, Assembly-CSharp
+      objectReference: {fileID: 0}
     - target: {fileID: 4279781671426875796, guid: a6f62c4ccb2f3984cb32a415c40fdf09, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 

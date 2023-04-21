@@ -105,7 +105,12 @@ public class DataCollectionAndWriting : MonoBehaviour
         if (!GameSession.ecDone && !GameSession.eoDone) //check which condition it is and ensure that the correct files are created
             _ecAssessmentStarted = true;
         else if (!GameSession.eoDone)
+        {
+            if (!_ecAssessmentStarted) //in the event that the ec assessment was skipped
+                _ecAssessmentStarted = true;
             _eoAssessmentStarted = true;
+        }
+            
     }
 
     private void ChangeFileLOS(string direction) //activates when direction changes in los

@@ -1961,7 +1961,7 @@ GameObject:
   - component: {fileID: 6002298769076915084}
   - component: {fileID: 6002298769076915085}
   m_Layer: 5
-  m_Name: Assessment
+  m_Name: Quiet Standing Calibration
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2375,7 +2375,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Assessment
+  m_Text: QS Calibration
 --- !u!1 &6002298769755181113
 GameObject:
   m_ObjectHideFlags: 0

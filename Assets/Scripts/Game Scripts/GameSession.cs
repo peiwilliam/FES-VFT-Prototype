@@ -355,6 +355,18 @@ public class GameSession : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Skips the eyes closed assessment if it's n ot needed.
+    /// </summary>
+    public void SkipEyesClosedAssessment()
+    {
+        if (!ecDone)
+        {
+            ecDone = true;
+            _assessInstructionsBox.text = _assessInstructions[1];
+        }
+    }
+
     private void ComputeLengthOffset() //computes the length offset after qs assessment is complete
     {
         var yValues = new List<float>();
@@ -528,8 +540,8 @@ public class GameSession : MonoBehaviour
             oldCircle = TargetColourCircle;
             ColourGameScore();
 
-            //reset values to loop again, += to account for when the time is negative and to subtract form 10f
-            _colourDuration += 10f; 
+            //reset values to loop again
+            _colourDuration = PlayerPrefs.GetInt("Duration of Target", 10); 
             _conditionColourMet = false;
         }
     }
@@ -640,8 +652,8 @@ public class GameSession : MonoBehaviour
                 quads.Remove(quad);
             }
 
-            //reset values to loop again, += to account for when the time is negative and to subtract form 10f
-            _huntingDuration += 10f; 
+            //reset values to loop again
+            _huntingDuration = PlayerPrefs.GetInt("Duration of Target", 10); 
             _conditionHuntingMet = false;
         }   
     }
