@@ -121,6 +121,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _deltaTimeScore: 0.25
   _gettingToCircleBuffer: 5
-  _score: 251
+  _score: 250
   _isDecreasing: 0
   _hasEntered: 0

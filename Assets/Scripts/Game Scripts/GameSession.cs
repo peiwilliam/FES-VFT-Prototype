@@ -131,7 +131,7 @@ public class GameSession : MonoBehaviour
     /// <summary>
     /// Property for getting the total score in the colour game.
     ///</summary>
-    public int ColourMatchingScore { get; private set; }
+    public float ColourMatchingScore { get; private set; }
     /// <summary>
     /// Property for getting the current target circle in the colour matching game.
     ///</summary>
@@ -166,7 +166,7 @@ public class GameSession : MonoBehaviour
     /// <summary>
     /// Property for getting access to the total score in the hunting game.
     ///</summary>
-    public int HuntingScore { get; private set; }
+    public float HuntingScore { get; private set; }
     /// <summary>
     /// Property for getting and setting the _conditionHuntingMet private attribute when the player has successfully stayed inside the target.
     ///</summary>
@@ -637,8 +637,8 @@ public class GameSession : MonoBehaviour
                 yield return null;
             }
 
-            Destroy(FindObjectOfType<HuntingCircle>().gameObject);
             HuntingGameScore();
+            Destroy(FindObjectOfType<HuntingCircle>().gameObject);
 
             if (quads.Count == 4) //when the game initially starts there are still four quads, so this takes care of that
             {

@@ -11,22 +11,28 @@ public class HuntingCircle : MonoBehaviour
     [Tooltip("How much time is given to the player to go from circle to circle before the maximum score starts to decrease")]
     [SerializeField] private float _gettingToCircleBuffer = 5f;
     [Tooltip("The maximum score per circle")]
-    [SerializeField] private int _score = 250;
+    [SerializeField] private int _maxScore = 250;
     [Tooltip("For debugging purposes only, shows when the maximum score is decreasing")]
     [SerializeField] private bool _isDecreasing;
     [Tooltip("For debugging purposes only, shows when the cursor has entered the circle")]
     [SerializeField] private bool _hasEntered;
 
-    private float _timeToGetScore; //How long players need to stay in the circle to get points
+    private float _actualScore;
+    private float _totalDuration;
+    private float _timeToGetScore; //How long players need to stay in the circle to get points, stored as ref
+    private float _timeLeftToGetScore; //Actually how much time left for the target
     private Color _oldColour; //Just for storing what the original colour is when it switches to green when the player is correct
     private Coroutine _enterCircle; //Coroutine responsible for determining how much time the player has left before they get points
     private Coroutine _exitCircle; //Coroutine responsible for adding to the amount of time needed to stay in the circle if player goes out of the circle
     private Coroutine _gettingToCircle; //Coroutine responsible for giving the players a grace period before they start losing points
     private GameSession _gameSession; //Get the gamesession object for reference values.
     
-    private void Start() //runs only at the beginning when the object is instantiated
+    private void Awake() //runs only at the beginning when the object is instantiated, needs to be awake so that all necessary variables are instantiated before any coroutines start
     {
-        _timeToGetScore = PlayerPrefs.GetInt("Duration to Get Points", 3); //the default value for the time to get the score is 3
+        _actualScore = _maxScore;
+        _totalDuration = PlayerPrefs.GetInt("Duration of Target", 10);
+        _timeToGetScore = PlayerPrefs.GetInt("Duration to Get Points", 3)/2; //the default value used to be 3 but hardcoded to be 1.5 for now
+        _timeLeftToGetScore = _timeToGetScore;
         _gameSession = FindObjectOfType<GameSession>();
 
         if (!_hasEntered) //when the circle spawns, the GettingToCircle coroutine is immediately started
@@ -54,26 +60,20 @@ public class HuntingCircle : MonoBehaviour
     private void OnTriggerExit2D(Collider2D collider) //handles what happens when another game obejct exits the circle
     {
         DetectCursor.ChangeColourBack(gameObject, _oldColour); //change back to the old colour
-
         StopCoroutine(_enterCircle);
         _exitCircle = StartCoroutine(ExitCircle());
     }
 
     private IEnumerator EnterCircle() //handles the time the player has left before they get points
     {
-        while (_timeToGetScore > 0)
+        while (_timeLeftToGetScore > 0)
         {
-            _timeToGetScore -= Time.unscaledDeltaTime;
+            _timeLeftToGetScore -= Time.unscaledDeltaTime;
             yield return null;
         }
 
-        //this condition is probably unnecessary because the code will never reach here unless the time is less than zero, but just in case
-        if (_timeToGetScore <= 0)
-        {
+        if (_timeLeftToGetScore <= 0)
             _gameSession.ConditionHuntingMet = true;
-            _hasEntered = false;
-            _timeToGetScore = 3f;
-        }
     }
 
     private IEnumerator ExitCircle() //handles the addition of time and subtraction of the score when the player goes out of the circle
@@ -82,10 +82,10 @@ public class HuntingCircle : MonoBehaviour
 
         while (true)
         {
-            _score--;
+            _actualScore -= _maxScore/(_totalDuration/_deltaTimeScore);
 
-            if (_timeToGetScore > 0) //add time if not completed time inside circle
-                _timeToGetScore += 0.0625f;
+            if (_timeLeftToGetScore > 0) //add time if not completed time inside circle
+                _timeLeftToGetScore += 0.0625f;
 
             yield return new WaitForSecondsRealtime(_deltaTimeScore);
         }
@@ -99,7 +99,9 @@ public class HuntingCircle : MonoBehaviour
         {
             while (true)
             {
-                _score--;
+                // _gettingToCircleBuffer is used here instead because if they still haven't reached the circle by this point
+                // it'll only be 5 seconds left and we need it to go to zero
+                _actualScore -= _maxScore/(_gettingToCircleBuffer/_deltaTimeScore);
                 yield return new WaitForSecondsRealtime(_deltaTimeScore);
             }
         }
@@ -108,5 +110,5 @@ public class HuntingCircle : MonoBehaviour
     /// <summary>
     /// This method is for getting what the player got as a score for completing the circle. Only used to get total score in GameSession.
     /// <summary>
-    public int GetScore() => _score;
+    public float GetScore() => _timeLeftToGetScore ==  _timeToGetScore ? 0 : _actualScore; //conditional operator not totally necessary, but sometimes the timing is a little off and we want to make sure that if the person doesn't go into the target that they get no points
 }

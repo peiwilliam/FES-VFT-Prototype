@@ -10,23 +10,29 @@ public class ColourCircle : MonoBehaviour
     [SerializeField] private float _deltaTimeScore = 0.25f;
     [Tooltip("The amount of time allowed to get to a circle before the highest possible score starts to decrease")]
     [SerializeField] private float _gettingToCircleBuffer = 5f;
-    [Tooltip("The highest possible score")]
-    [SerializeField] private int _score = 250;
+    [Tooltip("The maximum score per circle")]
+    [SerializeField] private int _maxScore = 250;
     [Tooltip("For debugging purposes only: Shows when the score is decreasing")]
     [SerializeField] private bool _isDecreasing;
     [Tooltip("For debugging purposes only: Shows when the cursor has entered the target circle")]
     [SerializeField] private bool _hasEntered;
 
+    private float _actualScore;
+    private float _totalDuration;
     private float _timeToGetScore; //How long players need to stay in the circle to get points
+    private float _timeLeftToGetScore; //Actually how much time left for the target
     private Color _oldColour; //Just for storing what the original colour is when it switches to green when the player is correct
     private Coroutine _enterCircle; //Coroutine responsible for determining how much time the player has left before they get points
     private Coroutine _exitCircle; //Coroutine responsible for adding to the amount of time needed to stay in the circle if player goes out of the circle
     private Coroutine _gettingToCircle; //Coroutine responsible for giving the players a grace period before they start losing points
     private GameSession _gameSession; //Get the gamesession object for reference values.
 
-    private void Start() //run when the object is instantiated
+    private void Awake() //run when the object is instantiated
     {
+        _actualScore = _maxScore;
+        _totalDuration = PlayerPrefs.GetInt("Duration of Target", 10);
         _timeToGetScore = PlayerPrefs.GetInt("Duration to Get Points", 3);
+        _timeLeftToGetScore = _timeToGetScore;
         _gameSession = FindObjectOfType<GameSession>();
     }
 
@@ -78,19 +84,18 @@ public class ColourCircle : MonoBehaviour
 
     private IEnumerator EnterCircle() //handles the time the player has left before they get points
     {
-        while (_timeToGetScore > 0)
+        while (_timeLeftToGetScore > 0)
         {
-            _timeToGetScore -= Time.unscaledDeltaTime;
+            _timeLeftToGetScore -= Time.unscaledDeltaTime;
 
             yield return null;
         }
 
-        if (_timeToGetScore <= 0) //reset the circle back to starting conditions
+        if (_timeLeftToGetScore <= 0) //reset the circle back to starting conditions
         {
             _gameSession.ConditionColourMet = true;
             _hasEntered = false;
             gameObject.tag = "Untagged";
-            _timeToGetScore = 3f; //this needs to be done because otherwise if the same circle is chosen again, it'll still be 0
         }
     }
 
@@ -100,9 +105,10 @@ public class ColourCircle : MonoBehaviour
 
         while (true)
         {
-            _score--;
-            if (_timeToGetScore > 0) //add time if not completed time inside circle
-                _timeToGetScore += 0.0625f;
+            _actualScore -= _maxScore/(_totalDuration/_deltaTimeScore);
+
+            if (_timeLeftToGetScore > 0) //add time if not completed time inside circle
+                _timeLeftToGetScore += 0.0625f;
 
             yield return new WaitForSecondsRealtime(_deltaTimeScore);
         }
@@ -116,7 +122,7 @@ public class ColourCircle : MonoBehaviour
         {
             while (true)
             {
-                _score--;
+                _actualScore -= _maxScore/(_gettingToCircleBuffer/_deltaTimeScore);
                 yield return new WaitForSecondsRealtime(_deltaTimeScore);
             }
         }
@@ -128,13 +134,13 @@ public class ColourCircle : MonoBehaviour
     public void GetNewCircle()
     {
         //reset all circle score and time values just in case they aren't already these values.
-        _score = 250;
-        _timeToGetScore = 3f;
+        _actualScore = 250;
+        _timeLeftToGetScore = _timeToGetScore;
         _gettingToCircle = StartCoroutine(GettingToCircle());
     }
 
     /// <summary>
     /// This method is for getting what the player got as a score for completing the circle. Only used to get total score in GameSession.
     /// <summary>
-    public int GetScore() => _score;
+    public float GetScore() => _timeLeftToGetScore ==  _timeToGetScore ? 0 : _actualScore; //conditional operator not totally necessary, but sometimes the timing is a little off and we want to make sure that if the person doesn't go into the target that they get no points
 }
