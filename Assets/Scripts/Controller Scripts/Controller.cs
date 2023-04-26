@@ -147,14 +147,39 @@ namespace ControllerManager
 
             //Need to convert from percent to fraction
             //LOS is in qs frame of reference but need to remove shift that was used to centre cursor for LOS
-            _limits = new float[] //front, back, left, right
+           if (_sceneName == "Target") //limits of target are only with reference to whatever the largest limits are in ap and ml direction
             {
-                PlayerPrefs.GetFloat("Limit of Stability Front")/100f - cursor.LOSShift*2f/_MaxY,
-                PlayerPrefs.GetFloat("Limit of Stability Back")/100f - cursor.LOSShift*2f/_MaxY,
-                PlayerPrefs.GetFloat("Limit of Stability Left")/100f,
-                PlayerPrefs.GetFloat("Limit of Stability Right")/100f
-            };
+                // this should almost 100% front, if it's back something's probably wrong
+                var apLimit = PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f) >=
+                              PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f) ?
+                              PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f) :
+                              PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f);
 
+                var mlLimit = PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f) >= 
+                              PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f) ?
+                              PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f) :
+                              PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f);
+
+                _limits = new float[]
+                {
+                    apLimit/100f - cursor.LOSShift*2f/_MaxY,
+                    apLimit/100f - cursor.LOSShift*2f/_MaxY,
+                    mlLimit/100f,
+                    mlLimit/100f
+                };
+            }
+            else
+            {
+                // need to convert from percent to fraction
+                // los is in qs frame of reference but need to remove shift that's inherent to los
+                _limits = new float[]
+                {
+                    PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f)/100f - cursor.LOSShift*2f/_MaxY,
+                    PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f)/100f - cursor.LOSShift*2f/_MaxY,
+                    PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f)/100f,
+                    PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f)/100f
+                };
+            }
             var myndSearchToStepsConv = 1f;
             //If stimulator being used is MyndSearch, we want to convert the mA to the 0-63 steps that the controller expects
             //We don't need to do for compex because each step is 1 mA

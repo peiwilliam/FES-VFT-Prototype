@@ -30,7 +30,7 @@ public class Cursor : MonoBehaviour
     private float _ankleLength; //the distance from the heel to the ankle in the AP direction, set in the settings.
     private float _ankleDisplacement; //to shift everything to the reference point of the ankle (ie. ankle is at y = 0)
     private float _heelPosition; //m, measured manually from centre of board to bottom of indicated feet area
-    private List<float> _limits;
+    private float[] _limits;
     private GameObject _rectangles;
     private Vector4 _zero; //values from the board sensor with nothing on it
     private Filter _filterX;
@@ -70,7 +70,7 @@ public class Cursor : MonoBehaviour
 
         if (_sceneName == "LOS" || _sceneName == "Assessment") //only shift and scale cop when it's the games
         {
-            _limits = new List<float>() {1.0f, 1.0f, 1.0f, 1.0f}; //front, back, left, right
+            _limits = new float[] {1.0f, 1.0f, 1.0f, 1.0f}; //front, back, left, right
 
             if (_sceneName == "LOS") //offset applied for LOS only, for qs assessment offset is default zero
                 _lengthOffset = PlayerPrefs.GetFloat("Length Offset", 0.0f)/100f; //convert from percent to fraction
@@ -90,7 +90,7 @@ public class Cursor : MonoBehaviour
                               PlayerPrefs.GetFloat("Limit of Stability Left", 1.0f) :
                               PlayerPrefs.GetFloat("Limit of Stability Right", 1.0f);
 
-                _limits = new List<float>()
+                _limits = new float[]
                 {
                     apLimit/100f - _rectanglesShift*2f/_maxY,
                     apLimit/100f - _rectanglesShift*2f/_maxY,
@@ -102,7 +102,7 @@ public class Cursor : MonoBehaviour
             {
                 // need to convert from percent to fraction
                 // los is in qs frame of reference but need to remove shift that's inherent to los
-                _limits = new List<float>()
+                _limits = new float[]
                 {
                     PlayerPrefs.GetFloat("Limit of Stability Front", 1.0f)/100f - _rectanglesShift*2f/_maxY,
                     PlayerPrefs.GetFloat("Limit of Stability Back", 1.0f)/100f - _rectanglesShift*2f/_maxY,
